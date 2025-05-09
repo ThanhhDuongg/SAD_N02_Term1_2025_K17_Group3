@@ -1,3 +1,5 @@
+package Model;
+
 public class student {
     private String name;
     private int dateOfBirth;
