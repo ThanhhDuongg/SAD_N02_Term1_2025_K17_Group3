@@ -1,6 +1,6 @@
 package Model;
 
-public class student {
+public class Student {
     private String name;
     private int dateOfBirth;
     private String gender;
