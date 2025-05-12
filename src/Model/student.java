@@ -8,9 +8,9 @@ public class Student {
     private String address;
     private String phoneNumber;
     private String email;
-    private String IdentityCard;
+    private String identityCard;
     private String roomNumber;
-    public student(String name, int dateOfBirth, String gender, String studentId, String address, String phoneNumber, String email, String IdentityCard, String roomNumber) {
+    public Student(String name, int dateOfBirth, String gender, String studentId, String address, String phoneNumber, String email, String IdentityCard, String roomNumber) {
         this.name = name;
         this.dateOfBirth = dateOfBirth;
         this.gender = gender;
@@ -18,7 +18,7 @@ public class Student {
         this.address = address;
         this.phoneNumber = phoneNumber;
         this.email = email;
-        this.IdentityCard = IdentityCard;
+        this.identityCard = identityCard;
         this.roomNumber = roomNumber;
     }
     public String getName() {
@@ -67,7 +67,7 @@ public class Student {
         return IdentityCard;
     }
     public void setIdentityCard(String identityCard) {
-        IdentityCard = identityCard;
+        identityCard = identityCard;
     }
     public String getRoomNumber() {
         return roomNumber;
@@ -85,7 +85,7 @@ public class Student {
                 ", address='" + address + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", email='" + email + '\'' +
-                "IdentityCard='" + IdentityCard + '\'' +
+                ", identityCard='" + identityCard + '\'' +
                 ", roomNumber='" + roomNumber + '\'' +
                 '}';
     }
