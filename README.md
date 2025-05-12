@@ -110,6 +110,8 @@ Dưới đây là 4 lớp (class) cốt lõi của hệ thống quản lý ký t
 
 ## Câu 3 – Cấu trúc Folder của Project
 
+```plaintext
+
 Dự án được tổ chức theo mô hình hướng đối tượng, chia rõ các thành phần theo chức năng như sau:
 
 DormitoryManagement/
@@ -127,6 +129,8 @@ DormitoryManagement/
 │
 └── connectionDB/ # Chứa lớp kết nối CSDL
 └── DBConnection.java # Quản lý kết nối cơ sở dữ liệu (JDBC)
+
+```
 ## Câu 5 – Kiểm thử chức năng Room
 
 File `roomtest.java` dùng để kiểm thử các chức năng chính của class `Room`, bao gồm:
