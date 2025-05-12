@@ -55,6 +55,7 @@ Dưới đây là 4 lớp (class) cốt lõi của hệ thống quản lý ký t
 | `roomNumber`       | `String`           | Số phòng |
 | `buildingNumber`   | `String`           | Mã tòa nhà |
 | `roomType`         | `String`           | Loại phòng (thường, điều hòa, VIP,...) |
+| `roomPrice`        | `double`           | Giá Phòng |
 | `maxOccupancy`     | `int`              | Sức chứa tối đa |
 | `currentOccupancy` | `int`              | Số sinh viên hiện tại |
 | `students`         | `List<Student>`    | Danh sách sinh viên trong phòng |
