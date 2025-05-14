@@ -47,12 +47,12 @@ public class Room {
         this.roomType = roomType;
     }
 
-    public String getRoomPrice() {
+    public double getRoomPrice() {
         return roomPrice;
     }
 
     public void setRoomPrice(double roomPrice) {
-        this.roomPrice = roomPrice
+        this.roomPrice = roomPrice;
     }        
 
     public int getMaxOccupancy() {
