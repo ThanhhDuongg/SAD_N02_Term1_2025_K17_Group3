@@ -10,7 +10,7 @@ public class Student {
     private String email;
     private String identityCard;
     private String roomNumber;
-    public Student(String name, int dateOfBirth, String gender, String studentId, String address, String phoneNumber, String email, String IdentityCard, String roomNumber) {
+    public Student(String name, int dateOfBirth, String gender, String studentId, String address, String phoneNumber, String email, String identityCard, String roomNumber) {
         this.name = name;
         this.dateOfBirth = dateOfBirth;
         this.gender = gender;
@@ -67,7 +67,7 @@ public class Student {
         return IdentityCard;
     }
     public void setIdentityCard(String identityCard) {
-        identityCard = identityCard;
+        this.identityCard = identityCard;
     }
     public String getRoomNumber() {
         return roomNumber;
