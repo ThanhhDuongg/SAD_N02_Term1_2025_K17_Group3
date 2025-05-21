@@ -143,3 +143,43 @@ File `roomtest.java` dùng để kiểm thử các chức năng chính của cla
 
 Kết quả được in ra màn hình để xác minh hoạt động của các phương thức `addStudent()`, `getCurrentOccupancy()` và `getStudents()`.
 
+##  Yêu cầu Practice 3
+
+- **Giao diện:** Java Spring Boot.
+- **Chức năng quản lý Sinh viên:**
+  - Thêm, sửa, xóa thông tin **sinh viên**.
+  - Liệt kê danh sách sinh viên, **lọc theo tên hoặc mã sinh viên**.
+
+- **Chức năng quản lý Phòng:**
+  - Thêm, sửa, xóa **phòng** ký túc xá.
+
+- **Gán sinh viên vào phòng:**
+  - Thực hiện thông qua việc tạo **hợp đồng thuê phòng**.
+
+- **Quản lý Phí:**
+  - Thêm, sửa, xóa các loại phí (điện, nước, vệ sinh).
+  - Lọc phí theo loại phí.
+
+- **Lưu trữ dữ liệu:**
+  - Dữ liệu được lưu dưới dạng **file nhị phân**.
+  - Sử dụng các lớp như `Student`, `Room`, `Contract` để đọc/ghi dữ liệu.
+
+- **Dữ liệu trong bộ nhớ:**
+  - Lưu trữ bằng các cấu trúc như `ArrayList`, `LinkedList`, `Map`,...
+
+- **Chức năng mở rộng:**
+  - Thống kê số lượng sinh viên theo phòng.
+  - Tìm phòng còn trống.
+  - Lọc hợp đồng còn hiệu lực.
+  - Tính tổng phí theo sinh viên hoặc theo phòng.
+  - Xuất báo cáo thống kê ra file.
+
+---
+
+## 🛠 Công nghệ sử dụng
+
+- Java
+- Java Spring Boot
+- MySQL
+- JDBC
+
