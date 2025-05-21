@@ -144,7 +144,7 @@ File `roomtest.java` dùng để kiểm thử các chức năng chính của cla
 Kết quả được in ra màn hình để xác minh hoạt động của các phương thức `addStudent()`, `getCurrentOccupancy()` và `getStudents()`.
 
 ##  Yêu cầu Practice 3
-
+ Nội dung 1:
 - **Giao diện:** Java Spring Boot.
 - **Chức năng quản lý Sinh viên:**
   - Thêm, sửa, xóa thông tin **sinh viên**.
@@ -176,7 +176,11 @@ Kết quả được in ra màn hình để xác minh hoạt động của các 
 
 ---
 
-## 🛠 Công nghệ sử dụng
+ Nội dung 2:
+
+ ![class_diagram](https://github.com/BachNguyenn/OOP_N01_Term3_2025_K17_Group9/blob/main/class_diagram.jpg)
+
+## Công nghệ sử dụng
 
 - Java
 - Java Spring Boot
