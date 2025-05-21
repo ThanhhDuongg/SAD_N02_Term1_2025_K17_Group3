@@ -189,6 +189,7 @@ Kết quả được in ra màn hình để xác minh hoạt động của các 
 
 Practice 4:
 Nội dung 3: 
+```plaintext
 Sequence Diagram
  Chức năng: Sinh viên đăng ký phòng (Student)
 
@@ -248,4 +249,4 @@ Chức năng: Quản lý phí của sinh viên (fee)
 [Cập nhật trạng thái phí]
      ↓
 [End]
-
+```
