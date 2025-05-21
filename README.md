@@ -183,3 +183,65 @@ Kết quả được in ra màn hình để xác minh hoạt động của các 
 - MySQL
 - JDBC
 
+Practice 4:
+Nội dung 3: 
+Sequence Diagram
+ Chức năng: Sinh viên đăng ký phòng (Student)
+
+ Student       Room        Fee
+   |            |           |
+   |---requestRoom()------->|
+   |            |           |
+   |     checkAvailability()|
+   |<---confirmRoom()-------|
+   |            |           |
+   |---createFee()--------->|
+   |            |           |
+   |<---feeDetails()--------|
+   |---payFee()------------>|
+   |<---paymentStatus()-----|
+
+Activity Diagram 
+Chức năng: Đăng ký phòng ký túc xá (Room)
+[Start]
+   ↓
+[Nhập thông tin sinh viên]
+   ↓
+[Kiểm tra phòng trống]
+   ↓
+┌────────────┐
+│Phòng trống?│
+└────┬───────┘
+     │Yes                    No
+     ↓                       ↓
+[Phân bổ phòng]        [Hiển thị lỗi]
+     ↓                       ↓
+[Tạo hóa đơn phí]           [End]
+     ↓
+[Thanh toán phí]
+     ↓
+[Hiển thị trạng thái thanh toán]
+     ↓
+[End]
+
+Activity Diagram 
+Chức năng: Quản lý phí của sinh viên (fee)
+[Start]
+   ↓
+[Truy vấn sinh viên]
+   ↓
+[Hiển thị các khoản phí]
+   ↓
+┌────────────┐
+│Có phí chưa?│
+└────┬───────┘
+     │Yes                   No
+     ↓                      ↓
+[Chọn hình thức thanh toán]  [Kết thúc]
+     ↓
+[Thực hiện thanh toán]
+     ↓
+[Cập nhật trạng thái phí]
+     ↓
+[End]
+
