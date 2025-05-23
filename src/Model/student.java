@@ -64,7 +64,7 @@ public class Student {
         this.email = email;
     }
     public String getIdentityCard() {
-        return IdentityCard;
+        return identityCard;
     }
     public void setIdentityCard(String identityCard) {
         this.identityCard = identityCard;
