@@ -35,7 +35,6 @@ public class Room {
     }
 
 
-    // Getter and Setter methods
     public int getRoomId() {
         return roomId;
     }
