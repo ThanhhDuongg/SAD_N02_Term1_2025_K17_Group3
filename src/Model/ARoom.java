@@ -6,13 +6,13 @@ public class ARoom extends Room{
     public ARoom(int roomId){
         super(roomId);
     }
-    public ARoom(String roomNumber, String roomType, int numberOfBeds, boolean isOccupied, double roomPrice, double additionalFee) {
-        super(roomNumber, roomType, numberOfBeds, isOccupied, roomPrice);
+    public ARoom(String roomNumber, String roomType, int max_occupancy, boolean isOccupied, double room_price, double additionalFee) {
+        super(roomNumber, roomType, max_occupancy, isOccupied, room_price);
         this.additionalFee = additionalFee;
     }
 
-    public ARoom(int roomId, String roomNumber, String roomType, int numberOfBeds, boolean isOccupied, double roomPrice, double additionalFee) {
-        super(roomId, roomNumber, roomType, numberOfBeds, isOccupied, roomPrice);
+    public ARoom(int roomId, String roomNumber, String roomType, int max_occupancy, boolean isOccupied, double room_price, double additionalFee) {
+        super(roomId, roomNumber, roomType, max_occupancy, isOccupied, room_price);
         this.additionalFee = additionalFee;
     }
 
@@ -25,7 +25,7 @@ public class ARoom extends Room{
     }
 
     @Override
-    public double getRoomPrice() {
-        return super.getRoomPrice() + additionalFee;
+    public double getroom_price() {
+        return super.getroom_price() + additionalFee;
     }
 }

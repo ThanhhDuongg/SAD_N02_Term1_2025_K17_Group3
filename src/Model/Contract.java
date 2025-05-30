@@ -84,34 +84,3 @@ public class Contract {
         this.room = room;
     }
 }
-
-    // Getter methods
-    public String getContractId() {
-        return contractId;
-    }
-
-    public String getStudentId() {
-        return studentId;
-    }
-
-    public String getRoomNumber() {
-        return roomNumber;
-    }
-
-    public LocalDate getStartDate() {
-        return startDate;
-    }
-
-    public LocalDate getEndDate() {
-        return endDate;
-    }
-
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public boolean isActive() {
-        return isActive;
-    }
-}
-

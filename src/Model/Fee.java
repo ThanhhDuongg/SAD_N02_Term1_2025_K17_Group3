@@ -55,11 +55,11 @@ public class Fee {
         this.student = student;
     }
 
-    public String getStatus() {  
+    public String getStatus() {  // ✅ đúng getter
         return status;
     }
 
-    public void setStatus(String status) {  
+    public void setStatus(String status) {  // ✅ đúng setter
         this.status = status;
     }
 
