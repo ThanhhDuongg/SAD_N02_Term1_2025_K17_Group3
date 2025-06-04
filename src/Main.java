@@ -1,4 +1,4 @@
-import DAO.RoomDAO;
+/*import DAO.RoomDAO;
 import DAO.StudentDAO;
 import Model.Contract;
 import Model.Room;
@@ -8,13 +8,17 @@ import service.ContractService;
 import view.MainFrame;
 
 import javax.swing.*;
-import java.util.List;
+import java.util.List;*/
 
 public class Main {
+    
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
+        /*SwingUtilities.invokeLater(() -> {
             MainFrame mainFrame = new MainFrame();
             mainFrame.setVisible(true);
-        });
-    }
+        });*/
+          TestSequence.test();
+    
+    } 
+  
 }
