@@ -10,14 +10,19 @@ import view.MainFrame;
 import javax.swing.*;
 import java.util.List;*/
 
+import Test.TestAddStudentWithContract;
+
+
 public class Main {
     
     public static void main(String[] args) {
         /*SwingUtilities.invokeLater(() -> {
             MainFrame mainFrame = new MainFrame();
             mainFrame.setVisible(true);
-        });*/
-          TestSequence.test();
+        });
+          TestSequence.test();*/
+          TestAddStudentWithContract.main(new String[]{});
+
     
     } 
   
