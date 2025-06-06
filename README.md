@@ -250,3 +250,36 @@ Chức năng: Quản lý phí của sinh viên (fee)
      ↓
 [End]
 ```
+Lưu đồ thuật toán thêm sinh viên kèm hợp đồng Ký túc xá
+``` plaintext
+Bắt đầu
+   │
+   ├──► Nhập thông tin sinh viên và phòng muốn thuê
+   │
+   ├──► Kiểm tra thông tin đầu vào (có hợp lệ không?)
+   │         │
+   │         ├──► Không → Thông báo lỗi, kết thúc
+   │         └──► Có
+   │
+   ├──► Bắt đầu Transaction
+   │
+   ├──► Thêm sinh viên vào bảng students
+   │         │
+   │         ├──► Không thành công → Rollback, thông báo lỗi
+   │         └──► Thành công
+   │
+   ├──► Truy vấn giá phòng từ bảng rooms
+   │         │
+   │         ├──► Không tìm thấy phòng → Rollback, thông báo lỗi
+   │         └──► Có giá phòng
+   │
+   ├──► Thêm hợp đồng vào bảng contracts
+   │         │
+   │         ├──► Không thành công → Rollback, thông báo lỗi
+   │         └──► Thành công
+   │
+   ├──► Commit transaction
+   │
+   └──► Thông báo thành công
+Kết thúc
+```
