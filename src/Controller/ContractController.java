@@ -1,6 +1,6 @@
 package Controller;
 
-import model.Contract;
+import Model.Contract;
 import Repository.ContractRepository;
 import Repository.StudentRepository;
 import Repository.RoomRepository;
