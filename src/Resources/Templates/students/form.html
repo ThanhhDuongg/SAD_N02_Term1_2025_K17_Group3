@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${student.id} ? 'Sửa Sinh Viên' : 'Thêm Sinh Viên'">Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 24px 28px 20px 28px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+            margin: 12px 0;
+        }
+        .form-group label {
+            width: 120px;
+            font-weight: bold;
+            color: #222;
+            margin-right: 10px;
+        }
+        .form-group input,
+        .form-group select {
+            flex: 1;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 15px;
+        }
+        .form-group input[type="radio"] {
+            width: auto;
+            margin: 0 4px 0 0;
+            accent-color: #28a745;
+        }
+        .gender-options {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .gender-options label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            margin: 0;
+            gap: 4px;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        .button {
+            padding: 8px 16px;
+            margin: 5px 8px 0 0;
+            text-decoration: none;
+            color: #fff;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .btn-save { background-color: #28a745; }
+        .btn-save:hover { background-color: #218838; }
+        .btn-cancel { background-color: #6c757d; }
+        .btn-cancel:hover { background-color: #5a6268; }
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            .form-group label { width: 90px; font-size: 14px; }
+            .form-group input, .form-group select { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 th:text="${student.id} ? 'Sửa Sinh Viên' : 'Thêm Sinh Viên'"></h2>
+        <form th:action="${student.id} ? @{/students/{id}(id=${student.id})} : @{/students}" th:object="${student}" method="post">
+            <div class="form-group">
+                <label for="name">Tên:</label>
+                <input type="text" id="name" th:field="*{name}" required>
+                <span class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+            </div>
+            <div class="form-group">
+                <label for="dob">Ngày Sinh:</label>
+                <input type="date" id="dob" th:field="*{dob}" required>
+                <span class="error" th:if="${#fields.hasErrors('dob')}" th:errors="*{dob}"></span>
+            </div>
+            <div class="form-group">
+                <label>Giới Tính:</label>
+                <div class="gender-options">
+                    <label>
+                        <input type="radio" th:field="*{gender}" value="Nam" id="male" required>
+                        Nam
+                    </label>
+                    <label>
+                        <input type="radio" th:field="*{gender}" value="Nữ" id="female">
+                        Nữ
+                    </label>
+                </div>
+                <span class="error" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></span>
+            </div>
+            <div class="form-group">
+                <label for="phone">Điện Thoại:</label>
+                <input type="text" id="phone" th:field="*{phone}" required>
+                <span class="error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></span>
+            </div>
+            <div class="form-group">
+                <label for="address">Địa Chỉ:</label>
+                <input type="text" id="address" th:field="*{address}" required>
+                <span class="error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" th:field="*{email}" required>
+                <span class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+            </div>
+            <div class="form-group">
+                <label for="department">Khoa:</label>
+                <input type="text" id="department" th:field="*{department}" required>
+                <span class="error" th:if="${#fields.hasErrors('department')}" th:errors="*{department}"></span>
+            </div>
+            <div class="form-group">
+                <label for="year">Năm Học:</label>
+                <input type="number" id="year" th:field="*{year}" required min="1" max="6">
+                <span class="error" th:if="${#fields.hasErrors('year')}" th:errors="*{year}"></span>
+            </div>
+            <div class="form-group">
+                <label for="room">Phòng:</label>
+                <select id="room" th:field="*{room.id}">
+                    <option value="">-- Chưa chọn phòng --</option>
+                    <option th:each="room : ${rooms}" th:value="${room.id}" th:text="${room.number}"></option>
+                </select>
+            </div>
+            <div style="text-align:center; margin-top: 18px;">
+                <button type="submit" class="button btn-save">Lưu</button>
+                <a th:href="@{/students}" class="button btn-cancel">Hủy</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
