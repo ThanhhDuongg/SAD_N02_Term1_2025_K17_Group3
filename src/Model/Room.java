@@ -1,86 +1,33 @@
-package Model;
+// Entity: Room
+package com.example.dorm.model;
 
-import java.math.BigDecimal;
+import jakarta.persistence.*;
+import java.util.List;
 
+@Entity
 public class Room {
-    private int roomId;
-    private String roomNumber;
-    private String roomType;
-    private int max_occupancy;
-    private double room_price;
-    private boolean isOccupied;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String number;
+    private String type;
+    private int capacity;
+    private int price; // Giá phòng, có thể thêm nếu cần
 
-    public Room() {
+    @OneToMany(mappedBy = "room")
+    private List<Student> students;
 
-    }
-    public Room(int roomId) {
-        this.roomId = roomId;
-    }
-
-    public Room(int roomId, String roomNumber, String roomType, int max_occupancy, boolean isOccupied, double room_price) {
-        this.roomId = roomId;
-        this.roomNumber = roomNumber;
-        this.roomType = roomType;
-        this.max_occupancy = max_occupancy;
-        this.isOccupied = isOccupied;
-        this.room_price = room_price;
-    }
-
-    public Room(String roomNumber, String roomType, int max_occupancy, boolean isOccupied, double room_price) {
-        this.roomNumber = roomNumber;
-        this.roomType = roomType;
-        this.max_occupancy = max_occupancy;
-        this.isOccupied = isOccupied;
-        this.room_price = room_price;
-    }
-
-
-    // Getter and Setter methods
-    public int getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(int roomId) {
-        this.roomId = roomId;
-    }
-
-    public String getRoomNumber() {
-        return roomNumber;
-    }
-
-    public void setRoomNumber(String roomNumber) {
-        this.roomNumber = roomNumber;
-    }
-
-    public String getRoomType() {
-        return roomType;
-    }
-
-    public void setRoomType(String roomType) {
-        this.roomType = roomType;
-    }
-
-    public int getmax_occupancy() {
-        return max_occupancy;
-    }
-
-    public void setmax_occupancy(int max_occupancy) {
-        this.max_occupancy = max_occupancy;
-    }
-
-    public double getroom_price() {
-        return room_price;
-    }
-
-    public void setroom_price(double room_price) {
-        this.room_price = room_price;
-    }
-
-    public boolean getOccupied() {
-        return isOccupied;
-    }
-
-    public void setOccupied(boolean occupied) {
-        isOccupied = occupied;
-    }
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getNumber() { return number; }
+    public void setNumber(String number) { this.number = number; }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    public int getCapacity() { return capacity; }
+    public void setCapacity(int capacity) { this.capacity = capacity; }
+    public int getPrice() { return price; }
+    public void setPrice(int price) { this.price = price; }
+    public List<Student> getStudents() { return students; }
+    public void setStudents(List<Student> students) { this.students = students; }
 }

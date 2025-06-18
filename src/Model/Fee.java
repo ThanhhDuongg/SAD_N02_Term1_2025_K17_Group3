@@ -1,69 +1,47 @@
-package Model;
+package com.example.dorm.model;
 
+import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.math.BigDecimal;
+
+@Entity
 public class Fee {
-    private int feeId;
-    private FeeType feeType;
-    private double feeAmount;
-    private String paymentDate;
-    private Student student;
-    private String status;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public Fee() {
-    }
+    @ManyToOne
+    @JoinColumn(name = "contract_id")
+    private Contract contract;
 
-    public Fee(int feeId) {
-        this.feeId = feeId;
-    }
+    @Enumerated(EnumType.STRING)
+    private FeeType type;
 
-    public int getFeeId() {
-        return feeId;
-    }
+    private BigDecimal amount;
+    private LocalDate dueDate;
 
-    public void setFeeId(int feeId) {
-        this.feeId = feeId;
-    }
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
 
-    public FeeType getFeeType() {
-        return feeType;
-    }
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Contract getContract() { return contract; }
+    public void setContract(Contract contract) { this.contract = contract; }
+    public FeeType getType() { return type; }
+    public void setType(FeeType type) { this.type = type; }
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
+    public LocalDate getDueDate() { return dueDate; }
+    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+    public PaymentStatus getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(PaymentStatus paymentStatus) { this.paymentStatus = paymentStatus; }
+}
 
-    public void setFeeType(FeeType feeType) {
-        this.feeType = feeType;
-    }
+enum FeeType {
+    CLEANING, ELECTRICITY, WATER, MAINTENANCE
+}
 
-    public double getFeeAmount() {
-        return feeAmount;
-    }
-
-    public void setFeeAmount(double feeAmount) {
-        this.feeAmount = feeAmount;
-    }
-
-    public String getPaymentDate() {
-        return paymentDate;
-    }
-
-    public void setPaymentDate(String paymentDate) {
-        this.paymentDate = paymentDate;
-    }
-
-    public Student getStudent() {
-        return student;
-    }
-
-    public void setStudent(Student student) {
-        this.student = student;
-    }
-
-    public String getStatus() {  // ✅ đúng getter
-        return status;
-    }
-
-    public void setStatus(String status) {  // ✅ đúng setter
-        this.status = status;
-    }
-
-    public boolean isPaid() {
-        return "Đã thanh toán".equals(this.status);
-    }
+enum PaymentStatus {
+    PAID, UNPAID
 }
