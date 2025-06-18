@@ -1,4 +1,4 @@
-package com.example.dorm.model;
+package Model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
