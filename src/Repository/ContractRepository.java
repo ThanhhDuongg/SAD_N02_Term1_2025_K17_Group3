@@ -1,6 +1,6 @@
-package com.example.dorm.repository;
+package Repository;
 
-import com.example.dorm.model.Contract;
+import Model.Contract;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
