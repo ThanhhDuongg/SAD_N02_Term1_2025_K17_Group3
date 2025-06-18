@@ -1,29 +1,10 @@
-/*import DAO.RoomDAO;
-import DAO.StudentDAO;
-import Model.Contract;
-import Model.Room;
-import Model.Student;
-import connectionDB.DBConnection;
-import service.ContractService;
-import view.MainFrame;
 
-import javax.swing.*;
-import java.util.List;*/
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import Test.TestAddStudentWithContract;
-
-
-public class Main {
-    
+@SpringBootApplication
+public class DormApplication {
     public static void main(String[] args) {
-        /*SwingUtilities.invokeLater(() -> {
-            MainFrame mainFrame = new MainFrame();
-            mainFrame.setVisible(true);
-        });
-          TestSequence.test();*/
-          TestAddStudentWithContract.main(new String[]{});
-
-    
-    } 
-  
+        SpringApplication.run(DormApplication.class, args);
+    }
 }
