@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh Sách Sinh Viên</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <h2>Danh Sách Sinh Viên</h2>
+        <div class="search-container">
+            <form th:action="@{/students/search}" method="get">
+                <input type="text" name="search" placeholder="Tìm kiếm sinh viên..." th:value="${search}">
+                <button type="submit">Tìm kiếm</button>
+            </form>
+            <a th:href="@{/students/new}" class="button btn-add">Thêm Sinh Viên</a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên</th>
+                    <th>Ngày Sinh</th>
+                    <th>Khoa</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="student : ${students}">
+                    <td th:text="${student.id}"></td>
+                    <td th:text="${student.name}"></td>
+                    <td th:text="${student.dob}"></td>
+                    <td th:text="${student.department}"></td>
+                    <td>
+                        <a th:href="@{/students/{id}(id=${student.id})}" class="button btn-view">Xem</a>
+                        <a th:href="@{/students/{id}/edit(id=${student.id})}" class="button btn-edit">Sửa</a>
+                        <a th:href="@{/students/{id}/delete(id=${student.id})}" class="button btn-delete" onclick="return confirm('Bạn có chắc muốn xóa?')">Xóa</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
