@@ -1,9 +1,9 @@
-package com.example.dorm.controller;
+package Controller;
 
-import com.example.dorm.model.Contract;
-import com.example.dorm.repository.ContractRepository;
-import com.example.dorm.repository.StudentRepository;
-import com.example.dorm.repository.RoomRepository;
+import model.Contract;
+import Repository.ContractRepository;
+import Repository.StudentRepository;
+import Repository.RoomRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
