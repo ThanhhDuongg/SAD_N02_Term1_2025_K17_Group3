@@ -1,4 +1,4 @@
-package Dorm.controller;
+package Controller;
 
 import Dorm.model.Room;
 import Dorm.service.RoomService;
