@@ -1,4 +1,4 @@
-package Dorm.service;
+package Service;
 
 import Dorm.model.Room;
 import Dorm.repository.RoomRepository;
