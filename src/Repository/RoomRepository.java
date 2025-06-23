@@ -1,4 +1,4 @@
-package Dorm.repository;
+package Repository;
 
 import Dorm.model.Room;
 import org.springframework.data.jpa.repository.JpaRepository;
