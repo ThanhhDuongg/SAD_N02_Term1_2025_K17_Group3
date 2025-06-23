@@ -1,8 +1,12 @@
-package com.example.dorm.controller;
+package Controller;
 
-import com.example.dorm.model.Student;
-import com.example.dorm.repository.RoomRepository;
-import com.example.dorm.repository.StudentRepository;
+import Model.Student;
+import Service.RoomService;
+import Service.StudentService;
+import Service.ContractService;
+import Model.Contract;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Optional;
 
