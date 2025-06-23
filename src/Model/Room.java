@@ -1,4 +1,3 @@
-// Entity: Room
 package Model;
 
 import jakarta.persistence.*;
