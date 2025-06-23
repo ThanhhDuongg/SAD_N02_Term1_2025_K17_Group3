@@ -1,9 +1,9 @@
 package Controller;
 
-import Model.Contract;
-import Repository.ContractRepository;
-import Repository.StudentRepository;
-import Repository.RoomRepository;
+import com.example.dorm.model.Contract;
+import com.example.dorm.service.ContractService;
+import com.example.dorm.service.StudentService;
+import com.example.dorm.service.RoomService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -17,16 +17,22 @@ import java.util.Optional;
 @RequestMapping("/contracts")
 public class ContractController {
     @Autowired
-    private ContractRepository contractRepository;
+    private ContractService contractService;
     @Autowired
-    private StudentRepository studentRepository;
+    private StudentService studentService;
     @Autowired
-    private RoomRepository roomRepository;
+    private RoomService roomService;
 
     @GetMapping
-    public String listContracts(Model model) {
+    public String listContracts(@RequestParam(value = "search", required = false) String search,
+                                @RequestParam(name = "page", defaultValue = "0") int page,
+                                @RequestParam(name = "size", defaultValue = "10") int size,
+                                Model model) {
         try {
-            model.addAttribute("contracts", contractRepository.findAll());
+            var pageable = org.springframework.data.domain.PageRequest.of(page, size);
+            var contractsPage = contractService.searchContracts(search, pageable);
+            model.addAttribute("contractsPage", contractsPage);
+            model.addAttribute("search", search);
             return "contracts/list";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi lấy danh sách hợp đồng: " + e.getMessage());
@@ -38,8 +44,7 @@ public class ContractController {
     public String showCreateForm(Model model) {
         try {
             model.addAttribute("contract", new Contract());
-            model.addAttribute("students", studentRepository.findAll());
-            model.addAttribute("rooms", roomRepository.findAll());
+            model.addAttribute("rooms", roomService.getAllRooms());
             return "contracts/form";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi hiển thị form tạo hợp đồng: " + e.getMessage());
@@ -50,12 +55,16 @@ public class ContractController {
     @PostMapping
     public String createContract(@Valid @ModelAttribute Contract contract, BindingResult result, Model model) {
         if (result.hasErrors()) {
-            model.addAttribute("students", studentRepository.findAll());
-            model.addAttribute("rooms", roomRepository.findAll());
+            model.addAttribute("rooms", roomService.getAllRooms());
+            return "contracts/form";
+        }
+        if (contract.getStudent() == null || contract.getStudent().getId() == null) {
+            model.addAttribute("rooms", roomService.getAllRooms());
+            model.addAttribute("errorMessage", "Vui lòng chọn sinh viên hợp lệ");
             return "contracts/form";
         }
         try {
-            contractRepository.save(contract);
+            contractService.createContract(contract);
             return "redirect:/contracts";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi lưu hợp đồng: " + e.getMessage());
@@ -64,9 +73,9 @@ public class ContractController {
     }
 
     @GetMapping("/{id}")
-    public String viewContract(@PathVariable Long id, Model model) {
+    public String viewContract(@PathVariable("id") Long id, Model model) {
         try {
-            Optional<Contract> contractOptional = contractRepository.findById(id);
+            Optional<Contract> contractOptional = contractService.getContract(id);
             if (contractOptional.isPresent()) {
                 model.addAttribute("contract", contractOptional.get());
                 return "contracts/detail";
@@ -81,13 +90,12 @@ public class ContractController {
     }
 
     @GetMapping("/{id}/edit")
-    public String showUpdateForm(@PathVariable Long id, Model model) {
+    public String showUpdateForm(@PathVariable("id") Long id, Model model) {
         try {
-            Optional<Contract> contractOptional = contractRepository.findById(id);
+            Optional<Contract> contractOptional = contractService.getContract(id);
             if (contractOptional.isPresent()) {
                 model.addAttribute("contract", contractOptional.get());
-                model.addAttribute("students", studentRepository.findAll());
-                model.addAttribute("rooms", roomRepository.findAll());
+                model.addAttribute("rooms", roomService.getAllRooms());
                 return "contracts/form";
             } else {
                 model.addAttribute("errorMessage", "Không tìm thấy hợp đồng với ID: " + id);
@@ -100,27 +108,19 @@ public class ContractController {
     }
 
     @PostMapping("/{id}")
-    public String updateContract(@PathVariable Long id, @Valid @ModelAttribute Contract contract, BindingResult result, Model model) {
+    public String updateContract(@PathVariable("id") Long id, @Valid @ModelAttribute Contract contract, BindingResult result, Model model) {
         if (result.hasErrors()) {
-            model.addAttribute("students", studentRepository.findAll());
-            model.addAttribute("rooms", roomRepository.findAll());
+            model.addAttribute("rooms", roomService.getAllRooms());
+            return "contracts/form";
+        }
+        if (contract.getStudent() == null || contract.getStudent().getId() == null) {
+            model.addAttribute("rooms", roomService.getAllRooms());
+            model.addAttribute("errorMessage", "Vui lòng chọn sinh viên hợp lệ");
             return "contracts/form";
         }
         try {
-            Optional<Contract> contractOptional = contractRepository.findById(id);
-            if (contractOptional.isPresent()) {
-                Contract existingContract = contractOptional.get();
-                existingContract.setStudent(contract.getStudent());
-                existingContract.setRoom(contract.getRoom());
-                existingContract.setStartDate(contract.getStartDate());
-                existingContract.setEndDate(contract.getEndDate());
-                existingContract.setStatus(contract.getStatus());
-                contractRepository.save(existingContract);
-                return "redirect:/contracts";
-            } else {
-                model.addAttribute("errorMessage", "Không tìm thấy hợp đồng với ID: " + id);
-                return "error";
-            }
+            contractService.updateContract(id, contract);
+            return "redirect:/contracts";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi cập nhật hợp đồng: " + e.getMessage());
             return "error";
@@ -128,11 +128,11 @@ public class ContractController {
     }
 
     @GetMapping("/{id}/delete")
-    public String deleteContract(@PathVariable Long id, Model model) {
+    public String deleteContract(@PathVariable("id") Long id, Model model) {
         try {
-            Optional<Contract> contractOptional = contractRepository.findById(id);
+            Optional<Contract> contractOptional = contractService.getContract(id);
             if (contractOptional.isPresent()) {
-                contractRepository.deleteById(id);
+                contractService.deleteContract(id);
                 return "redirect:/contracts";
             } else {
                 model.addAttribute("errorMessage", "Không tìm thấy hợp đồng với ID: " + id);
@@ -144,21 +144,22 @@ public class ContractController {
         }
     }
 
-    @GetMapping("/search")
-    public String searchContracts(@RequestParam("search") String search, Model model) {
-        try {
-            if (search == null || search.trim().isEmpty()) {
-                model.addAttribute("contracts", contractRepository.findAll());
+    @GetMapping(value = "/search", produces = "application/json")
+    @ResponseBody
+    public java.util.List<java.util.Map<String, Object>> autocomplete(@RequestParam("term") String term) {
+        var pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        var contractsPage = contractService.searchContractsAutocomplete(term, pageable);
+        return contractsPage.getContent().stream().map(c -> {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", c.getId());
+            if (c.getStudent() != null) {
+                map.put("label", c.getId() + " - " + c.getStudent().getCode() + " - " + c.getStudent().getName());
             } else {
-                model.addAttribute("contracts",
-                    contractRepository.findByStudent_NameContainingIgnoreCaseOrRoom_NumberContainingIgnoreCaseOrStatusContainingIgnoreCase(
-                        search, search, search));
+                map.put("label", String.valueOf(c.getId()));
             }
-            model.addAttribute("search", search);
-            return "contracts/list";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tìm kiếm hợp đồng: " + e.getMessage());
-            return "error";
-        }
+            return map;
+        }).toList();
     }
+
+    // search handled by listContracts
 }
