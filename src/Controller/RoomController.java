@@ -1,7 +1,7 @@
-package Controller;
+package Dorm.controller;
 
-import Model.Room;
-import Repository.RoomRepository;
+import Dorm.model.Room;
+import Dorm.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,12 +13,18 @@ import java.util.Optional;
 @RequestMapping("/rooms")
 public class RoomController {
     @Autowired
-    private RoomRepository roomRepository;
+    private RoomService roomService;
 
     @GetMapping
-    public String listRooms(Model model) {
+    public String listRooms(@RequestParam(value = "search", required = false) String search,
+                            @RequestParam(name = "page", defaultValue = "0") int page,
+                            @RequestParam(name = "size", defaultValue = "10") int size,
+                            Model model) {
         try {
-            model.addAttribute("rooms", roomRepository.findAll());
+            var pageable = org.springframework.data.domain.PageRequest.of(page, size);
+            var roomsPage = roomService.searchRooms(search, pageable);
+            model.addAttribute("roomsPage", roomsPage);
+            model.addAttribute("search", search);
             return "rooms/list";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi tải danh sách phòng: " + e.getMessage());
@@ -45,7 +51,7 @@ public class RoomController {
             } else if ("Phòng tám".equals(room.getType())) {
                 room.setPrice(1200000);
             }
-            roomRepository.save(room);
+            roomService.createRoom(room);
             return "redirect:/rooms";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi tạo phòng: " + e.getMessage());
@@ -54,9 +60,9 @@ public class RoomController {
     }
 
     @GetMapping("/{id}")
-    public String viewRoom(@PathVariable Long id, Model model) {
+    public String viewRoom(@PathVariable("id") Long id, Model model) {
         try {
-            Optional<Room> roomOptional = roomRepository.findById(id);
+            Optional<Room> roomOptional = roomService.getRoom(id);
             if (roomOptional.isPresent()) {
                 model.addAttribute("room", roomOptional.get());
                 return "rooms/detail";
@@ -71,9 +77,9 @@ public class RoomController {
     }
 
     @GetMapping("/{id}/edit")
-    public String showUpdateForm(@PathVariable Long id, Model model) {
+    public String showUpdateForm(@PathVariable("id") Long id, Model model) {
         try {
-            Optional<Room> roomOptional = roomRepository.findById(id);
+            Optional<Room> roomOptional = roomService.getRoom(id);
             if (roomOptional.isPresent()) {
                 model.addAttribute("room", roomOptional.get());
                 return "rooms/form";
@@ -88,15 +94,11 @@ public class RoomController {
     }
 
     @PostMapping("/{id}")
-    public String updateRoom(@PathVariable Long id, @ModelAttribute Room room, Model model) {
+    public String updateRoom(@PathVariable("id") Long id, @ModelAttribute Room room, Model model) {
         try {
-            Optional<Room> roomOptional = roomRepository.findById(id);
+            Optional<Room> roomOptional = roomService.getRoom(id);
             if (roomOptional.isPresent()) {
-                Room existingRoom = roomOptional.get();
-                room.setId(id);
-                room.setType(existingRoom.getType()); // Không cho sửa loại phòng
-                room.setPrice(existingRoom.getPrice()); // Không cho sửa giá
-                roomRepository.save(room);
+                roomService.updateRoom(id, room);
                 return "redirect:/rooms";
             } else {
                 model.addAttribute("errorMessage", "Không tìm thấy phòng với ID: " + id);
@@ -109,11 +111,11 @@ public class RoomController {
     }
 
     @GetMapping("/{id}/delete")
-    public String deleteRoom(@PathVariable Long id, Model model) {
+    public String deleteRoom(@PathVariable("id") Long id, Model model) {
         try {
-            Optional<Room> roomOptional = roomRepository.findById(id);
+            Optional<Room> roomOptional = roomService.getRoom(id);
             if (roomOptional.isPresent()) {
-                roomRepository.deleteById(id);
+                roomService.deleteRoom(id);
                 return "redirect:/rooms";
             } else {
                 model.addAttribute("errorMessage", "Không tìm thấy phòng với ID: " + id);
@@ -125,19 +127,5 @@ public class RoomController {
         }
     }
 
-    @GetMapping("/search")
-    public String searchRooms(@RequestParam("search") String search, Model model) {
-        try {
-            if (search == null || search.trim().isEmpty()) {
-                model.addAttribute("rooms", roomRepository.findAll());
-            } else {
-                model.addAttribute("rooms", roomRepository.findByNumberContainingIgnoreCaseOrTypeContainingIgnoreCase(search, search));
-            }
-            model.addAttribute("search", search);
-            return "rooms/list";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tìm kiếm phòng: " + e.getMessage());
-            return "error";
-        }
-    }
+    // search handled by listRooms
 }
