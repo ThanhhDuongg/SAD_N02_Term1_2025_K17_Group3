@@ -37,11 +37,3 @@ public class Fee {
     public PaymentStatus getPaymentStatus() { return paymentStatus; }
     public void setPaymentStatus(PaymentStatus paymentStatus) { this.paymentStatus = paymentStatus; }
 }
-
-enum FeeType {
-    CLEANING, ELECTRICITY, WATER, MAINTENANCE
-}
-
-enum PaymentStatus {
-    PAID, UNPAID
-}
