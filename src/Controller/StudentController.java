@@ -118,12 +118,30 @@ public class StudentController {
         }
     }
 
-    @GetMapping("/{id}/delete")
-    public String deleteStudent(@PathVariable Long id, Model model) {
+    @PostMapping("/{id}")
+    public String updateStudent(@PathVariable("id") Long id, @ModelAttribute Student student, Model model) {
         try {
-            Optional<Student> studentOptional = studentRepository.findById(id);
+            Optional<Student> studentOptional = studentService.getStudent(id);
             if (studentOptional.isPresent()) {
-                studentRepository.deleteById(id);
+                student.setId(id);
+                studentService.saveStudent(student);
+                return "redirect:/students";
+            } else {
+                model.addAttribute("errorMessage", "Không tìm thấy sinh viên với ID: " + id);
+                return "error";
+            }
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Lỗi khi cập nhật sinh viên: " + e.getMessage());
+            return "error";
+        }
+    }
+
+    @GetMapping("/{id}/delete")
+    public String deleteStudent(@PathVariable("id") Long id, Model model) {
+        try {
+            Optional<Student> studentOptional = studentService.getStudent(id);
+            if (studentOptional.isPresent()) {
+                studentService.deleteStudent(id);
                 return "redirect:/students";
             } else {
                 model.addAttribute("errorMessage", "Không tìm thấy sinh viên với ID: " + id);
@@ -135,19 +153,18 @@ public class StudentController {
         }
     }
 
-    @GetMapping("/search")
-    public String searchStudents(@RequestParam("search") String search, Model model) {
-        try {
-            if (search == null || search.trim().isEmpty()) {
-                model.addAttribute("students", studentRepository.findAll());
-            } else {
-                model.addAttribute("students", studentRepository.findByNameContainingIgnoreCase(search));
-            }
-            model.addAttribute("search", search);
-            return "students/list";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tìm kiếm sinh viên: " + e.getMessage());
-            return "error";
-        }
+    @GetMapping(value = "/search", produces = "application/json")
+    @ResponseBody
+    public java.util.List<java.util.Map<String, Object>> autocomplete(@RequestParam("term") String term) {
+        var pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        var studentsPage = studentService.searchStudents(term, pageable);
+        return studentsPage.getContent().stream().map(s -> {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", s.getId());
+            map.put("label", s.getCode() + " - " + s.getName());
+            return map;
+        }).toList();
     }
+
+    // search handled by listStudents
 }
