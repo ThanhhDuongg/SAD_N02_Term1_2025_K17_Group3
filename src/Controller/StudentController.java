@@ -19,15 +19,24 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/students")
 public class StudentController {
     @Autowired
-    private StudentRepository studentRepository;
+    private StudentService studentService;
 
     @Autowired
-    private RoomRepository roomRepository;
+    private RoomService roomService;
+
+    @Autowired
+    private ContractService contractService;
 
     @GetMapping
-    public String listStudents(Model model) {
+    public String listStudents(@RequestParam(value = "search", required = false) String search,
+                               @RequestParam(name = "page", defaultValue = "0") int page,
+                               @RequestParam(name = "size", defaultValue = "10") int size,
+                               Model model) {
         try {
-            model.addAttribute("students", studentRepository.findAll());
+            var pageable = org.springframework.data.domain.PageRequest.of(page, size);
+            var studentsPage = studentService.searchStudents(search, pageable);
+            model.addAttribute("studentsPage", studentsPage);
+            model.addAttribute("search", search);
             return "students/list";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi tải danh sách sinh viên: " + e.getMessage());
@@ -39,7 +48,7 @@ public class StudentController {
     public String showCreateForm(Model model) {
         try {
             model.addAttribute("student", new Student());
-            model.addAttribute("rooms", roomRepository.findAll());
+            model.addAttribute("rooms", roomService.getAllRooms());
             return "students/form";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi hiển thị form tạo sinh viên: " + e.getMessage());
@@ -48,9 +57,25 @@ public class StudentController {
     }
 
     @PostMapping
-    public String createStudent(@ModelAttribute Student student, Model model) {
+    public String createStudent(
+            @ModelAttribute Student student,
+            @RequestParam(value = "contractStartDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate contractStartDate,
+            @RequestParam(value = "contractEndDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate contractEndDate,
+            @RequestParam(value = "contractStatus", required = false) String contractStatus,
+            Model model) {
         try {
-            studentRepository.save(student);
+            var saved = studentService.saveStudent(student);
+            if (student.getRoom() != null && contractStartDate != null && contractEndDate != null) {
+                Contract c = new Contract();
+                c.setStudent(saved);
+                c.setRoom(saved.getRoom());
+                c.setStartDate(contractStartDate);
+                c.setEndDate(contractEndDate);
+                c.setStatus(contractStatus != null ? contractStatus : "ACTIVE");
+                contractService.createContract(c);
+            }
             return "redirect:/students";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi tạo sinh viên: " + e.getMessage());
@@ -59,9 +84,9 @@ public class StudentController {
     }
 
     @GetMapping("/{id}")
-    public String viewStudent(@PathVariable Long id, Model model) {
+    public String viewStudent(@PathVariable("id") Long id, Model model) {
         try {
-            Optional<Student> studentOptional = studentRepository.findById(id);
+            Optional<Student> studentOptional = studentService.getStudent(id);
             if (studentOptional.isPresent()) {
                 model.addAttribute("student", studentOptional.get());
                 return "students/detail";
@@ -76,12 +101,12 @@ public class StudentController {
     }
 
     @GetMapping("/{id}/edit")
-    public String showUpdateForm(@PathVariable Long id, Model model) {
+    public String showUpdateForm(@PathVariable("id") Long id, Model model) {
         try {
-            Optional<Student> studentOptional = studentRepository.findById(id);
+            Optional<Student> studentOptional = studentService.getStudent(id);
             if (studentOptional.isPresent()) {
                 model.addAttribute("student", studentOptional.get());
-                model.addAttribute("rooms", roomRepository.findAll());
+                model.addAttribute("rooms", roomService.getAllRooms());
                 return "students/form";
             } else {
                 model.addAttribute("errorMessage", "Không tìm thấy sinh viên với ID: " + id);
@@ -89,24 +114,6 @@ public class StudentController {
             }
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi hiển thị form cập nhật: " + e.getMessage());
-            return "error";
-        }
-    }
-
-    @PostMapping("/{id}")
-    public String updateStudent(@PathVariable Long id, @ModelAttribute Student student, Model model) {
-        try {
-            Optional<Student> studentOptional = studentRepository.findById(id);
-            if (studentOptional.isPresent()) {
-                student.setId(id);
-                studentRepository.save(student);
-                return "redirect:/students";
-            } else {
-                model.addAttribute("errorMessage", "Không tìm thấy sinh viên với ID: " + id);
-                return "error";
-            }
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi cập nhật sinh viên: " + e.getMessage());
             return "error";
         }
     }
