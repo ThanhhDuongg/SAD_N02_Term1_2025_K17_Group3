@@ -1,8 +1,8 @@
 package Controller;
 
 import Model.Fee;
-import Repository.FeeRepository;
-import Repository.ContractRepository;
+import Service.FeeService;
+import Service.ContractService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -16,14 +16,20 @@ import java.util.Optional;
 @RequestMapping("/fees")
 public class FeeController {
     @Autowired
-    private FeeRepository feeRepository;
+    private FeeService feeService;
     @Autowired
-    private ContractRepository contractRepository;
+    private ContractService contractService;
 
     @GetMapping
-    public String listFees(Model model) {
+    public String listFees(@RequestParam(value = "search", required = false) String search,
+                           @RequestParam(name = "page", defaultValue = "0") int page,
+                           @RequestParam(name = "size", defaultValue = "10") int size,
+                           Model model) {
         try {
-            model.addAttribute("fees", feeRepository.findAll());
+            var pageable = org.springframework.data.domain.PageRequest.of(page, size);
+            var feesPage = feeService.searchFees(search, pageable);
+            model.addAttribute("feesPage", feesPage);
+            model.addAttribute("search", search);
             return "fees/list";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi lấy danh sách phí: " + e.getMessage());
@@ -35,7 +41,7 @@ public class FeeController {
     public String showCreateForm(Model model) {
         try {
             model.addAttribute("fee", new Fee());
-            model.addAttribute("contracts", contractRepository.findAll());
+            model.addAttribute("contracts", contractService.getAllContracts(org.springframework.data.domain.Pageable.unpaged()).getContent());
             return "fees/form";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi hiển thị form tạo phí: " + e.getMessage());
@@ -44,13 +50,16 @@ public class FeeController {
     }
 
     @PostMapping
-    public String createFee(@Valid @ModelAttribute Fee fee, BindingResult result, Model model) {
+    public String createFee(@RequestParam("amountInput") String amountInput,
+                            @Valid @ModelAttribute Fee fee,
+                            BindingResult result, Model model) {
         if (result.hasErrors()) {
-            model.addAttribute("contracts", contractRepository.findAll());
+            model.addAttribute("contracts", contractService.getAllContracts(org.springframework.data.domain.Pageable.unpaged()).getContent());
             return "fees/form";
         }
         try {
-            feeRepository.save(fee);
+            fee.setAmount(parseAmount(amountInput));
+            feeService.createFee(fee);
             return "redirect:/fees";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi lưu phí: " + e.getMessage());
@@ -59,9 +68,9 @@ public class FeeController {
     }
 
     @GetMapping("/{id}")
-    public String viewFee(@PathVariable Long id, Model model) {
+    public String viewFee(@PathVariable("id") Long id, Model model) {
         try {
-            Optional<Fee> feeOptional = feeRepository.findById(id);
+            Optional<Fee> feeOptional = feeService.getFee(id);
             if (feeOptional.isPresent()) {
                 model.addAttribute("fee", feeOptional.get());
                 return "fees/detail";
@@ -76,12 +85,12 @@ public class FeeController {
     }
 
     @GetMapping("/{id}/edit")
-    public String showUpdateForm(@PathVariable Long id, Model model) {
+    public String showUpdateForm(@PathVariable("id") Long id, Model model) {
         try {
-            Optional<Fee> feeOptional = feeRepository.findById(id);
+            Optional<Fee> feeOptional = feeService.getFee(id);
             if (feeOptional.isPresent()) {
                 model.addAttribute("fee", feeOptional.get());
-                model.addAttribute("contracts", contractRepository.findAll());
+                model.addAttribute("contracts", contractService.getAllContracts(org.springframework.data.domain.Pageable.unpaged()).getContent());
                 return "fees/form";
             } else {
                 model.addAttribute("errorMessage", "Không tìm thấy phí với ID: " + id);
@@ -94,38 +103,38 @@ public class FeeController {
     }
 
     @PostMapping("/{id}")
-    public String updateFee(@PathVariable Long id, @Valid @ModelAttribute Fee fee, BindingResult result, Model model) {
+    public String updateFee(@PathVariable("id") Long id,
+                            @RequestParam("amountInput") String amountInput,
+                            @Valid @ModelAttribute Fee fee,
+                            BindingResult result, Model model) {
         if (result.hasErrors()) {
-            model.addAttribute("contracts", contractRepository.findAll());
+            model.addAttribute("contracts", contractService.getAllContracts(org.springframework.data.domain.Pageable.unpaged()).getContent());
             return "fees/form";
         }
         try {
-            Optional<Fee> feeOptional = feeRepository.findById(id);
-            if (feeOptional.isPresent()) {
-                Fee existingFee = feeOptional.get();
-                existingFee.setAmount(fee.getAmount());
-                existingFee.setContract(fee.getContract());
-                existingFee.setType(fee.getType());
-                existingFee.setDueDate(fee.getDueDate());
-                existingFee.setPaymentStatus(fee.getPaymentStatus());
-                feeRepository.save(existingFee);
-                return "redirect:/fees";
-            } else {
-                model.addAttribute("errorMessage", "Không tìm thấy phí với ID: " + id);
-                return "error";
-            }
+            fee.setAmount(parseAmount(amountInput));
+            feeService.updateFee(id, fee);
+            return "redirect:/fees";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi khi cập nhật phí: " + e.getMessage());
             return "error";
         }
     }
 
+    private java.math.BigDecimal parseAmount(String input) {
+        if (input == null || input.isBlank()) {
+            return java.math.BigDecimal.ZERO;
+        }
+        String normalized = input.replace(".", "");
+        return new java.math.BigDecimal(normalized);
+    }
+
     @GetMapping("/{id}/delete")
-    public String deleteFee(@PathVariable Long id, Model model) {
+    public String deleteFee(@PathVariable("id") Long id, Model model) {
         try {
-            Optional<Fee> feeOptional = feeRepository.findById(id);
+            Optional<Fee> feeOptional = feeService.getFee(id);
             if (feeOptional.isPresent()) {
-                feeRepository.deleteById(id);
+                feeService.deleteFee(id);
                 return "redirect:/fees";
             } else {
                 model.addAttribute("errorMessage", "Không tìm thấy phí với ID: " + id);
@@ -137,31 +146,5 @@ public class FeeController {
         }
     }
 
-    @GetMapping("/search")
-    public String searchFees(@RequestParam("search") String search, Model model) {
-        try {
-            if (search == null || search.trim().isEmpty()) {
-                model.addAttribute("fees", feeRepository.findAll());
-            } else {
-                try {
-                    Long id = Long.parseLong(search);
-                    Optional<Fee> feeOptional = feeRepository.findById(id);
-                    if (feeOptional.isPresent()) {
-                        model.addAttribute("fees", java.util.List.of(feeOptional.get()));
-                    } else {
-                        model.addAttribute("fees", java.util.Collections.emptyList());
-                        model.addAttribute("errorMessage", "Không tìm thấy phí với ID: " + id);
-                    }
-                } catch (NumberFormatException e) {
-                    model.addAttribute("fees", java.util.Collections.emptyList());
-                    model.addAttribute("errorMessage", "Vui lòng nhập ID hợp lệ (số).");
-                }
-            }
-            model.addAttribute("search", search);
-            return "fees/list";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tìm kiếm phí: " + e.getMessage());
-            return "error";
-        }
-    }
+    // search handled by listFees
 }

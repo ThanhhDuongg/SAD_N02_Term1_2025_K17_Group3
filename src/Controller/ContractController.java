@@ -1,9 +1,9 @@
 package Controller;
 
-import com.example.dorm.model.Contract;
-import com.example.dorm.service.ContractService;
-import com.example.dorm.service.StudentService;
-import com.example.dorm.service.RoomService;
+import Model.Contract;
+import Service.ContractService;
+import Service.StudentService;
+import Service.RoomService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
