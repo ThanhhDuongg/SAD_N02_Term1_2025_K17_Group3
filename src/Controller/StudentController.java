@@ -36,6 +36,13 @@ public class StudentController {
             var pageable = org.springframework.data.domain.PageRequest.of(page, size);
             var studentsPage = studentService.searchStudents(search, pageable);
             model.addAttribute("studentsPage", studentsPage);
+            int totalPages = studentsPage.getTotalPages();
+            if (totalPages > 0) {
+                java.util.List<Integer> pageNumbers =
+                        java.util.stream.IntStream.rangeClosed(1, totalPages)
+                                .boxed().toList();
+                model.addAttribute("pageNumbers", pageNumbers);
+            }
             model.addAttribute("search", search);
             return "students/list";
         } catch (Exception e) {
