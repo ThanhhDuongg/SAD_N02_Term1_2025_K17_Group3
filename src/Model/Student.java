@@ -18,7 +18,9 @@ public class Student {
     private String address;
     private String email;
     private String department;
-    private int year;
+
+    @Column(name = "study_year")
+    private int studyYear;
 
     @ManyToOne
     @JoinColumn(name = "room_id")
@@ -44,8 +46,8 @@ public class Student {
     public void setEmail(String email) { this.email = email; }
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }
-    public int getYear() { return year; }
-    public void setYear(int year) { this.year = year; }
+    public int getStudyYear() { return studyYear; }
+    public void setStudyYear(int studyYear) { this.studyYear = studyYear; }
     public Room getRoom() { return room; }
     public void setRoom(Room room) { this.room = room; }
 }
