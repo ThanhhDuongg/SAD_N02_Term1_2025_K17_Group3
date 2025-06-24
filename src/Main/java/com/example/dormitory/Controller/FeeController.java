@@ -1,4 +1,4 @@
-package Controller;
+package com.example.dormitory. Controller;
 
 import Model.Fee;
 import Service.FeeService;

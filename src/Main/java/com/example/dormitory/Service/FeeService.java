@@ -1,4 +1,4 @@
-package Service;
+package com.example.dormitory.Service;
 
 import Model.Fee;
 import Model.FeeType;

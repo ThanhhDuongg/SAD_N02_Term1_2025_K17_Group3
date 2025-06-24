@@ -1,4 +1,4 @@
-package Controller;
+package com.example.dormitory.Controller;
 
 import Model.Contract;
 import Service.ContractService;

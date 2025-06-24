@@ -1,4 +1,4 @@
-package Repository;
+package com.example.dormitory.Repository;
 
 import Model.Contract;
 
