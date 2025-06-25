@@ -1,9 +1,9 @@
 package com.example.dorm.controller;
 
-import Service.StudentService;
-import Service.RoomService;
-import Service.ContractService;
-import Service.FeeService;
+import com.example.dorm.service.StudentService;
+import com.example.dorm.service.RoomService;
+import com.example.dorm.service.ContractService;
+import com.example.dorm.service.FeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
