@@ -1,0 +1,22 @@
+<div th:fragment="header">
+    <header class="header">
+        <div class="header-left">
+            <!-- thêm logo -->
+            <img th:src="@{/images/logo-phenikaa.png}"
+                 alt="Phenikaa Logo"
+                 class="header-logo" />
+
+            <div class="header-text">
+                <h1 class="header-title">Phenikaa University</h1>
+                <p class="header-subtitle">Hệ thống quản lý ký túc xá</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="user-profile">
+                <div class="user-avatar">A</div>
+                <span>Admin</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+    </header>
+</div>
