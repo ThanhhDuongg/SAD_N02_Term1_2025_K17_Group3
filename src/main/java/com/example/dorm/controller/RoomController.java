@@ -1,7 +1,7 @@
 package com.example.dorm.controller;
 
-import Dorm.model.Room;
-import Dorm.service.RoomService;
+import com.example.dorm.model.Room;
+import com.example.dorm.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,6 +24,13 @@ public class RoomController {
             var pageable = org.springframework.data.domain.PageRequest.of(page, size);
             var roomsPage = roomService.searchRooms(search, pageable);
             model.addAttribute("roomsPage", roomsPage);
+            int totalPages = roomsPage.getTotalPages();
+            if (totalPages > 0) {
+                java.util.List<Integer> pageNumbers =
+                        java.util.stream.IntStream.rangeClosed(1, totalPages)
+                                .boxed().toList();
+                model.addAttribute("pageNumbers", pageNumbers);
+            }
             model.addAttribute("search", search);
             return "rooms/list";
         } catch (Exception e) {
