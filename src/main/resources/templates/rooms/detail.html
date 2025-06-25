@@ -29,6 +29,10 @@
                 <td class="label">Sức Chứa:</td>
                 <td class="value" th:text="${room.capacity}"></td>
             </tr>
+             <tr>
+                <td class="label">Đang Ở:</td>
+                <td class="value" th:text="|${occupancy}/${room.capacity}|"></td>
+            </tr>
         </table>
         <h3>Danh sách sinh viên trong phòng</h3>
         <table>

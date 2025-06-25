@@ -2,6 +2,7 @@ package com.example.dorm.service;
 
 import com.example.dorm.model.Room;
 import com.example.dorm.repository.RoomRepository;
+import com.example.dorm.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,10 @@ public class RoomService {
 
     @Autowired
     private RoomRepository roomRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
+
 
     public Page<Room> getAllRooms(Pageable pageable) {
         return roomRepository.findAll(pageable);
@@ -49,6 +54,11 @@ public class RoomService {
     public void deleteRoom(Long id) {
         roomRepository.deleteById(id);
     }
+
+     public long getCurrentOccupancy(Long roomId) {
+        return studentRepository.countByRoom_Id(roomId);
+    }
+
 
     public Page<Room> searchRooms(String search, Pageable pageable) {
         if (search == null || search.trim().isEmpty()) {

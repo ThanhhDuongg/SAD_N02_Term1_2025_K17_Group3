@@ -70,11 +70,21 @@ public class ContractService {
     public Contract updateContract(Long id, Contract contract) {
         Contract existing = contractRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Contract not found"));
-        if (!existing.getRoom().getId().equals(contract.getRoom().getId())) {
-            checkRoomCapacity(contract.getRoom(), contract.getStudent() != null ? contract.getStudent().getId() : null);
+        Long newStudentId = contract.getStudent() != null ? contract.getStudent().getId() : null;
+        Long existingStudentId = existing.getStudent() != null ? existing.getStudent().getId() : null;
+
+        if (!existing.getRoom().getId().equals(contract.getRoom().getId())
+                || (newStudentId != null && !newStudentId.equals(existingStudentId))) {
+            checkRoomCapacity(contract.getRoom(), newStudentId);
+         if (existingStudentId != null && (newStudentId == null || !existingStudentId.equals(newStudentId))) {
+            studentRepository.findById(existingStudentId).ifPresent(s -> {
+                s.setRoom(null);
+                studentRepository.save(s);
+            });
         }
-        if (contract.getStudent() != null && contract.getStudent().getId() != null) {
-            var student = studentRepository.findById(contract.getStudent().getId())
+
+        if (newStudentId != null) {
+            var student = studentRepository.findById(newStudentId)
                     .orElseThrow(() -> new IllegalArgumentException("Student not found"));
             student.setRoom(contract.getRoom());
             studentRepository.save(student);
@@ -82,10 +92,12 @@ public class ContractService {
         } else {
             existing.setStudent(null);
         }
+      
         existing.setRoom(contract.getRoom());
         existing.setStartDate(contract.getStartDate());
         existing.setEndDate(contract.getEndDate());
         existing.setStatus(contract.getStatus());
+        }
         return contractRepository.save(existing);
     }
 

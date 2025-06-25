@@ -24,6 +24,11 @@ public class RoomController {
             var pageable = org.springframework.data.domain.PageRequest.of(page, size);
             var roomsPage = roomService.searchRooms(search, pageable);
             model.addAttribute("roomsPage", roomsPage);
+             java.util.Map<Long, Long> occupancies = new java.util.HashMap<>();
+            for (Room r : roomsPage.getContent()) {
+                occupancies.put(r.getId(), roomService.getCurrentOccupancy(r.getId()));
+            }
+            model.addAttribute("occupancies", occupancies);
             int totalPages = roomsPage.getTotalPages();
             if (totalPages > 0) {
                 java.util.List<Integer> pageNumbers =
@@ -53,11 +58,6 @@ public class RoomController {
     @PostMapping
     public String createRoom(@ModelAttribute Room room, Model model) {
         try {
-            if ("Phòng bốn".equals(room.getType())) {
-                room.setPrice(2000000);
-            } else if ("Phòng tám".equals(room.getType())) {
-                room.setPrice(1200000);
-            }
             roomService.createRoom(room);
             return "redirect:/rooms";
         } catch (Exception e) {
@@ -72,6 +72,8 @@ public class RoomController {
             Optional<Room> roomOptional = roomService.getRoom(id);
             if (roomOptional.isPresent()) {
                 model.addAttribute("room", roomOptional.get());
+                long occupancy = roomService.getCurrentOccupancy(id);
+                model.addAttribute("occupancy", occupancy);
                 return "rooms/detail";
             } else {
                 model.addAttribute("errorMessage", "Không tìm thấy phòng với ID: " + id);

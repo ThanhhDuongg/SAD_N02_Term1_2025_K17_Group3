@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -66,7 +65,4 @@ public class StudentService {
         }
     }
 
-    public List<Room> getAllRooms() {
-        return roomRepository.findAll();
-    }
 }
