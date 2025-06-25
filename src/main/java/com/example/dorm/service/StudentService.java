@@ -1,9 +1,9 @@
 package com.example.dorm.service;
 
-import Model.Student;
-import Repository.StudentRepository;
-import Repository.RoomRepository;
-import Model.Room;
+import com.example.dorm.model.Student;
+import com.example.dorm.repository.StudentRepository;
+import com.example.dorm.repository.RoomRepository;
+import com.example.dorm.model.Room;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
