@@ -1,7 +1,7 @@
 package com.example.dorm.service;
 
-import Dorm.model.Room;
-import Dorm.repository.RoomRepository;
+import com.example.dorm.model.Room;
+import com.example.dorm.repository.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
