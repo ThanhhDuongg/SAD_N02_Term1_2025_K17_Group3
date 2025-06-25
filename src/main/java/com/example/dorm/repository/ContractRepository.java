@@ -38,4 +38,6 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
     long countByRoom_Id(Long roomId);
 
     long countByRoom_IdAndStatus(Long roomId, String status);
+
+    Contract findTopByStudent_IdOrderByEndDateDesc(Long studentId);
 }

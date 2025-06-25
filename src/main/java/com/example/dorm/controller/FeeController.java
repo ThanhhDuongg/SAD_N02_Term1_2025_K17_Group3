@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Optional;
 
@@ -59,7 +60,7 @@ public class FeeController {
     @PostMapping
     public String createFee(@RequestParam("amountInput") String amountInput,
                             @Valid @ModelAttribute Fee fee,
-                            BindingResult result, Model model) {
+                            BindingResult result, RedirectAttributes redirectAttributes, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("contracts", contractService.getAllContracts(org.springframework.data.domain.Pageable.unpaged()).getContent());
             return "fees/form";
@@ -67,10 +68,13 @@ public class FeeController {
         try {
             fee.setAmount(parseAmount(amountInput));
             feeService.createFee(fee);
+            redirectAttributes.addFlashAttribute("message", "Thêm phí thành công!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
             return "redirect:/fees";
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi lưu phí: " + e.getMessage());
-            return "error";
+            redirectAttributes.addFlashAttribute("message", "Thêm phí thất bại!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/fees";
         }
     }
 
@@ -113,7 +117,7 @@ public class FeeController {
     public String updateFee(@PathVariable("id") Long id,
                             @RequestParam("amountInput") String amountInput,
                             @Valid @ModelAttribute Fee fee,
-                            BindingResult result, Model model) {
+                            BindingResult result, RedirectAttributes redirectAttributes, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("contracts", contractService.getAllContracts(org.springframework.data.domain.Pageable.unpaged()).getContent());
             return "fees/form";
@@ -121,10 +125,13 @@ public class FeeController {
         try {
             fee.setAmount(parseAmount(amountInput));
             feeService.updateFee(id, fee);
+            redirectAttributes.addFlashAttribute("message", "Cập nhật phí thành công!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
             return "redirect:/fees";
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi cập nhật phí: " + e.getMessage());
-            return "error";
+            redirectAttributes.addFlashAttribute("message", "Cập nhật phí thất bại!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/fees";
         }
     }
 
@@ -137,19 +144,23 @@ public class FeeController {
     }
 
     @GetMapping("/{id}/delete")
-    public String deleteFee(@PathVariable("id") Long id, Model model) {
+    public String deleteFee(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Model model) {
         try {
             Optional<Fee> feeOptional = feeService.getFee(id);
             if (feeOptional.isPresent()) {
                 feeService.deleteFee(id);
+                redirectAttributes.addFlashAttribute("message", "Xoá phí thành công!");
+                redirectAttributes.addFlashAttribute("alertClass", "alert-success");
                 return "redirect:/fees";
             } else {
-                model.addAttribute("errorMessage", "Không tìm thấy phí với ID: " + id);
-                return "error";
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy phí với ID: " + id);
+                redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+                return "redirect:/fees";
             }
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi xoá phí: " + e.getMessage());
-            return "error";
+            redirectAttributes.addFlashAttribute("message", "Xoá phí thất bại!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/fees";
         }
     }
 

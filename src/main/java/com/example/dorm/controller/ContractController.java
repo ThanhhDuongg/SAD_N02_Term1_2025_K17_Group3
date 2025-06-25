@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Optional;
 
@@ -60,7 +61,7 @@ public class ContractController {
     }
 
     @PostMapping
-    public String createContract(@Valid @ModelAttribute Contract contract, BindingResult result, Model model) {
+    public String createContract(@Valid @ModelAttribute Contract contract, BindingResult result, RedirectAttributes redirectAttributes, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("rooms", roomService.getAllRooms());
             return "contracts/form";
@@ -72,10 +73,13 @@ public class ContractController {
         }
         try {
             contractService.createContract(contract);
+            redirectAttributes.addFlashAttribute("message", "Thêm hợp đồng thành công!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
             return "redirect:/contracts";
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi lưu hợp đồng: " + e.getMessage());
-            return "error";
+            redirectAttributes.addFlashAttribute("message", "Thêm hợp đồng thất bại!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/contracts";
         }
     }
 
@@ -115,7 +119,7 @@ public class ContractController {
     }
 
     @PostMapping("/{id}")
-    public String updateContract(@PathVariable("id") Long id, @Valid @ModelAttribute Contract contract, BindingResult result, Model model) {
+    public String updateContract(@PathVariable("id") Long id, @Valid @ModelAttribute Contract contract, BindingResult result, RedirectAttributes redirectAttributes, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("rooms", roomService.getAllRooms());
             return "contracts/form";
@@ -127,27 +131,34 @@ public class ContractController {
         }
         try {
             contractService.updateContract(id, contract);
+            redirectAttributes.addFlashAttribute("message", "Cập nhật hợp đồng thành công!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
             return "redirect:/contracts";
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi cập nhật hợp đồng: " + e.getMessage());
-            return "error";
+            redirectAttributes.addFlashAttribute("message", "Cập nhật hợp đồng thất bại!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/contracts";
         }
     }
 
     @GetMapping("/{id}/delete")
-    public String deleteContract(@PathVariable("id") Long id, Model model) {
+    public String deleteContract(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Model model) {
         try {
             Optional<Contract> contractOptional = contractService.getContract(id);
             if (contractOptional.isPresent()) {
                 contractService.deleteContract(id);
+                redirectAttributes.addFlashAttribute("message", "Xoá hợp đồng thành công!");
+                redirectAttributes.addFlashAttribute("alertClass", "alert-success");
                 return "redirect:/contracts";
             } else {
-                model.addAttribute("errorMessage", "Không tìm thấy hợp đồng với ID: " + id);
-                return "error";
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy hợp đồng với ID: " + id);
+                redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+                return "redirect:/contracts";
             }
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi xoá hợp đồng: " + e.getMessage());
-            return "error";
+            redirectAttributes.addFlashAttribute("message", "Xoá hợp đồng thất bại!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/contracts";
         }
     }
 

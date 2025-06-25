@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Optional;
 
@@ -56,13 +57,16 @@ public class RoomController {
     }
 
     @PostMapping
-    public String createRoom(@ModelAttribute Room room, Model model) {
+    public String createRoom(@ModelAttribute Room room, RedirectAttributes redirectAttributes, Model model) {
         try {
             roomService.createRoom(room);
+            redirectAttributes.addFlashAttribute("message", "Thêm phòng thành công!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
             return "redirect:/rooms";
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tạo phòng: " + e.getMessage());
-            return "error";
+            redirectAttributes.addFlashAttribute("message", "Thêm phòng thất bại!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/rooms";
         }
     }
 
@@ -103,36 +107,44 @@ public class RoomController {
     }
 
     @PostMapping("/{id}")
-    public String updateRoom(@PathVariable("id") Long id, @ModelAttribute Room room, Model model) {
+    public String updateRoom(@PathVariable("id") Long id, @ModelAttribute Room room, RedirectAttributes redirectAttributes, Model model) {
         try {
             Optional<Room> roomOptional = roomService.getRoom(id);
             if (roomOptional.isPresent()) {
                 roomService.updateRoom(id, room);
+                redirectAttributes.addFlashAttribute("message", "Cập nhật phòng thành công!");
+                redirectAttributes.addFlashAttribute("alertClass", "alert-success");
                 return "redirect:/rooms";
             } else {
-                model.addAttribute("errorMessage", "Không tìm thấy phòng với ID: " + id);
-                return "error";
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy phòng với ID: " + id);
+                redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+                return "redirect:/rooms";
             }
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi cập nhật phòng: " + e.getMessage());
-            return "error";
+            redirectAttributes.addFlashAttribute("message", "Cập nhật phòng thất bại!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/rooms";
         }
     }
 
     @GetMapping("/{id}/delete")
-    public String deleteRoom(@PathVariable("id") Long id, Model model) {
+    public String deleteRoom(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Model model) {
         try {
             Optional<Room> roomOptional = roomService.getRoom(id);
             if (roomOptional.isPresent()) {
                 roomService.deleteRoom(id);
+                redirectAttributes.addFlashAttribute("message", "Xoá phòng thành công!");
+                redirectAttributes.addFlashAttribute("alertClass", "alert-success");
                 return "redirect:/rooms";
             } else {
-                model.addAttribute("errorMessage", "Không tìm thấy phòng với ID: " + id);
-                return "error";
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy phòng với ID: " + id);
+                redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+                return "redirect:/rooms";
             }
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi xoá phòng: " + e.getMessage());
-            return "error";
+            redirectAttributes.addFlashAttribute("message", "Xoá phòng thất bại!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/rooms";
         }
     }
 

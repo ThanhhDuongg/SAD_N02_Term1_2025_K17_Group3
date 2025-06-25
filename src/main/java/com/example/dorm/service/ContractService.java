@@ -119,4 +119,8 @@ public class ContractService {
         }
         return contractRepository.searchByIdOrStudentWord(search, pageable);
     }
+
+    public Contract findLatestContractByStudentId(Long studentId) {
+        return contractRepository.findTopByStudent_IdOrderByEndDateDesc(studentId);
+    }
 }

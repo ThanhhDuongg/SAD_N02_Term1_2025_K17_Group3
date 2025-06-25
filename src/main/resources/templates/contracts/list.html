@@ -12,6 +12,7 @@
     <div class="content-with-sidebar">
         <div class="container">
         <h2>Danh Sách Hợp Đồng</h2>
+        <div th:replace="fragments/header :: popup"></div>
         <div class="search-container">
             <form th:action="@{/contracts}" method="get">
                 <input type="text" name="search" placeholder="Tìm kiếm hợp đồng..." th:value="${search}">

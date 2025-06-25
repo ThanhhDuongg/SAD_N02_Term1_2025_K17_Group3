@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/students")
@@ -71,6 +72,7 @@ public class StudentController {
             @RequestParam(value = "contractEndDate", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate contractEndDate,
             @RequestParam(value = "contractStatus", required = false) String contractStatus,
+            RedirectAttributes redirectAttributes,
             Model model) {
         try {
             var saved = studentService.saveStudent(student);
@@ -83,10 +85,13 @@ public class StudentController {
                 c.setStatus(contractStatus != null ? contractStatus : "ACTIVE");
                 contractService.createContract(c);
             }
+            redirectAttributes.addFlashAttribute("message", "Thêm sinh viên thành công!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
             return "redirect:/students";
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tạo sinh viên: " + e.getMessage());
-            return "error";
+            redirectAttributes.addFlashAttribute("message", "Thêm sinh viên thất bại!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/students";
         }
     }
 
@@ -114,6 +119,11 @@ public class StudentController {
             if (studentOptional.isPresent()) {
                 model.addAttribute("student", studentOptional.get());
                 model.addAttribute("rooms", roomService.getAllRooms());
+                Contract latestContract = contractService.findLatestContractByStudentId(id);
+                if (latestContract != null) {
+                    model.addAttribute("contractStartDate", latestContract.getStartDate());
+                    model.addAttribute("contractEndDate", latestContract.getEndDate());
+                }
                 return "students/form";
             } else {
                 model.addAttribute("errorMessage", "Không tìm thấy sinh viên với ID: " + id);
@@ -126,37 +136,45 @@ public class StudentController {
     }
 
     @PostMapping("/{id}")
-    public String updateStudent(@PathVariable("id") Long id, @ModelAttribute Student student, Model model) {
+    public String updateStudent(@PathVariable("id") Long id, @ModelAttribute Student student, RedirectAttributes redirectAttributes, Model model) {
         try {
             Optional<Student> studentOptional = studentService.getStudent(id);
             if (studentOptional.isPresent()) {
                 student.setId(id);
                 studentService.saveStudent(student);
+                redirectAttributes.addFlashAttribute("message", "Cập nhật sinh viên thành công!");
+                redirectAttributes.addFlashAttribute("alertClass", "alert-success");
                 return "redirect:/students";
             } else {
-                model.addAttribute("errorMessage", "Không tìm thấy sinh viên với ID: " + id);
-                return "error";
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy sinh viên với ID: " + id);
+                redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+                return "redirect:/students";
             }
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi cập nhật sinh viên: " + e.getMessage());
-            return "error";
+            redirectAttributes.addFlashAttribute("message", "Cập nhật sinh viên thất bại!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/students";
         }
     }
 
     @GetMapping("/{id}/delete")
-    public String deleteStudent(@PathVariable("id") Long id, Model model) {
+    public String deleteStudent(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Model model) {
         try {
             Optional<Student> studentOptional = studentService.getStudent(id);
             if (studentOptional.isPresent()) {
                 studentService.deleteStudent(id);
+                redirectAttributes.addFlashAttribute("message", "Xoá sinh viên thành công!");
+                redirectAttributes.addFlashAttribute("alertClass", "alert-success");
                 return "redirect:/students";
             } else {
-                model.addAttribute("errorMessage", "Không tìm thấy sinh viên với ID: " + id);
-                return "error";
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy sinh viên với ID: " + id);
+                redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+                return "redirect:/students";
             }
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi xoá sinh viên: " + e.getMessage());
-            return "error";
+            redirectAttributes.addFlashAttribute("message", "Xoá sinh viên thất bại!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/students";
         }
     }
 
