@@ -477,12 +477,6 @@ flowchart TD
     J -- "❌ Không" --> K
     J -- "✅ Có" --> L --> M
     
-    style A fill:#e8f5e8
-    style M fill:#e8f5e8
-    style E fill:#ffebee
-    style H fill:#ffebee
-    style K fill:#ffebee
-    style L fill:#e0f2f1
 ```
 
 ---
