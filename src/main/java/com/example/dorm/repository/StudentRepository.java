@@ -1,6 +1,6 @@
 package com.example.dorm.repository;
 
-import Model.Student;
+import com.example.dorm.model.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import org.springframework.data.domain.Page;
