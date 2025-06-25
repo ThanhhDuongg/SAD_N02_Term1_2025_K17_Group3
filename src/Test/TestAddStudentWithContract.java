@@ -1,3 +1,4 @@
+// File được thực hiện trong quá trình học hiện tại có sự thay đổi nên không chạy được
 package Test;
 
 import Model.Room;
