@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi Tiết Hợp Đồng</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+    <div class="content-with-sidebar">
+        <div class="detail-container">
+        <h2>Chi Tiết Hợp Đồng</h2>
+        <table class="info-table">
+            <tr>
+                <td class="label">ID:</td>
+                <td class="value" th:text="${contract.id}"></td>
+            </tr>
