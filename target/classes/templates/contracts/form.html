@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${contract.id} ? 'Sửa Hợp Đồng' : 'Thêm Hợp Đồng'">Thêm Hợp Đồng</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+    <div class="content-with-sidebar">
+        <div class="form-container">
+        <h2 th:text="${contract.id} ? 'Sửa Hợp Đồng' : 'Thêm Hợp Đồng'"></h2>
+        <div th:if="${errorMessage}" class="error" th:text="${errorMessage}"></div>
+        <form th:action="${contract.id} ? @{/contracts/{id}(id=${contract.id})} : @{/contracts}" th:object="${contract}" method="post">
+            <div class="form-group">
+                <label for="studentInput">Sinh Viên</label>
+                <input type="text" id="studentInput" list="studentOptions" autocomplete="off"
+                       th:value="${contract.student != null} ? ${contract.student.code + ' - ' + contract.student.name} : ''">
+                <datalist id="studentOptions"></datalist>
+                <input type="hidden" id="studentId" th:field="*{student.id}">
+            </div>
+            <div class="form-group">
+                <label for="room">Phòng</label>
+                <!-- Chọn phòng -->
+                <select id="room" th:field="*{room.id}" required>
+                    <option th:each="room : ${rooms}" th:value="${room.id}" th:text="${room.number}"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="startDate">Ngày Bắt Đầu</label>
+                <input type="date" id="startDate" th:field="*{startDate}" required>
+            </div>
+            <div class="form-group">
+                <label for="endDate">Ngày Kết Thúc</label>
+                <input type="date" id="endDate" th:field="*{endDate}" required>
+            </div>
+            <div class="form-group">
+                <label for="status">Trạng Thái</label>
+                <select id="status" th:field="*{status}" required>
+                    <option value="ACTIVE">Đang Hoạt Động</option>
+                    <option value="EXPIRED">Hết Hạn</option>
+                    <option value="TERMINATED">Đã Hủy</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="button btn-save">Lưu</button>
+                <a th:href="@{/contracts}" class="button btn-cancel">Hủy</a>
+            </div>
+        </form>
+        </div>
+    </div>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const input = document.getElementById('studentInput');
+        const list = document.getElementById('studentOptions');
+        const hidden = document.getElementById('studentId');
+
+        function fetchStudents(q) {
+            if (!q) { list.innerHTML = ''; return; }
+            fetch('/students/search?term=' + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(data => {
+                    list.innerHTML = '';
+                    data.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.label;
+                        opt.dataset.id = s.id;
+                        list.appendChild(opt);
+                    });
+                });
+        }
+
+        input.addEventListener('input', () => {
+            fetchStudents(input.value);
+            const opt = Array.from(list.options).find(o => o.value === input.value);
+            hidden.value = opt ? opt.dataset.id : '';
+        });
+        input.addEventListener('change', () => {
+            const opt = Array.from(list.options).find(o => o.value === input.value);
+            hidden.value = opt ? opt.dataset.id : '';
+        });
+        if (input.value) { fetchStudents(input.value); }
+        /*]]>*/
+    </script>
+</body>
+</html>

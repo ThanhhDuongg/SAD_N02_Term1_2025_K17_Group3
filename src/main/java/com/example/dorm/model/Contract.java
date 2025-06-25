@@ -1,4 +1,3 @@
-// Entity: Contract
 package com.example.dorm.model;
 
 import jakarta.persistence.*;

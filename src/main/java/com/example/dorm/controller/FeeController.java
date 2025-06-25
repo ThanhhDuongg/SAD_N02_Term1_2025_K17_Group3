@@ -1,9 +1,8 @@
 package com.example.dorm.controller;
 
 import com.example.dorm.model.Fee;
-import com.example.dorm.service.ContractService;
 import com.example.dorm.service.FeeService;
-
+import com.example.dorm.service.ContractService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -30,6 +29,13 @@ public class FeeController {
             var pageable = org.springframework.data.domain.PageRequest.of(page, size);
             var feesPage = feeService.searchFees(search, pageable);
             model.addAttribute("feesPage", feesPage);
+            int totalPages = feesPage.getTotalPages();
+            if (totalPages > 0) {
+                java.util.List<Integer> pageNumbers =
+                        java.util.stream.IntStream.rangeClosed(1, totalPages)
+                                .boxed().toList();
+                model.addAttribute("pageNumbers", pageNumbers);
+            }
             model.addAttribute("search", search);
             return "fees/list";
         } catch (Exception e) {

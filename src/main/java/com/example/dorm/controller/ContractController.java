@@ -2,9 +2,8 @@ package com.example.dorm.controller;
 
 import com.example.dorm.model.Contract;
 import com.example.dorm.service.ContractService;
-import com.example.dorm.service.RoomService;
 import com.example.dorm.service.StudentService;
-
+import com.example.dorm.service.RoomService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -33,6 +32,13 @@ public class ContractController {
             var pageable = org.springframework.data.domain.PageRequest.of(page, size);
             var contractsPage = contractService.searchContracts(search, pageable);
             model.addAttribute("contractsPage", contractsPage);
+            int totalPages = contractsPage.getTotalPages();
+            if (totalPages > 0) {
+                java.util.List<Integer> pageNumbers =
+                        java.util.stream.IntStream.rangeClosed(1, totalPages)
+                                .boxed().toList();
+                model.addAttribute("pageNumbers", pageNumbers);
+            }
             model.addAttribute("search", search);
             return "contracts/list";
         } catch (Exception e) {

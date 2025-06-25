@@ -3,9 +3,8 @@ package com.example.dorm.service;
 import com.example.dorm.model.Contract;
 import com.example.dorm.model.Room;
 import com.example.dorm.repository.ContractRepository;
-import com.example.dorm.repository.RoomRepository;
 import com.example.dorm.repository.StudentRepository;
-
+import com.example.dorm.repository.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -109,4 +108,3 @@ public class ContractService {
         return contractRepository.searchByIdOrStudentWord(search, pageable);
     }
 }
-       
