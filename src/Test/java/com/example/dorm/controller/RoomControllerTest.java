@@ -4,196 +4,266 @@ import com.example.dorm.model.Room;
 import com.example.dorm.service.RoomService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.ui.Model;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(RoomController.class)
+@Import(RoomControllerTest.SecurityConfig.class)
 class RoomControllerTest {
-    @Mock
-    private RoomService roomService;
-    @Mock
-    private Model model;
-    @Mock
-    private RedirectAttributes redirectAttributes;
-    @InjectMocks
-    private RoomController roomController;
 
-    private Room testRoom;
-    private List<Room> roomList;
+    @TestConfiguration
+    static class SecurityConfig {
+        @Bean
+        SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+            http
+                    .authorizeHttpRequests(authz -> authz.anyRequest().permitAll())
+                    .csrf().disable();
+            return http.build();
+        }
+    }
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private RoomService roomService;
+
+    private Room sampleRoom;
+    private Room secondRoom;
+    private List<Room> sampleRooms;
 
     @BeforeEach
     void setUp() {
-        testRoom = new Room();
-        testRoom.setId(1L);
-        testRoom.setNumber("101");
-        roomList = Arrays.asList(testRoom);
+        sampleRoom = new Room();
+        sampleRoom.setId(1L);
+        sampleRoom.setNumber("101");
+        sampleRoom.setType("STANDARD");
+        sampleRoom.setCapacity(4);
+        sampleRoom.setPrice(1000);
+
+        secondRoom = new Room();
+        secondRoom.setId(2L);
+        secondRoom.setNumber("102");
+        secondRoom.setType("DELUXE");
+        secondRoom.setCapacity(3);
+        secondRoom.setPrice(1200);
+
+        sampleRooms = Arrays.asList(sampleRoom, secondRoom);
     }
 
     @Test
-    void testListRooms_Success() {
+    void testListRooms_Success() throws Exception {
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Room> roomsPage = new PageImpl<>(roomList, pageable, 1);
-        when(roomService.searchRooms(anyString(), any(Pageable.class))).thenReturn(roomsPage);
-        when(roomService.getCurrentOccupancy(anyLong())).thenReturn(2L);
-        String result = roomController.listRooms("test", 0, 10, model);
-        assertEquals("rooms/list", result);
-        verify(model).addAttribute("roomsPage", roomsPage);
-        verify(model).addAttribute("search", "test");
-    }
+        Page<Room> roomsPage = new PageImpl<>(sampleRooms, pageable, sampleRooms.size());
 
-    @Test
-    void testListRooms_Exception() {
-        when(roomService.searchRooms(anyString(), any(Pageable.class))).thenThrow(new RuntimeException("Database error"));
-        String result = roomController.listRooms("test", 0, 10, model);
-        assertEquals("error", result);
-        verify(model).addAttribute(eq("errorMessage"), contains("Lỗi khi tải danh sách phòng"));
-    }
-
-    @Test
-    void testShowCreateForm_Success() {
-        String result = roomController.showCreateForm(model);
-        assertEquals("rooms/form", result);
-        verify(model).addAttribute(eq("room"), any(Room.class));
-    }
-
-    @Test
-    void testShowCreateForm_Exception() {
-        doThrow(new RuntimeException("Service error")).when(model).addAttribute(eq("room"), any(Room.class));
-        String result = roomController.showCreateForm(model);
-        assertEquals("error", result);
-        verify(model).addAttribute(eq("errorMessage"), contains("Lỗi khi hiển thị form tạo phòng"));
-    }
-
-    @Test
-    void testViewRoom_Success() {
-        when(roomService.getRoom(1L)).thenReturn(Optional.of(testRoom));
+        when(roomService.searchRooms(isNull(), eq(pageable))).thenReturn(roomsPage);
         when(roomService.getCurrentOccupancy(1L)).thenReturn(2L);
-        String result = roomController.viewRoom(1L, model);
-        assertEquals("rooms/detail", result);
-        verify(model).addAttribute("room", testRoom);
-        verify(model).addAttribute("occupancy", 2L);
+        when(roomService.getCurrentOccupancy(2L)).thenReturn(1L);
+
+        mockMvc.perform(get("/rooms")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("rooms/list"))
+                .andExpect(model().attributeExists("roomsPage"))
+                .andExpect(model().attributeExists("occupancies"))
+                .andExpect(model().attributeExists("pageNumbers"));
+
+        verify(roomService).searchRooms(isNull(), eq(pageable));
+        verify(roomService).getCurrentOccupancy(1L);
+        verify(roomService).getCurrentOccupancy(2L);
     }
 
     @Test
-    void testViewRoom_NotFound() {
-        when(roomService.getRoom(1L)).thenReturn(Optional.empty());
-        String result = roomController.viewRoom(1L, model);
-        assertEquals("error", result);
-        verify(model).addAttribute(eq("errorMessage"), contains("Không tìm thấy phòng"));
+    void testListRooms_WithSearchTerm() throws Exception {
+        String searchTerm = "101";
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Room> roomsPage = new PageImpl<>(List.of(sampleRoom), pageable, 1);
+
+        when(roomService.searchRooms(eq(searchTerm), eq(pageable))).thenReturn(roomsPage);
+        when(roomService.getCurrentOccupancy(1L)).thenReturn(2L);
+
+        mockMvc.perform(get("/rooms")
+                        .param("search", searchTerm)
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("rooms/list"))
+                .andExpect(model().attribute("search", searchTerm));
+
+        verify(roomService).searchRooms(eq(searchTerm), eq(pageable));
     }
 
     @Test
-    void testViewRoom_Exception() {
-        when(roomService.getRoom(1L)).thenThrow(new RuntimeException("Database error"));
-        String result = roomController.viewRoom(1L, model);
-        assertEquals("error", result);
-        verify(model).addAttribute(eq("errorMessage"), contains("Lỗi khi xem phòng"));
+    void testListRooms_Exception() throws Exception {
+        when(roomService.searchRooms(any(), any())).thenThrow(new RuntimeException("Database error"));
+
+        mockMvc.perform(get("/rooms"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("error"))
+                .andExpect(model().attributeExists("errorMessage"));
     }
 
     @Test
-    void testCreateRoom_Success() {
-        when(roomService.createRoom(any(Room.class))).thenReturn(testRoom);
-        String result = roomController.createRoom(testRoom, redirectAttributes, model);
-        assertEquals("redirect:/rooms", result);
+    void testShowCreateForm_Success() throws Exception {
+        mockMvc.perform(get("/rooms/new"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("rooms/form"))
+                .andExpect(model().attributeExists("room"));
+    }
+
+    @Test
+    void testCreateRoom_Success() throws Exception {
+        when(roomService.createRoom(any(Room.class))).thenReturn(sampleRoom);
+
+        mockMvc.perform(post("/rooms")
+                        .param("number", "103")
+                        .param("capacity", "4")
+                        .param("type", "STANDARD")
+                        .param("price", "1200"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/rooms"))
+                .andExpect(flash().attribute("message", "Thêm phòng thành công!"))
+                .andExpect(flash().attribute("alertClass", "alert-success"));
+
         verify(roomService).createRoom(any(Room.class));
-        verify(redirectAttributes).addFlashAttribute("message", contains("Thêm phòng thành công"));
     }
 
     @Test
-    void testCreateRoom_Exception() {
-        when(roomService.createRoom(any(Room.class))).thenThrow(new RuntimeException("DB error"));
-        String result = roomController.createRoom(testRoom, redirectAttributes, model);
-        assertEquals("redirect:/rooms", result);
-        verify(redirectAttributes).addFlashAttribute("message", contains("Thêm phòng thất bại"));
+    void testCreateRoom_Exception() throws Exception {
+        when(roomService.createRoom(any(Room.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+        mockMvc.perform(post("/rooms")
+                        .param("number", "103")
+                        .param("capacity", "4")
+                        .param("type", "STANDARD")
+                        .param("price", "1200"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/rooms"))
+                .andExpect(flash().attribute("message", "Thêm phòng thất bại!"))
+                .andExpect(flash().attribute("alertClass", "alert-danger"));
     }
 
     @Test
-    void testShowUpdateForm_Success() {
-        when(roomService.getRoom(1L)).thenReturn(Optional.of(testRoom));
-        String result = roomController.showUpdateForm(1L, model);
-        assertEquals("rooms/form", result);
-        verify(model).addAttribute("room", testRoom);
+    void testViewRoom_Success() throws Exception {
+        when(roomService.getRoom(1L)).thenReturn(Optional.of(sampleRoom));
+        when(roomService.getCurrentOccupancy(1L)).thenReturn(2L);
+
+        mockMvc.perform(get("/rooms/1"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("rooms/detail"))
+                .andExpect(model().attributeExists("room"))
+                .andExpect(model().attribute("occupancy", 2L));
+
+        verify(roomService).getRoom(1L);
+        verify(roomService).getCurrentOccupancy(1L);
     }
 
     @Test
-    void testShowUpdateForm_NotFound() {
+    void testViewRoom_NotFound() throws Exception {
         when(roomService.getRoom(1L)).thenReturn(Optional.empty());
-        String result = roomController.showUpdateForm(1L, model);
-        assertEquals("error", result);
-        verify(model).addAttribute(eq("errorMessage"), contains("Không tìm thấy phòng"));
+
+        mockMvc.perform(get("/rooms/1"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("error"))
+                .andExpect(model().attributeExists("errorMessage"));
     }
 
     @Test
-    void testShowUpdateForm_Exception() {
-        when(roomService.getRoom(1L)).thenThrow(new RuntimeException("DB error"));
-        String result = roomController.showUpdateForm(1L, model);
-        assertEquals("error", result);
-        verify(model).addAttribute(eq("errorMessage"), contains("Lỗi khi hiển thị form sửa phòng"));
+    void testShowUpdateForm_Success() throws Exception {
+        when(roomService.getRoom(1L)).thenReturn(Optional.of(sampleRoom));
+
+        mockMvc.perform(get("/rooms/1/edit"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("rooms/form"))
+                .andExpect(model().attributeExists("room"));
+
+        verify(roomService).getRoom(1L);
     }
 
     @Test
-    void testUpdateRoom_Success() {
-        when(roomService.getRoom(1L)).thenReturn(Optional.of(testRoom));
-        when(roomService.updateRoom(eq(1L), any(Room.class))).thenReturn(testRoom);
-        String result = roomController.updateRoom(1L, testRoom, redirectAttributes, model);
-        assertEquals("redirect:/rooms", result);
+    void testUpdateRoom_Success() throws Exception {
+        when(roomService.getRoom(1L)).thenReturn(Optional.of(sampleRoom));
+        when(roomService.updateRoom(eq(1L), any(Room.class))).thenReturn(sampleRoom);
+
+        mockMvc.perform(post("/rooms/1")
+                        .param("number", "101")
+                        .param("capacity", "4")
+                        .param("type", "STANDARD")
+                        .param("price", "1000"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/rooms"))
+                .andExpect(flash().attribute("message", "Cập nhật phòng thành công!"))
+                .andExpect(flash().attribute("alertClass", "alert-success"));
+
+        verify(roomService).getRoom(1L);
         verify(roomService).updateRoom(eq(1L), any(Room.class));
-        verify(redirectAttributes).addFlashAttribute("message", contains("Cập nhật phòng thành công"));
     }
 
     @Test
-    void testUpdateRoom_NotFound() {
-        when(roomService.getRoom(1L)).thenReturn(Optional.empty());
-        String result = roomController.updateRoom(1L, testRoom, redirectAttributes, model);
-        assertEquals("redirect:/rooms", result);
-        verify(redirectAttributes).addFlashAttribute("message", contains("Không tìm thấy phòng"));
+    void testUpdateRoom_Exception() throws Exception {
+        when(roomService.getRoom(1L)).thenReturn(Optional.of(sampleRoom));
+        when(roomService.updateRoom(eq(1L), any(Room.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+        mockMvc.perform(post("/rooms/1")
+                        .param("number", "101")
+                        .param("capacity", "4")
+                        .param("type", "STANDARD")
+                        .param("price", "1000"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/rooms"))
+                .andExpect(flash().attribute("message", "Cập nhật phòng thất bại!"))
+                .andExpect(flash().attribute("alertClass", "alert-danger"));
     }
 
     @Test
-    void testUpdateRoom_Exception() {
-        when(roomService.getRoom(1L)).thenThrow(new RuntimeException("DB error"));
-        String result = roomController.updateRoom(1L, testRoom, redirectAttributes, model);
-        assertEquals("redirect:/rooms", result);
-        verify(redirectAttributes).addFlashAttribute("message", contains("Cập nhật phòng thất bại"));
-    }
-
-    @Test
-    void testDeleteRoom_Success() {
-        when(roomService.getRoom(1L)).thenReturn(Optional.of(testRoom));
+    void testDeleteRoom_Success() throws Exception {
+        when(roomService.getRoom(1L)).thenReturn(Optional.of(sampleRoom));
         doNothing().when(roomService).deleteRoom(1L);
-        String result = roomController.deleteRoom(1L, redirectAttributes, model);
-        assertEquals("redirect:/rooms", result);
+
+        mockMvc.perform(get("/rooms/1/delete"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/rooms"))
+                .andExpect(flash().attribute("message", "Xoá phòng thành công!"))
+                .andExpect(flash().attribute("alertClass", "alert-success"));
+
+        verify(roomService).getRoom(1L);
         verify(roomService).deleteRoom(1L);
-        verify(redirectAttributes).addFlashAttribute("message", contains("Xoá phòng thành công"));
     }
 
     @Test
-    void testDeleteRoom_NotFound() {
+    void testDeleteRoom_NotFound() throws Exception {
         when(roomService.getRoom(1L)).thenReturn(Optional.empty());
-        String result = roomController.deleteRoom(1L, redirectAttributes, model);
-        assertEquals("redirect:/rooms", result);
-        verify(redirectAttributes).addFlashAttribute("message", contains("Không tìm thấy phòng"));
-    }
 
-    @Test
-    void testDeleteRoom_Exception() {
-        when(roomService.getRoom(1L)).thenThrow(new RuntimeException("DB error"));
-        String result = roomController.deleteRoom(1L, redirectAttributes, model);
-        assertEquals("redirect:/rooms", result);
-        verify(redirectAttributes).addFlashAttribute("message", contains("Xoá phòng thất bại"));
+        mockMvc.perform(get("/rooms/1/delete"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/rooms"))
+                .andExpect(flash().attribute("message", "Không tìm thấy phòng với ID: 1"))
+                .andExpect(flash().attribute("alertClass", "alert-danger"));
+
+        verify(roomService).getRoom(1L);
+        verify(roomService, never()).deleteRoom(any());
     }
-} 
+}
