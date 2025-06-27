@@ -102,27 +102,101 @@
 </div>
 
 ### 📁 **Cấu trúc thư mục**
-
-```plaintext
+```plain texttext
 🗂️ OOP_N01_Term3_2025_K17_Group9/
 ├── 📁 src/
 │   ├── 📁 main/
-│   │   ├── 📁 java/com/example/dorm_web/
-│   │   │   ├── 🎮 controller/          # Controllers
-│   │   │   ├── ⚠️ exception/           # Exception Handlers  
-│   │   │   ├── 📊 model/               # Data Models
-│   │   │   ├── 🗄️ repository/          # Data Access Layer
-│   │   │   ├── ⚙️ service/             # Business Logic
-│   │   │   └── 🚀 DormWebApplication.java
+│   │   ├── 📁 java/com/example/dorm/
+│   │   │   ├── 📁 config/    # Cấu hình (bảo mật)
+│   │   │   │   └── 📄 SecurityConfig.java
+│   │   │   ├── 🎮 controller/ # Xử lý điều hướng (Controller)
+│   │   │   │   ├── 📄 ContractController.java
+│   │   │   │   ├── 📄 DashboardController.java
+│   │   │   │   ├── 📄 FeeController.java
+│   │   │   │   ├── 📄 RoomController.java
+│   │   │   │   └── 📄 StudentController.java
+│   │   │   ├── ⚠️ exception/ # Xử lý ngoại lệ
+│   │   │   │   └── 📄 GlobalExceptionHandler.java
+│   │   │   ├── 📊 model/     # Các lớp mô hình dữ liệu
+│   │   │   │   ├── 📄 Contract.java
+│   │   │   │   ├── 📄 Fee.java
+│   │   │   │   ├── 📄 FeeType.java
+│   │   │   │   ├── 📄 PaymentStatus.java
+│   │   │   │   ├── 📄 Room.java
+│   │   │   │   └── 📄 Student.java
+│   │   │   ├── 🗄️ repository/ # Tầng truy cập dữ liệu
+│   │   │   │   ├── 📄 ContractRepository.java
+│   │   │   │   ├── 📄 FeeRepository.java
+│   │   │   │   ├── 📄 RoomRepository.java
+│   │   │   │   └── 📄 StudentRepository.java
+│   │   │   ├── ⚙️ service/   # Tầng logic nghiệp vụ
+│   │   │   │   ├── 📄 ContractService.java
+│   │   │   │   ├── 📄 FeeService.java
+│   │   │   │   ├── 📄 RoomService.java
+│   │   │   │   └── 📄 StudentService.java
+│   │   │   └── 🚀 DormitoryApplication.java
 │   │   └── 📁 resources/
-│   │       ├── 🎨 static/              # CSS, JS, Images
-│   │       └── 🖼️ templates/           # HTML Templates
-│   │           └── *.html
-├── 🧪 test/                           # Unit Tests
-│   └── 📁 java/com/example/dorm_web/
-│       └── ... (unit test)
-├── 📝 README.md
-└── ⚙️ ...
+│   │       ├── 🎨 static/   # Tài nguyên tĩnh (CSS, JS, hình ảnh)
+│   │       │   ├── 📁 css/
+│   │       │   │   └── 📄 style.css
+│   │       │   └── 📁 images/
+│   │       │       └── 📄 logo-phenikaa.png
+│   │       ├── 🖼️ templates/ # Giao diện (các trang HTML)
+│   │       │   ├── 📁 contracts/
+│   │       │   │   ├── 📄 detail.html
+│   │       │   │   ├── 📄 form.html
+│   │       │   │   └── 📄 list.html
+│   │       │   ├── 📁 fees/
+│   │       │   │   ├── 📄 detail.html
+│   │       │   │   ├── 📄 form.html
+│   │       │   │   └── 📄 list.html
+│   │       │   ├── 📁 fragments/
+│   │       │   │   ├── 📄 header.html
+│   │       │   │   └── 📄 sidebar.html
+│   │       │   ├── 📁 rooms/
+│   │       │   │   ├── 📄 detail.html
+│   │       │   │   ├── 📄 form.html
+│   │       │   │   └── 📄 list.html
+│   │       │   ├── 📁 students/
+│   │       │   │   ├── 📄 detail.html
+│   │       │   │   ├── 📄 form.html
+│   │       │   │   └── 📄 list.html
+│   │       │   ├── 📄 dashboard.html
+│   │       │   └── 📄 error.html
+│   │       └── 📄 application.properties
+│   └── 🧪 Test/ # Kiểm thử (Unit tests)
+│       ├── 📁 java/com/example/dorm/
+│       │   ├── 🎮 controller/ # Xử lý điều hướng (Controller)
+│       │   │   ├── 📄 ContractControllerTest.java
+│       │   │   ├── 📄 FeeControllerTest.java
+│       │   │   ├── 📄 RoomControllerTest.java
+│       │   │   └── 📄 StudentControllerTest.java
+│       │   ├── 📊 model/     # Các lớp mô hình dữ liệu
+│       │   │   ├── 📄 ContractTest.java
+│       │   │   ├── 📄 FeeTest.java
+│       │   │   ├── 📄 FeeTypeTest.java
+│       │   │   ├── 📄 PaymentStatusTest.java
+│       │   │   ├── 📄 RoomTest.java
+│       │   │   └── 📄 StudentTest.java
+│       │   └── ⚙️ service/   # Tầng logic nghiệp vụ
+│       │       ├── 📄 ContractServiceTest.java
+│       │       ├── 📄 FeeServiceTest.java
+│       │       ├── 📄 RoomServiceTest.java
+│       │       └── 📄 StudentServiceTest.java
+│       └── 📄 TestAddStudentWithContract.java
+├── 🏞️ Images/ # Hình ảnh thiết kế UML
+│   ├── 📄 ActivityDiagram.png
+│   ├── 📄 ClassDiagram.png
+│   ├── 📄 SequenceDiagram.png
+│   ├── 📄 UMLDiagram.png
+│   └── 📄 UsecaseDiagram.png
+├── 📁 Review/ # Hoạt động trên lớp
+│   ├── 📄 Selector.java
+│   ├── 📄 Sequence.java
+│   └── 📄 TestSequence.java
+├── 🛠️ mvnw.cmd
+├── 🛠️ pom.xml
+└── 📝 README.md
 ```
 
 ---
