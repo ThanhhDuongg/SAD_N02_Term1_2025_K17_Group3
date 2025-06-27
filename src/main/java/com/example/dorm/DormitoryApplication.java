@@ -8,4 +8,4 @@ public class DormitoryApplication {
     public static void main(String[] args) {
         SpringApplication.run(DormitoryApplication.class, args);
     }
-}
+} 
