@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi Tiết Hợp Đồng</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+    <div class="content-with-sidebar">
+        <div class="detail-container">
+        <h2>Chi Tiết Hợp Đồng</h2>
+        <table class="info-table">
+            <tr>
+                <td class="label">ID:</td>
+                <td class="value" th:text="${contract.id}"></td>
+            </tr>
+            <tr>
+                <td class="label">Mã SV:</td>
+                <td class="value" th:text="${contract.student != null ? contract.student.code : ''}"></td>
+            </tr>
+            <tr>
+                <td class="label">Sinh Viên:</td>
+                <td class="value" th:text="${contract.student != null ? contract.student.name : ''}"></td>
+            </tr>
+            <tr>
+                <td class="label">Phòng:</td>
+                <td class="value" th:text="${contract.room != null ? contract.room.number : ''}"></td>
+            </tr>
+            <tr>
+                <td class="label">Ngày Bắt Đầu:</td>
+                <td class="value" th:text="${contract.startDate != null ? #temporals.format(contract.startDate, 'dd/MM/yyyy') : ''}"></td>
+            </tr>
+            <tr>
+                <td class="label">Ngày Kết Thúc:</td>
+                <td class="value" th:text="${contract.endDate != null ? #temporals.format(contract.endDate, 'dd/MM/yyyy') : ''}"></td>
+            </tr>
+            <tr>
+                <td class="label">Trạng Thái:</td>
+                <td class="value" th:text="${contract.status}"></td>
+            </tr>
+        </table>
+        <div class="form-actions">
+            <a th:href="@{/contracts}" class="button btn-back">Quay Lại</a>
+            <a th:href="@{/contracts/{id}/edit(id=${contract.id})}" class="button btn-edit">Sửa</a>
+        </div>
+        </div>
+    </div>
+</body>
+</html>
