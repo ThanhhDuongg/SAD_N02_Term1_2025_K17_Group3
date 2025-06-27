@@ -597,7 +597,7 @@ flowchart TD
 
 <div align="center">
 
-![Student List](https://github.com/user-attachments/assets/d4b54f87-6a86-4854-a25e-8093b50164d6)
+![image](https://github.com/user-attachments/assets/c0b0e5a3-d9d8-4a60-8937-d29c88cd0162)
 
 </div>
 
@@ -605,7 +605,7 @@ flowchart TD
 
 <div align="center">
 
-![Student Details](https://github.com/user-attachments/assets/6d966641-5c9a-4018-a1bb-d8ec321aaa23)
+![image](https://github.com/user-attachments/assets/8851aa01-918a-4b27-b559-07522b67e766)
 
 </div>
 
@@ -613,7 +613,8 @@ flowchart TD
 
 <div align="center">
 
-![Add Student](https://github.com/user-attachments/assets/3183f130-e9b9-4985-bb71-bb0162075b3c)
+![image](https://github.com/user-attachments/assets/20df6c9f-fd5d-4460-84e5-b6dcd2ba1892)
+
 
 </div>
 
