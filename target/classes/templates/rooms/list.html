@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh Sách Phòng</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+    <div class="content-with-sidebar">
+        <div class="container">
+        <h2>Danh Sách Phòng</h2>
+        <div th:replace="fragments/header :: popup"></div>
+        <div class="search-container">
+            <form th:action="@{/rooms}" method="get">
+                <input type="text" name="search" placeholder="Tìm kiếm phòng..." th:value="${search}">
+                <button type="submit">Tìm kiếm</button>
+            </form>
+            <a th:href="@{/rooms/new}" class="button btn-add">Thêm Phòng</a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Số Phòng</th>
+                    <th>Loại Phòng</th>
+                    <th>Sức Chứa</th>
+                    <th>Đang Ở</th>
+                    <th>Giá/Tháng</th>
+                    <th>Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="room : ${roomsPage.content}" class="table-row">
+                    <td th:text="${room.id}"></td>
+                    <td th:text="${room.number}"></td>
+                    <td th:text="${room.type}"></td>
+                    <td th:text="${room.capacity}"></td>
+                    <td th:text="${occupancies[room.id]}"></td>
+                    <td th:text="${T(java.lang.String).format('%,d', room.price).replace(',', '.')}"></td>
+                    <td class="action-icons">
+                        <a th:href="@{/rooms/{id}(id=${room.id})}" class="view"><i class="fas fa-eye"></i></a>
+                        <a th:href="@{/rooms/{id}/edit(id=${room.id})}" class="edit"><i class="fas fa-edit"></i></a>
+                        <a th:href="@{/rooms/{id}/delete(id=${room.id})}" class="delete" onclick="return confirm('Bạn có chắc muốn xóa?')"><i class="fas fa-trash"></i></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="pagination">
+            <a th:if="${roomsPage.number > 0}" th:href="@{/rooms(page=${roomsPage.number-1},size=${roomsPage.size},search=${search})}">Trước</a>
+            <span th:each="i : ${pageNumbers}">
+                <a th:href="@{/rooms(page=${i-1},size=${roomsPage.size},search=${search})}"
+                   th:text="${i}"
+                   th:classappend="${i-1 == roomsPage.number} ? 'current' : ''">
+                </a>
+            </span>
+            <a th:if="${roomsPage.number + 1 < roomsPage.totalPages}" th:href="@{/rooms(page=${roomsPage.number+1},size=${roomsPage.size},search=${search})}">Sau</a>
+        </div>
+        </div>
+    </div>
+</body>
+</html>

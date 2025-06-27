@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi Tiết Phòng</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+    <div class="content-with-sidebar">
+        <div class="detail-container">
+        <h2>Chi Tiết Phòng</h2>
+        <table class="info-table">
+            <tr>
+                <td class="label">ID:</td>
+                <td class="value" th:text="${room.id}"></td>
+            </tr>
+            <tr>
+                <td class="label">Số Phòng:</td>
+                <td class="value" th:text="${room.number}"></td>
+            </tr>
+            <tr>
+                <td class="label">Loại Phòng:</td>
+                <td class="value" th:text="${room.type}"></td>
+            </tr>
+            <tr>
+                <td class="label">Sức Chứa:</td>
+                <td class="value" th:text="${room.capacity}"></td>
+            </tr>
+             <tr>
+                <td class="label">Đang Ở:</td>
+                <td class="value" th:text="|${occupancy}/${room.capacity}|"></td>
+            </tr>
+        </table>
+        <h3>Danh sách sinh viên trong phòng</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên</th>
+                    <th>Ngày sinh</th>
+                    <th>Khoa</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="student : ${room.students}">
+                    <td th:text="${student.id}"></td>
+                    <td th:text="${student.name}"></td>
+                    <td th:text="${#temporals.format(student.dob, 'dd/MM/yyyy')}"></td>
+                    <td th:text="${student.department}"></td>
+                </tr>
+                <tr th:if="${room.students == null or #lists.isEmpty(room.students)}">
+                    <td colspan="4">Chưa có sinh viên nào trong phòng này.</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="form-actions">
+            <a th:href="@{/rooms}" class="button btn-back">Quay Lại</a>
+        </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh Sách Sinh Viên</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+    <div class="content-with-sidebar">
+        <div class="container">
+        <h2>Danh Sách Sinh Viên</h2>
+        <div th:replace="fragments/header :: popup"></div>
+        <div class="search-container">
+            <form th:action="@{/students}" method="get">
+                <input type="text" name="search" placeholder="Tìm kiếm sinh viên..." th:value="${search}">
+                <button type="submit">Tìm kiếm</button>
+            </form>
+            <a th:href="@{/students/new}" class="button btn-add">Thêm Sinh Viên</a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Mã SV</th>
+                    <th>Tên</th>
+                    <th>Ngày Sinh</th>
+                    <th>Giới Tính</th>
+                    <th>Điện Thoại</th>
+                    <th>Email</th>
+                    <th>Khoa</th>
+                    <th>Địa Chỉ</th>
+                    <th>Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="student : ${studentsPage.content}" class="table-row">
+                    <td th:text="${student.id}"></td>
+                    <td th:text="${student.code}"></td>
+                    <td th:text="${student.name}"></td>
+                    <td th:text="${#temporals.format(student.dob, 'dd/MM/yyyy')}"></td>
+                    <td th:text="${student.gender}"></td>
+                    <td th:text="${student.phone}"></td>
+                    <td th:text="${student.email}"></td>
+                    <td th:text="${student.department}"></td>
+                    <td th:text="${student.address}"></td>
+                    <td class="action-icons">
+                        <a th:href="@{/students/{id}(id=${student.id})}" class="view"><i class="fas fa-eye"></i></a>
+                        <a th:href="@{/students/{id}/edit(id=${student.id})}" class="edit"><i class="fas fa-edit"></i></a>
+                        <a th:href="@{/students/{id}/delete(id=${student.id})}" class="delete" onclick="return confirm('Bạn có chắc muốn xóa?')"><i class="fas fa-trash"></i></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="pagination">
+            <a th:if="${studentsPage.number > 0}" th:href="@{/students(page=${studentsPage.number-1},size=${studentsPage.size},search=${search})}">Trước</a>
+            <span th:each="i : ${pageNumbers}">
+                <a th:href="@{/students(page=${i-1},size=${studentsPage.size},search=${search})}"
+                   th:text="${i}"
+                   th:classappend="${i-1 == studentsPage.number} ? 'current' : ''">
+                </a>
+            </span>
+            <a th:if="${studentsPage.number + 1 < studentsPage.totalPages}" th:href="@{/students(page=${studentsPage.number+1},size=${studentsPage.size},search=${search})}">Sau</a>
+        </div>
+        </div>
+    </div>
+</body>
+</html>

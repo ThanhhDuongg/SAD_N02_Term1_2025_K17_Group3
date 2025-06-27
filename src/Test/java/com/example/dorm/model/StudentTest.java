@@ -9,7 +9,21 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Simple unit tests for the {@link Student} model.
  */
-class StudentTest {
+public class StudentTest {
+
+    @Test
+    void testStudentConstructorAndGettersSetters() {
+        Student student = new Student();
+        student.setId(1L);
+        assertEquals(1L, student.getId());
+        // Thêm các test cho các thuộc tính khác nếu có
+    }
+
+    @Test
+    void testToString() {
+        Student student = new Student();
+        assertNotNull(student.toString());
+    }
 
     @Test
     void testGettersAndSetters() {
