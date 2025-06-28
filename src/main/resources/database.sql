@@ -15,7 +15,7 @@ CREATE TABLE student (
                          address VARCHAR(255),
                          email VARCHAR(255),
                          department VARCHAR(255),
-                         study_year INT, -- Suggest: Add CHECK (study_year BETWEEN 1 AND 4) if supported
+                         year INT, -- Suggest: Add CHECK (year BETWEEN 1 AND 4) if supported
                          CONSTRAINT chk_email UNIQUE (email)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -56,7 +56,7 @@ CREATE TABLE fee (
 
 -- Insert sample data into Student table (đã đổi số điện thoại sang bắt đầu bằng 0)
 -- 25 sinh viên, mã SV01 ... SV25
-INSERT INTO student (code, name, dob, gender, phone, address, email, department, study_year) VALUES
+INSERT INTO student (code, name, dob, gender, phone, address, email, department, year) VALUES
                                                                                                  ('SV01','Nguyễn Văn An', '2005-03-15', 'Nam', '0912345601', 'Hà Nội', 'sv01@example.com', 'Công nghệ Thông tin', 3),
                                                                                                  ('SV02','Trần Thị Bình', '2005-07-22', 'Nữ', '0912345602', 'Ninh Bình', 'sv02@example.com', 'Kinh tế', 2),
                                                                                                  ('SV03','Lê Minh Châu', '2003-11-30', 'Nam', '0912345603', 'Nghệ An', 'sv03@example.com', 'Kỹ thuật Điện', 4),

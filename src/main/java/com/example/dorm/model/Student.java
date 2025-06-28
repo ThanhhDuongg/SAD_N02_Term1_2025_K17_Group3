@@ -26,8 +26,8 @@ public class Student {
     @NotNull(message = "Năm học không được để trống")
     @Min(1)
     @Max(6)
-    @Column(name = "study_year")
-    private Integer studyYear;
+    @Column(name = "year")
+    private Integer year;
 
 
     @ManyToOne
@@ -54,8 +54,8 @@ public class Student {
     public void setEmail(String email) { this.email = email; }
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }
-    public Integer getStudyYear() { return studyYear; }
-    public void setStudyYear(Integer studyYear) { this.studyYear = studyYear; }
+    public Integer getYear() { return year; }
+    public void setYear(Integer year) { this.year = year; }
     public Room getRoom() { return room; }
     public void setRoom(Room room) { this.room = room; }
 }
