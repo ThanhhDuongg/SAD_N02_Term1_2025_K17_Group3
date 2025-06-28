@@ -236,20 +236,6 @@ INSERT INTO fee (contract_id, type, amount, due_date, payment_status) VALUES
     -- Contract 22
     (22, 'WATER',       170000, '2025-08-20', 'PAID'),
     (22, 'MAINTENANCE', 120000, '2025-08-25', 'UNPAID'),
-<<<<<<< HEAD
-
-    -- Contract 23
-    (23, 'CLEANING',    142000, '2025-08-10', 'UNPAID'),
-    (23, 'ELECTRICITY', 222000, '2025-08-15', 'PAID'),
-
-    -- Contract 24
-    (24, 'WATER',       172000, '2025-08-20', 'PAID'),
-    (24, 'MAINTENANCE', 122000, '2025-08-25', 'PAID'),
-
-    -- Contract 25
-    (25, 'CLEANING',    144000, '2025-08-10', 'PAID'),
-    (25, 'ELECTRICITY', 224000, '2025-08-15', 'UNPAID');
-=======
 
     -- Contract 23
     (23, 'CLEANING',    142000, '2025-08-10', 'UNPAID'),
@@ -263,8 +249,5 @@ INSERT INTO fee (contract_id, type, amount, due_date, payment_status) VALUES
     (25, 'CLEANING',    144000, '2025-08-10', 'PAID'),
     (25, 'ELECTRICITY', 224000, '2025-08-15', 'UNPAID');
 
-
-
->>>>>>> 327b3fa807967e8acfb03ea8d24a1db4725cbe9b
 
 
