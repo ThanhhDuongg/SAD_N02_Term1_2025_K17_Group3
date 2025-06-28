@@ -1,0 +1,64 @@
+<div th:fragment="sidebar">
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Quản lý chính</h3>
+            <nav class="sidebar-nav">
+                <a th:href="@{/}" class="sidebar-link">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Trang chủ</span>
+                </a>
+                <a th:href="@{/students}" class="sidebar-link">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>Sinh Viên</span>
+                </a>
+                <a th:href="@{/rooms}" class="sidebar-link">
+                    <i class="fas fa-bed"></i>
+                    <span>Phòng</span>
+                </a>
+                <a th:href="@{/contracts}" class="sidebar-link">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Hợp Đồng</span>
+                </a>
+                <a th:href="@{/fees}" class="sidebar-link">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Phí</span>
+                </a>
+            </nav>
+        </div>
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Khác</h3>
+            <nav class="sidebar-nav">
+                <a href="javascript:void(0)" class="sidebar-link special" id="aboutBtn">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Giới thiệu</span>
+                </a>
+            </nav>
+        </div>
+    </aside>
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>Giới thiệu</h2>
+            <p>Website này được phát triển để hỗ trợ công tác quản lý ký túc xá của
+                <strong>Đại học Phenikaa</strong>. Sản phẩm được tạo bởi <strong>OOP_N01_Term3_2025_K17_Group9</strong> Trường CNTT Phenikaa</p>
+        </div>
+    </div>
+    <script>
+        const aboutBtn = document.getElementById('aboutBtn');
+        const aboutModal = document.getElementById('aboutModal');
+        const closeBtn = aboutModal.querySelector('.modal-close');
+        if (aboutBtn && aboutModal && closeBtn) {
+            aboutBtn.addEventListener('click', () => {
+                aboutModal.style.display = 'flex';
+            });
+            closeBtn.addEventListener('click', () => {
+                aboutModal.style.display = 'none';
+            });
+            window.addEventListener('click', (e) => {
+                if (e.target === aboutModal) {
+                    aboutModal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</div>

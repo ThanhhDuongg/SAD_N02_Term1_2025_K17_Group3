@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý kí túc xá</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<!-- Include Header -->
+<div th:replace="fragments/header :: header"></div>
+
+<!-- Include Sidebar -->
+<div th:replace="fragments/sidebar :: sidebar"></div>
+
+<!-- Main Content -->
+<div class="content-with-sidebar">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Dashboard</h1>
+        <p class="dashboard-subtitle">Quản lý thông tin ký túc xá một cách dễ dàng và hiệu quả</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stats-grid">
+            <!-- Tổng Sinh Viên -->
+            <div class="stat-card">
+                <div class="stat-icon student-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h3 class="stat-title">Tổng Sinh Viên</h3>
+                <div class="stat-value" th:text="${studentCount} ?: '0'">150</div>
+                <a th:href="@{/students}" class="stat-action">
+                    <span>Xem Chi Tiết</span><i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Tổng Phòng -->
+            <div class="stat-card">
+                <div class="stat-icon room-icon">
+                    <i class="fas fa-bed"></i>
+                </div>
+                <h3 class="stat-title">Tổng Phòng</h3>
+                <div class="stat-value" th:text="${roomCount} ?: '0'">75</div>
+                <a th:href="@{/rooms}" class="stat-action">
+                    <span>Xem Chi Tiết</span><i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Tổng Hợp Đồng -->
+            <div class="stat-card">
+                <div class="stat-icon contract-icon">
+                    <i class="fas fa-file-contract"></i>
+                </div>
+                <h3 class="stat-title">Tổng Hợp Đồng</h3>
+                <div class="stat-value" th:text="${contractCount} ?: '0'">120</div>
+                <a th:href="@{/contracts}" class="stat-action">
+                    <span>Xem Chi Tiết</span><i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Tổng Phí -->
+            <div class="stat-card">
+                <div class="stat-icon fee-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h3 class="stat-title">Tổng Phí</h3>
+                <div class="stat-value" th:text="${feeCount} ?: '0'">85</div>
+                <a th:href="@{/fees}" class="stat-action">
+                    <span>Xem Chi Tiết</span><i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+
+
+</body>
+</html>

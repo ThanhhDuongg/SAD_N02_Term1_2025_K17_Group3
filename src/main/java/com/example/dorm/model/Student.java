@@ -54,8 +54,8 @@ public class Student {
     public void setEmail(String email) { this.email = email; }
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }
-    public int getStudyYear() { return studyYear; }
-    public void setStudyYear(int studyYear) { this.studyYear = studyYear; }
+    public Integer getStudyYear() { return studyYear; }
+    public void setStudyYear(Integer studyYear) { this.studyYear = studyYear; }
     public Room getRoom() { return room; }
     public void setRoom(Room room) { this.room = room; }
 }
