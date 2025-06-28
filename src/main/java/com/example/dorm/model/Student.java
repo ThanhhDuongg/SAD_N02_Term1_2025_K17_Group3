@@ -2,6 +2,10 @@ package com.example.dorm.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+
 
 @Entity
 public class Student {
@@ -19,8 +23,12 @@ public class Student {
     private String email;
     private String department;
 
+    @NotNull(message = "Năm học không được để trống")
+    @Min(1)
+    @Max(6)
     @Column(name = "study_year")
-    private int studyYear;
+    private Integer studyYear;
+
 
     @ManyToOne
     @JoinColumn(name = "room_id")

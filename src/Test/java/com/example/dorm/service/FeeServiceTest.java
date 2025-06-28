@@ -14,6 +14,8 @@ import org.springframework.data.domain.Pageable;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import java.math.BigDecimal;
+
 
 @ExtendWith(MockitoExtension.class)
 public class FeeServiceTest {
@@ -51,7 +53,7 @@ public class FeeServiceTest {
     @Test
     void testUpdateFeeSuccess() {
         Fee existing = new Fee(); existing.setId(1L);
-        Fee update = new Fee(); update.setAmount(1000.0);
+        Fee update = new Fee(); update.setAmount(BigDecimal.valueOf(10000.0));
         when(feeRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(feeRepository.save(any())).thenReturn(existing);
         Fee result = feeService.updateFee(1L, update);

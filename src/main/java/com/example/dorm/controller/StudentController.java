@@ -7,7 +7,7 @@ import com.example.dorm.service.ContractService;
 import com.example.dorm.model.Contract;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
-
+import jakarta.validation.Valid;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.validation.BindingResult;
 
 @Controller
 @RequestMapping("/students")
@@ -66,14 +67,20 @@ public class StudentController {
 
     @PostMapping
     public String createStudent(
-            @ModelAttribute Student student,
+            @Valid @ModelAttribute Student student,
+            BindingResult bindingResult,
             @RequestParam(value = "contractStartDate", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate contractStartDate,
             @RequestParam(value = "contractEndDate", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate contractEndDate,
             @RequestParam(value = "contractStatus", required = false) String contractStatus,
-            RedirectAttributes redirectAttributes,
-            Model model) {
+            Model model,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("rooms", roomService.getAllRooms());
+            return "students/form";
+        }
         try {
             var saved = studentService.saveStudent(student);
             if (student.getRoom() != null && contractStartDate != null && contractEndDate != null) {
@@ -94,6 +101,7 @@ public class StudentController {
             return "redirect:/students";
         }
     }
+
 
     @GetMapping("/{id}")
     public String viewStudent(@PathVariable("id") Long id, Model model) {
@@ -136,7 +144,17 @@ public class StudentController {
     }
 
     @PostMapping("/{id}")
-    public String updateStudent(@PathVariable("id") Long id, @ModelAttribute Student student, RedirectAttributes redirectAttributes, Model model) {
+    public String updateStudent(
+            @PathVariable("id") Long id,
+            @Valid @ModelAttribute Student student,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("rooms", roomService.getAllRooms());
+            return "students/form";
+        }
         try {
             Optional<Student> studentOptional = studentService.getStudent(id);
             if (studentOptional.isPresent()) {
@@ -156,6 +174,7 @@ public class StudentController {
             return "redirect:/students";
         }
     }
+
 
     @GetMapping("/{id}/delete")
     public String deleteStudent(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Model model) {
