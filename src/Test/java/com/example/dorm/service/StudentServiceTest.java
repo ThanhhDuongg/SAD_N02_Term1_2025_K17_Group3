@@ -54,6 +54,17 @@ public class StudentServiceTest {
         when(roomRepository.findById(1L)).thenReturn(Optional.empty());
         assertThrows(IllegalArgumentException.class, () -> studentService.saveStudent(student));
     }
+
+    @Test
+    void testSaveStudentEmailExists() {
+        Student student = new Student();
+        student.setEmail("test@example.com");
+        Student existing = new Student();
+        existing.setId(2L);
+        existing.setEmail("test@example.com");
+        when(studentRepository.findByEmail("test@example.com")).thenReturn(Optional.of(existing));
+        assertThrows(IllegalStateException.class, () -> studentService.saveStudent(student));
+    }
     @Test
     void testSaveStudentSuccess() {
         Room room = new Room(); room.setId(1L); room.setCapacity(2);
