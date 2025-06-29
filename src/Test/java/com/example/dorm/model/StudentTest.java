@@ -1,9 +1,7 @@
 package com.example.dorm.model;
 
 import org.junit.jupiter.api.Test;
-
 import java.time.LocalDate;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -38,7 +36,8 @@ public class StudentTest {
         s.setAddress("Street 1");
         s.setEmail("a@b.com");
         s.setDepartment("CS");
-        s.setStudyYear(3);
+        s.setYear(3);  // SỬA Ở ĐÂY
+
         Room room = new Room();
         room.setId(10L);
         s.setRoom(room);
@@ -52,7 +51,7 @@ public class StudentTest {
         assertEquals("Street 1", s.getAddress());
         assertEquals("a@b.com", s.getEmail());
         assertEquals("CS", s.getDepartment());
-        assertEquals(3, s.getStudyYear());
+        assertEquals(3, s.getYear());  // SỬA Ở ĐÂY
         assertSame(room, s.getRoom());
         assertNotNull(s.toString());
     }

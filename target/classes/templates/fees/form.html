@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${fee.id} ? 'Sửa Phí' : 'Thêm Phí'">Thêm Phí</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+    <div class="content-with-sidebar">
+        <div class="form-container">
+        <h2 th:text="${fee.id} ? 'Sửa Phí' : 'Thêm Phí'"></h2>
+        <form th:action="${fee.id} ? @{/fees/{id}(id=${fee.id})} : @{/fees}" th:object="${fee}" method="post">
+            <div class="form-group">
+                <label for="contractInput">Hợp Đồng</label>
+                <input type="text" id="contractInput" list="contractOptions" autocomplete="off"
+                       th:value="${fee.contract != null && fee.contract.student != null ? fee.contract.id + ' - ' + fee.contract.student.code + ' - ' + fee.contract.student.name : ''}">
+                <datalist id="contractOptions"></datalist>
+                <input type="hidden" id="contractId" th:field="*{contract.id}">
+            </div>
+            <div class="form-group">
+                <label for="type">Loại Phí</label>
+                <select id="type" th:field="*{type}" required>
+                    <option value="CLEANING">Tiền Dọn Dẹp</option>
+                    <option value="ELECTRICITY">Tiền Điện</option>
+                    <option value="WATER">Tiền Nước</option>
+                    <option value="MAINTENANCE">Bảo Trì</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="amount">Số Tiền</label>
+                <input type="text" id="amount" name="amountInput"
+                       th:value="${fee.amount != null ? T(java.lang.String).format('%,d', fee.amount.intValue()).replace(',', '.') : ''}"
+                       required>
+            </div>
+            <div class="form-group">
+                <label for="dueDate">Ngày Đáo Hạn</label>
+                <input type="date" id="dueDate" th:field="*{dueDate}" required>
+            </div>
+            <div class="form-group">
+                <label for="paymentStatus">Trạng Thái Thanh Toán</label>
+                <select id="paymentStatus" th:field="*{paymentStatus}" required>
+                    <option value="PAID">Đã Thanh Toán</option>
+                    <option value="UNPAID">Chưa Thanh Toán</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="button btn-save">Lưu</button>
+                <a th:href="@{/fees}" class="button btn-cancel">Hủy</a>
+            </div>
+        </form>
+        </div>
+    </div>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const cInput = document.getElementById('contractInput');
+        const cList = document.getElementById('contractOptions');
+        const cHidden = document.getElementById('contractId');
+
+        function fetchContracts(q) {
+            if (!q) { cList.innerHTML = ''; return; }
+            fetch('/contracts/search?term=' + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(data => {
+                    cList.innerHTML = '';
+                    data.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.label;
+                        opt.dataset.id = c.id;
+                        cList.appendChild(opt);
+                    });
+                });
+        }
+
+        cInput.addEventListener('input', () => {
+            fetchContracts(cInput.value);
+            const opt = Array.from(cList.options).find(o => o.value === cInput.value);
+            cHidden.value = opt ? opt.dataset.id : '';
+        });
+        cInput.addEventListener('change', () => {
+            const opt = Array.from(cList.options).find(o => o.value === cInput.value);
+            cHidden.value = opt ? opt.dataset.id : '';
+        });
+        if (cInput.value) { fetchContracts(cInput.value); }
+        /*]]>*/
+    </script>
+</body>
+</html>

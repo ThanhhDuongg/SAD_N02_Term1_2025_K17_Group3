@@ -96,7 +96,7 @@ public class StudentController {
             redirectAttributes.addFlashAttribute("alertClass", "alert-success");
             return "redirect:/students";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "Thêm sinh viên thất bại!");
+            redirectAttributes.addFlashAttribute("message", "Thêm sinh viên thất bại: " + e.getMessage());
             redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
             return "redirect:/students";
         }

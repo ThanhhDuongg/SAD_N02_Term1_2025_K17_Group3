@@ -210,7 +210,7 @@ class StudentControllerTest {
                         .param("name", "Nguyễn Văn A"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/students"))
-                .andExpect(flash().attribute("message", "Thêm sinh viên thất bại!"))
+                .andExpect(flash().attribute("message", org.hamcrest.Matchers.startsWith("Thêm sinh viên thất bại:")))
                 .andExpect(flash().attribute("alertClass", "alert-danger"));
 
         verify(studentService).saveStudent(any(Student.class));

@@ -30,8 +30,27 @@ public class StudentService {
     }
 
     public Student saveStudent(Student student) {
-        if (student.getRoom() != null) {
+        if (student.getCode() != null) {
+            var existingOpt = studentRepository.findByCode(student.getCode());
+            if (existingOpt.isPresent()) {
+                if (student.getId() == null || !existingOpt.get().getId().equals(student.getId())) {
+                    throw new IllegalStateException("Mã sinh viên đã tồn tại");
+                }
+            }
+        }
+        if (student.getEmail() != null) {
+            var existingEmailOpt = studentRepository.findByEmail(student.getEmail());
+            if (existingEmailOpt.isPresent()) {
+                if (student.getId() == null || !existingEmailOpt.get().getId().equals(student.getId())) {
+                    throw new IllegalStateException("Email đã tồn tại");
+                }
+            }
+        }
+        if (student.getRoom() != null && student.getRoom().getId() != null) {
             checkRoomCapacity(student.getRoom(), student.getId());
+        } else {
+            // treat null id as no room selected
+            student.setRoom(null);
         }
         return studentRepository.save(student);
     }
