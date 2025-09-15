@@ -1,0 +1,22 @@
+-------------------------------------------------------------------------------
+Test set: com.example.dorm.model.FeeTypeTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 0.005 s <<< FAILURE! -- in com.example.dorm.model.FeeTypeTest
+com.example.dorm.model.FeeTypeTest.testToString -- Time elapsed: 0.003 s <<< ERROR!
+java.lang.IllegalArgumentException: No enum constant com.example.dorm.model.FeeType.SOME_TYPE
+	at java.base/java.lang.Enum.valueOf(Enum.java:293)
+	at com.example.dorm.model.FeeType.valueOf(FeeType.java:3)
+	at com.example.dorm.model.FeeTypeTest.testToString(FeeTypeTest.java:14)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+
+com.example.dorm.model.FeeTypeTest.testFeeTypeConstructorAndGettersSetters -- Time elapsed: 0 s <<< ERROR!
+java.lang.IllegalArgumentException: No enum constant com.example.dorm.model.FeeType.SOME_TYPE
+	at java.base/java.lang.Enum.valueOf(Enum.java:293)
+	at com.example.dorm.model.FeeType.valueOf(FeeType.java:3)
+	at com.example.dorm.model.FeeTypeTest.testFeeTypeConstructorAndGettersSetters(FeeTypeTest.java:9)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+

@@ -1,0 +1,40 @@
+<div th:fragment="header">
+    <header class="header">
+        <div class="header-left">
+            <!-- thêm logo -->
+            <img th:src="@{/images/logo-phenikaa.png}"
+                 alt="Phenikaa Logo"
+                 class="header-logo" />
+
+            <div class="header-text">
+                <h1 class="header-title">Phenikaa University</h1>
+                <p class="header-subtitle">Hệ thống quản lý ký túc xá</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="user-profile">
+                <div class="user-avatar">A</div>
+                <span>Admin</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+    </header>
+</div>
+<!-- Popup Thông báo dùng chung -->
+<div th:fragment="popup">
+    <div id="popup-message" th:if="${message}" th:class="'popup-alert ' + ${alertClass}" style="display:none;">
+        <span th:text="${message}"></span>
+    </div>
+    <script>
+        function closePopup() {
+            document.getElementById('popup-message').style.display = 'none';
+        }
+        window.addEventListener('DOMContentLoaded', function() {
+            var popup = document.getElementById('popup-message');
+            if (popup) {
+                popup.style.display = 'flex';
+                setTimeout(function() { popup.style.display = 'none'; }, 3000);
+            }
+        });
+    </script>
+</div>

@@ -1,4 +1,5 @@
-package com.example.dorm.model;
+/ Updated Student.java
+        package com.example.dorm.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -6,15 +7,15 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
 
-
 @Entity
 public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    // Mã sinh viên
+
     @Column(unique = true)
     private String code;
+
     private String name;
     private LocalDate dob;
     private String gender;
@@ -29,13 +30,20 @@ public class Student {
     @Column(name = "year")
     private Integer year;
 
-
     @ManyToOne
     @JoinColumn(name = "room_id")
     private Room room;
 
+    // NEW: Link to user account
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    // Getters and Setters
+    // Getters and Setters (keep existing ones and add new ones)
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    // ... rest of existing getters and setters remain the same
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getCode() { return code; }

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${student.id} ? 'Sửa Sinh Viên' : 'Thêm Sinh Viên'">Form</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+    <div class="content-with-sidebar">
+        <div class="form-container">
+        <h2 th:text="${student.id} ? 'Sửa Sinh Viên' : 'Thêm Sinh Viên'"></h2>
+        <form th:action="${student.id} ? @{/students/{id}(id=${student.id})} : @{/students}" th:object="${student}" method="post">
+            <div class="form-group">
+                <label for="code">Mã SV:</label>
+                <input type="text" id="code" th:field="*{code}" required>
+            </div>
+            <div class="form-group">
+                <label for="name">Tên:</label>
+                <input type="text" id="name" th:field="*{name}" required>
+                <span class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+            </div>
+            <div class="form-group">
+                <label for="dob">Ngày Sinh:</label>
+                <input type="date" id="dob" th:field="*{dob}"
+                       th:value="${student.dob != null ? #temporals.format(student.dob, 'yyyy-MM-dd') : ''}" required>
+                <span class="error" th:if="${#fields.hasErrors('dob')}" th:errors="*{dob}"></span>
+            </div>
+            <div class="form-group">
+                <label>Giới Tính:</label>
+                <div class="gender-options">
+                    <label>
+                        <input type="radio" th:field="*{gender}" value="Nam" id="male" required>
+                        Nam
+                    </label>
+                    <label>
+                        <input type="radio" th:field="*{gender}" value="Nữ" id="female">
+                        Nữ
+                    </label>
+                </div>
+                <span class="error" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></span>
+            </div>
+            <div class="form-group">
+                <label for="phone">Điện Thoại:</label>
+                <input type="text" id="phone" th:field="*{phone}" required>
+                <span class="error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></span>
+            </div>
+            <div class="form-group">
+                <label for="address">Địa Chỉ:</label>
+                <input type="text" id="address" th:field="*{address}" required>
+                <span class="error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" th:field="*{email}" required>
+                <span class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+            </div>
+            <div class="form-group">
+                <label for="department">Khoa:</label>
+                <input type="text" id="department" th:field="*{department}" required>
+                <span class="error" th:if="${#fields.hasErrors('department')}" th:errors="*{department}"></span>
+            </div>
+            <div class="form-group">
+                <label for="year">Năm Học:</label>
+                <input type="number" id="year" th:field="*{year}" required min="1" max="6">
+                <span class="error" th:if="${#fields.hasErrors('year')}" th:errors="*{year}"></span>
+            </div>
+            <div class="form-group">
+                <label for="room">Phòng:</label>
+                <select id="room" th:field="*{room.id}">
+                    <option value="">-- Chưa chọn phòng --</option>
+                    <option th:each="room : ${rooms}" th:value="${room.id}" th:text="${room.number}"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="contractStartDate">Ngày bắt đầu hợp đồng:</label>
+                <input type="date" id="contractStartDate" name="contractStartDate"
+                       th:value="${contractStartDate != null ? #temporals.format(contractStartDate, 'yyyy-MM-dd') : ''}">
+            </div>
+            <div class="form-group">
+                <label for="contractEndDate">Ngày kết thúc hợp đồng:</label>
+                <input type="date" id="contractEndDate" name="contractEndDate"
+                       th:value="${contractEndDate != null ? #temporals.format(contractEndDate, 'yyyy-MM-dd') : ''}">
+            </div>
+            <div class="form-group">
+                <label for="contractStatus">Trạng thái hợp đồng:</label>
+                <select id="contractStatus" name="contractStatus">
+                    <option value="ACTIVE">Đang Hoạt Động</option>
+                    <option value="EXPIRED">Hết Hạn</option>
+                    <option value="TERMINATED">Đã Hủy</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="button btn-save">Lưu</button>
+                <a th:href="@{/students}" class="button btn-cancel">Hủy</a>
+            </div>
+        </form>
+        </div>
+    </div>
+</body>
+</html>
