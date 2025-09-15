@@ -18,6 +18,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     Optional<Student> findByEmail(String email);
 
+    Optional<Student> findByUser_Username(String username);
+
     @org.springframework.data.jpa.repository.Query("""
             SELECT s FROM Student s
             WHERE lower(s.code) LIKE lower(concat('%', :search, '%'))

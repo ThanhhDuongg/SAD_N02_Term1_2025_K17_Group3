@@ -14,30 +14,27 @@ public class Role {
 
     private String description;
 
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public RoleName getName() { return name; }
-    public void setName(RoleName name) { this.name = name; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-}
-
-// RoleName.java
-package com.example.dorm.model;
-
-public enum RoleName {
-    ROLE_ADMIN("Quản lý KTX"),
-    ROLE_STAFF("Nhân viên hỗ trợ"),
-    ROLE_STUDENT("Sinh viên");
-
-    private String displayName;
-
-    RoleName(String displayName) {
-        this.displayName = displayName;
+    public Long getId() {
+        return id;
     }
 
-    public String getDisplayName() {
-        return displayName;
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public RoleName getName() {
+        return name;
+    }
+
+    public void setName(RoleName name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

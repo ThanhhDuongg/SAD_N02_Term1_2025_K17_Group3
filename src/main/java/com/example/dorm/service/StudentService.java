@@ -20,7 +20,6 @@ public class StudentService {
     @Autowired
     private RoomRepository roomRepository;
 
-
     public Page<Student> getAllStudents(Pageable pageable) {
         return studentRepository.findAll(pageable);
     }
@@ -49,7 +48,6 @@ public class StudentService {
         if (student.getRoom() != null && student.getRoom().getId() != null) {
             checkRoomCapacity(student.getRoom(), student.getId());
         } else {
-            // treat null id as no room selected
             student.setRoom(null);
         }
         return studentRepository.save(student);
@@ -64,6 +62,10 @@ public class StudentService {
             return studentRepository.findAll(pageable);
         }
         return studentRepository.searchByCodeOrNameWord(search, pageable);
+    }
+
+    public Optional<Student> findByUsername(String username) {
+        return studentRepository.findByUser_Username(username);
     }
 
     private void checkRoomCapacity(Room room, Long studentId) {
@@ -83,5 +85,4 @@ public class StudentService {
             throw new IllegalStateException("Room capacity exceeded");
         }
     }
-
 }
