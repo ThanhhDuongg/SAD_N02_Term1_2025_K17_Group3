@@ -144,7 +144,8 @@ INSERT INTO role (name, description) VALUES
 INSERT INTO users (username, password, email) VALUES
     ('admin','{noop}password','admin@example.com'),
     ('staff','{noop}password','staff@example.com'),
-    ('sv01','{noop}password','sv01-login@example.com');
+    ('sv01','{noop}password','sv01-login@example.com'),
+    ('sv02','{noop}password','sv02-login@example.com');
 
 -- ============================================
 -- SAMPLE DATA: USER_ROLES
@@ -152,17 +153,20 @@ INSERT INTO users (username, password, email) VALUES
 INSERT INTO user_roles (user_id, role_id) VALUES
     (1,1),
     (2,2),
-    (3,3);
-
-UPDATE student SET user_id = 3 WHERE code = 'SV01';
+    (3,3),
+    (4,3);
 
 -- ============================================
 -- SAMPLE DATA: STUDENT
 -- ============================================
--- 25 sinh viên, mã SV01 ... SV25
-INSERT INTO student (code, name, dob, gender, phone, address, email, department, year) VALUES
-    ('SV01','Nguyễn Văn An','2005-03-15','Nam','0912345601','Hà Nội','sv01@example.com','Công nghệ Thông tin',3),
-    ('SV02','Trần Thị Bình','2005-07-22','Nữ','0912345602','Ninh Bình','sv02@example.com','Kinh tế',2);
+-- Một số sinh viên mẫu để kiểm thử
+INSERT INTO student (code, name, dob, gender, phone, address, email, department, year, user_id) VALUES
+    ('SV01','Nguyễn Văn An','2005-03-15','Nam','0912345601','Hà Nội','sv01@example.com','Công nghệ Thông tin',3,
+        (SELECT id FROM users WHERE username = 'sv01')),
+    ('SV02','Trần Thị Bình','2005-07-22','Nữ','0912345602','Ninh Bình','sv02@example.com','Kinh tế',2,
+        (SELECT id FROM users WHERE username = 'sv02')),
+    ('SV03','Phạm Minh Châu','2004-11-05','Nữ','0912345603','Đà Nẵng','sv03@example.com','Du lịch',4,NULL),
+    ('SV04','Lê Quốc Dũng','2005-01-30','Nam','0912345604','Hải Phòng','sv04@example.com','Điện tử',1,NULL);
 
 -- ============================================
 -- SAMPLE DATA: ROOM
@@ -170,170 +174,59 @@ INSERT INTO student (code, name, dob, gender, phone, address, email, department,
 INSERT INTO room (number, type, capacity, price) VALUES
     ('101', 'Phòng tám', 8, 1200000.00),
     ('102', 'Phòng tám', 8, 1200000.00),
-    ('103', 'Phòng tám', 8, 1200000.00),
-    ('104', 'Phòng tám', 8, 1200000.00),
-    ('105', 'Phòng tám', 8, 1200000.00),
-    ('106', 'Phòng tám', 8, 1200000.00),
-    ('107', 'Phòng tám', 8, 1200000.00),
     ('201', 'Phòng bốn', 4, 2000000.00),
     ('202', 'Phòng bốn', 4, 2000000.00),
-    ('203', 'Phòng bốn', 4, 2000000.00),
-    ('204', 'Phòng bốn', 4, 2000000.00),
-    ('205', 'Phòng bốn', 4, 2000000.00),
-    ('206', 'Phòng bốn', 4, 2000000.00),
-    ('207', 'Phòng bốn', 4, 2000000.00),
-    ('208', 'Phòng bốn', 4, 2000000.00);
+    ('301', 'Phòng đôi', 2, 2500000.00);
 
 -- ============================================
 -- SAMPLE DATA: CONTRACT
 -- ============================================
--- 25 hợp đồng, mỗi hợp đồng gán lần lượt phòng_id từ 1 đến 15, sau đó quay lại phòng 1
+-- Một vài hợp đồng minh họa
 INSERT INTO contract (student_id, room_id, start_date, end_date, status) VALUES
-    ( 1,  1, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    ( 2,  2, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    ( 3,  3, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    ( 4,  4, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    ( 5,  5, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    ( 6,  6, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    ( 7,  7, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    ( 8,  8, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    ( 9,  9, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (10, 10, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (11, 11, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (12, 12, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (13, 13, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (14, 14, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (15, 15, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (16,  1, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (17,  2, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (18,  3, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (19,  4, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (20,  5, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (21,  6, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (22,  7, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (23,  8, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (24,  9, '2025-01-01', '2025-12-31', 'ACTIVE'),
-    (25, 10, '2025-01-01', '2025-12-31', 'ACTIVE');
+    ((SELECT id FROM student WHERE code = 'SV01'), (SELECT id FROM room WHERE number = '101'), '2025-01-01', '2025-12-31', 'ACTIVE'),
+    ((SELECT id FROM student WHERE code = 'SV02'), (SELECT id FROM room WHERE number = '102'), '2025-01-01', '2025-12-31', 'ACTIVE'),
+    ((SELECT id FROM student WHERE code = 'SV03'), (SELECT id FROM room WHERE number = '201'), '2025-02-01', '2025-12-31', 'ACTIVE'),
+    ((SELECT id FROM student WHERE code = 'SV04'), (SELECT id FROM room WHERE number = '202'), '2024-09-01', '2025-08-31', 'EXPIRED');
 
 -- ============================================
 -- SAMPLE DATA: MAINTENANCE REQUEST
 -- ============================================
 INSERT INTO maintenance_request (student_id, room_id, description, request_type, desired_room_number, status)
 VALUES
-    (1, 1, 'Đèn phòng bị hỏng, cần thay mới', 'MAINTENANCE', NULL, 'PENDING'),
-    (2, 2, 'Xin chuyển sang phòng 201 để học nhóm', 'ROOM_TRANSFER', '201', 'IN_PROGRESS');
+    ((SELECT id FROM student WHERE code = 'SV01'), (SELECT id FROM room WHERE number = '101'),
+        'Đèn phòng bị hỏng, cần thay mới', 'MAINTENANCE', NULL, 'PENDING'),
+    ((SELECT id FROM student WHERE code = 'SV02'), (SELECT id FROM room WHERE number = '102'),
+        'Xin chuyển sang phòng 201 để học nhóm', 'ROOM_TRANSFER', '201', 'IN_PROGRESS');
 
 -- ============================================
 -- SAMPLE DATA: VIOLATION
 -- ============================================
 INSERT INTO violation (student_id, room_id, description, severity, date)
 VALUES
-    (1, 1, 'Tụ tập quá giờ quy định', 'MEDIUM', '2025-02-15'),
-    (2, 2, 'Không tuân thủ quy định dọn vệ sinh', 'LOW', '2025-03-01');
+    ((SELECT id FROM student WHERE code = 'SV01'), (SELECT id FROM room WHERE number = '101'),
+        'Tụ tập quá giờ quy định', 'MEDIUM', '2025-02-15'),
+    ((SELECT id FROM student WHERE code = 'SV03'), (SELECT id FROM room WHERE number = '201'),
+        'Không tuân thủ quy định dọn vệ sinh', 'LOW', '2025-03-01');
 
 -- ============================================
 -- SAMPLE DATA: FEE
 -- ============================================
 INSERT INTO fee (contract_id, type, amount, due_date, payment_status) VALUES
-    -- Contract 1
-    ( 1, 'CLEANING',    120000, '2025-06-10', 'PAID'),
-    ( 1, 'ELECTRICITY', 200000, '2025-06-15', 'UNPAID'),
+    -- Hợp đồng của SV01
+    ((SELECT id FROM contract WHERE student_id = (SELECT id FROM student WHERE code = 'SV01')), 'RENT',        1200000, '2025-03-01', 'PAID'),
+    ((SELECT id FROM contract WHERE student_id = (SELECT id FROM student WHERE code = 'SV01')), 'ELECTRICITY', 180000,  '2025-03-05', 'UNPAID'),
 
-    -- Contract 2
-    ( 2, 'WATER',       150000, '2025-06-20', 'PAID'),
-    ( 2, 'MAINTENANCE', 100000, '2025-06-25', 'UNPAID'),
+    -- Hợp đồng của SV02
+    ((SELECT id FROM contract WHERE student_id = (SELECT id FROM student WHERE code = 'SV02')), 'RENT',        1200000, '2025-03-01', 'PAID'),
+    ((SELECT id FROM contract WHERE student_id = (SELECT id FROM student WHERE code = 'SV02')), 'WATER',        90000,  '2025-03-05', 'PAID'),
 
-    -- Contract 3
-    ( 3, 'CLEANING',    122000, '2025-06-10', 'PAID'),
-    ( 3, 'ELECTRICITY', 202000, '2025-06-15', 'PAID'),
+    -- Hợp đồng của SV03
+    ((SELECT id FROM contract WHERE student_id = (SELECT id FROM student WHERE code = 'SV03')), 'RENT',        2000000, '2025-03-10', 'UNPAID'),
+    ((SELECT id FROM contract WHERE student_id = (SELECT id FROM student WHERE code = 'SV03')), 'MAINTENANCE',  85000,  '2025-03-15', 'PAID'),
 
-    -- Contract 4
-    ( 4, 'WATER',       152000, '2025-06-20', 'UNPAID'),
-    ( 4, 'MAINTENANCE', 102000, '2025-06-25', 'PAID'),
-
-    -- Contract 5
-    ( 5, 'CLEANING',    124000, '2025-06-10', 'UNPAID'),
-    ( 5, 'ELECTRICITY', 204000, '2025-06-15', 'PAID'),
-
-    -- Contract 6
-    ( 6, 'WATER',       154000, '2025-06-20', 'PAID'),
-    ( 6, 'MAINTENANCE', 104000, '2025-06-25', 'UNPAID'),
-
-    -- Contract 7
-    ( 7, 'CLEANING',    126000, '2025-06-10', 'PAID'),
-    ( 7, 'ELECTRICITY', 206000, '2025-06-15', 'PAID'),
-
-    -- Contract 8
-    ( 8, 'WATER',       156000, '2025-06-20', 'UNPAID'),
-    ( 8, 'MAINTENANCE', 106000, '2025-06-25', 'PAID'),
-
-    -- Contract 9
-    ( 9, 'CLEANING',    128000, '2025-06-10', 'UNPAID'),
-    ( 9, 'ELECTRICITY', 208000, '2025-06-15', 'PAID'),
-
-    -- Contract 10
-    (10, 'WATER',       158000, '2025-06-20', 'PAID'),
-    (10, 'MAINTENANCE', 108000, '2025-06-25', 'UNPAID'),
-
-    -- Contract 11
-    (11, 'CLEANING',    130000, '2025-07-10', 'PAID'),
-    (11, 'ELECTRICITY', 210000, '2025-07-15', 'UNPAID'),
-
-    -- Contract 12
-    (12, 'WATER',       160000, '2025-07-20', 'PAID'),
-    (12, 'MAINTENANCE', 110000, '2025-07-25', 'PAID'),
-
-    -- Contract 13
-    (13, 'CLEANING',    132000, '2025-07-10', 'UNPAID'),
-    (13, 'ELECTRICITY', 212000, '2025-07-15', 'PAID'),
-
-    -- Contract 14
-    (14, 'WATER',       162000, '2025-07-20', 'PAID'),
-    (14, 'MAINTENANCE', 112000, '2025-07-25', 'UNPAID'),
-
-    -- Contract 15
-    (15, 'CLEANING',    134000, '2025-07-10', 'PAID'),
-    (15, 'ELECTRICITY', 214000, '2025-07-15', 'PAID'),
-
-    -- Contract 16
-    (16, 'WATER',       164000, '2025-07-20', 'UNPAID'),
-    (16, 'MAINTENANCE', 114000, '2025-07-25', 'PAID'),
-
-    -- Contract 17
-    (17, 'CLEANING',    136000, '2025-07-10', 'PAID'),
-    (17, 'ELECTRICITY', 216000, '2025-07-15', 'UNPAID'),
-
-    -- Contract 18
-    (18, 'WATER',       166000, '2025-07-20', 'PAID'),
-    (18, 'MAINTENANCE', 116000, '2025-07-25', 'PAID'),
-
-    -- Contract 19
-    (19, 'CLEANING',    138000, '2025-07-10', 'UNPAID'),
-    (19, 'ELECTRICITY', 218000, '2025-07-15', 'PAID'),
-
-    -- Contract 20
-    (20, 'WATER',       168000, '2025-07-20', 'PAID'),
-    (20, 'MAINTENANCE', 118000, '2025-07-25', 'UNPAID'),
-
-    -- Contract 21
-    (21, 'CLEANING',    140000, '2025-08-10', 'PAID'),
-    (21, 'ELECTRICITY', 220000, '2025-08-15', 'PAID'),
-
-    -- Contract 22
-    (22, 'WATER',       170000, '2025-08-20', 'PAID'),
-    (22, 'MAINTENANCE', 120000, '2025-08-25', 'UNPAID'),
-
-    -- Contract 23
-    (23, 'CLEANING',    142000, '2025-08-10', 'UNPAID'),
-    (23, 'ELECTRICITY', 222000, '2025-08-15', 'PAID'),
-
-    -- Contract 24
-    (24, 'WATER',       172000, '2025-08-20', 'PAID'),
-    (24, 'MAINTENANCE', 122000, '2025-08-25', 'PAID'),
-
-    -- Contract 25
-    (25, 'CLEANING',    144000, '2025-08-10', 'PAID'),
-    (25, 'ELECTRICITY', 224000, '2025-08-15', 'UNPAID');
+    -- Hợp đồng của SV04
+    ((SELECT id FROM contract WHERE student_id = (SELECT id FROM student WHERE code = 'SV04')), 'RENT',        2000000, '2024-10-01', 'PAID'),
+    ((SELECT id FROM contract WHERE student_id = (SELECT id FROM student WHERE code = 'SV04')), 'ELECTRICITY', 150000,  '2024-10-05', 'PAID');
 
 
 
