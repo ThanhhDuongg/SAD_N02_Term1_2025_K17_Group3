@@ -17,7 +17,11 @@ public class MaintenanceRequest {
     @JoinColumn(name = "room_id")
     private Room room;
 
+    private String requestType;
+
     private String description;
+
+    private String desiredRoomNumber;
 
     private String status;
 
@@ -53,6 +57,22 @@ public class MaintenanceRequest {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getRequestType() {
+        return requestType;
+    }
+
+    public void setRequestType(String requestType) {
+        this.requestType = requestType;
+    }
+
+    public String getDesiredRoomNumber() {
+        return desiredRoomNumber;
+    }
+
+    public void setDesiredRoomNumber(String desiredRoomNumber) {
+        this.desiredRoomNumber = desiredRoomNumber;
     }
 
     public String getStatus() {

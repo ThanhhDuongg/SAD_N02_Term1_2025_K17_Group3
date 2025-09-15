@@ -21,6 +21,7 @@ CREATE TABLE student (
     email VARCHAR(255),
     department VARCHAR(255),
     year INT,
+    user_id BIGINT UNIQUE,
     CONSTRAINT chk_email UNIQUE (email)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -95,6 +96,10 @@ CREATE TABLE user_roles (
     FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+ALTER TABLE student
+    ADD CONSTRAINT fk_student_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
+
 -- ============================================
 -- TABLE: MAINTENANCE_REQUEST
 -- ============================================
@@ -103,8 +108,10 @@ CREATE TABLE maintenance_request (
     student_id BIGINT,
     room_id BIGINT,
     description TEXT,
+    request_type VARCHAR(50),
+    desired_room_number VARCHAR(50),
     status VARCHAR(50),
-    created_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
     FOREIGN KEY (room_id) REFERENCES room(id) ON DELETE SET NULL
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -135,13 +142,19 @@ INSERT INTO role (name, description) VALUES
 -- SAMPLE DATA: USERS
 -- ============================================
 INSERT INTO users (username, password, email) VALUES
-    ('admin','{noop}password','admin@example.com');
+    ('admin','{noop}password','admin@example.com'),
+    ('staff','{noop}password','staff@example.com'),
+    ('sv01','{noop}password','sv01-login@example.com');
 
 -- ============================================
 -- SAMPLE DATA: USER_ROLES
 -- ============================================
 INSERT INTO user_roles (user_id, role_id) VALUES
-    (1,1);
+    (1,1),
+    (2,2),
+    (3,3);
+
+UPDATE student SET user_id = 3 WHERE code = 'SV01';
 
 -- ============================================
 -- SAMPLE DATA: STUDENT
@@ -201,6 +214,22 @@ INSERT INTO contract (student_id, room_id, start_date, end_date, status) VALUES
     (23,  8, '2025-01-01', '2025-12-31', 'ACTIVE'),
     (24,  9, '2025-01-01', '2025-12-31', 'ACTIVE'),
     (25, 10, '2025-01-01', '2025-12-31', 'ACTIVE');
+
+-- ============================================
+-- SAMPLE DATA: MAINTENANCE REQUEST
+-- ============================================
+INSERT INTO maintenance_request (student_id, room_id, description, request_type, desired_room_number, status)
+VALUES
+    (1, 1, 'Đèn phòng bị hỏng, cần thay mới', 'MAINTENANCE', NULL, 'PENDING'),
+    (2, 2, 'Xin chuyển sang phòng 201 để học nhóm', 'ROOM_TRANSFER', '201', 'IN_PROGRESS');
+
+-- ============================================
+-- SAMPLE DATA: VIOLATION
+-- ============================================
+INSERT INTO violation (student_id, room_id, description, severity, date)
+VALUES
+    (1, 1, 'Tụ tập quá giờ quy định', 'MEDIUM', '2025-02-15'),
+    (2, 2, 'Không tuân thủ quy định dọn vệ sinh', 'LOW', '2025-03-01');
 
 -- ============================================
 -- SAMPLE DATA: FEE

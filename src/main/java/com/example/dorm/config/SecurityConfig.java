@@ -1,8 +1,11 @@
 package com.example.dorm.config;
 
+import com.example.dorm.service.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,9 +19,23 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
+
+    @Autowired
+    private RoleAwareAuthenticationSuccessHandler authenticationSuccessHandler;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
     @Bean
@@ -29,22 +46,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/admin/**", "/users/**").hasRole("ADMIN")
-                        .requestMatchers("/students/new", "/students/*/edit", "/students/*/delete").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers("/rooms/new", "/rooms/*/edit", "/rooms/*/delete").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers("/contracts/new", "/contracts/*/edit", "/contracts/*/delete").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers("/fees/new", "/fees/*/edit", "/fees/*/delete").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/", "/login", "/register", "/error").permitAll()
                         .requestMatchers("/student/**").hasRole("STUDENT")
-                        .requestMatchers("/students", "/rooms", "/contracts", "/fees").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers("/students/*", "/rooms/*", "/contracts/*", "/fees/*").authenticated()
+                        .requestMatchers("/maintenance/**", "/violations/**", "/dashboard").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers("/students/**", "/rooms/**", "/contracts/**", "/fees/**").hasAnyRole("ADMIN", "STAFF")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/dashboard", true)
+                        .successHandler(authenticationSuccessHandler)
                         .failureUrl("/login?error=true")
                         .permitAll()
                 )

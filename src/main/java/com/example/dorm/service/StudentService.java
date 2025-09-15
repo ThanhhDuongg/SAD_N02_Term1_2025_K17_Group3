@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,6 +23,10 @@ public class StudentService {
 
     public Page<Student> getAllStudents(Pageable pageable) {
         return studentRepository.findAll(pageable);
+    }
+
+    public List<Student> getAllStudents() {
+        return studentRepository.findAll();
     }
 
     public Optional<Student> getStudent(Long id) {
@@ -66,6 +71,14 @@ public class StudentService {
 
     public Optional<Student> findByUsername(String username) {
         return studentRepository.findByUser_Username(username);
+    }
+
+    public Optional<Student> findByCode(String code) {
+        return studentRepository.findByCode(code);
+    }
+
+    public Optional<Student> findByEmail(String email) {
+        return studentRepository.findByEmail(email);
     }
 
     private void checkRoomCapacity(Room room, Long studentId) {

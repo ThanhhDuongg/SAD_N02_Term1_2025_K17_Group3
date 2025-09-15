@@ -7,4 +7,8 @@ import java.util.List;
 
 public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceRequest, Long> {
     List<MaintenanceRequest> findByStudent_Id(Long studentId);
+
+    List<MaintenanceRequest> findByStatusOrderByCreatedAtDesc(String status);
+
+    List<MaintenanceRequest> findAllByOrderByCreatedAtDesc();
 }

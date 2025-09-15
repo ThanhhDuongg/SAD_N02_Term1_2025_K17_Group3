@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý yêu cầu</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="fragments/header :: header"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div th:replace="fragments/header :: popup"></div>
+
+<div class="content-with-sidebar">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h2>Quản lý yêu cầu sửa chữa & chuyển phòng</h2>
+                <p class="text-muted">Theo dõi và xử lý các yêu cầu do sinh viên gửi từ cổng thông tin</p>
+            </div>
+            <a class="button btn-add" th:href="@{/student/dashboard}" sec:authorize="hasRole('STUDENT')">Tạo yêu cầu</a>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card" th:each="status : ${statusOptions}">
+                <h4 th:text="${status}"></h4>
+                <p class="summary-value" th:text="${statusSummary[status]} ?: 0">0</p>
+            </div>
+        </div>
+
+        <form class="filter-bar" method="get">
+            <div class="filter-group">
+                <label for="status">Trạng thái</label>
+                <select id="status" name="status">
+                    <option value="">Tất cả</option>
+                    <option th:each="status : ${statusOptions}"
+                            th:value="${status}"
+                            th:selected="${status.equalsIgnoreCase(selectedStatus)}"
+                            th:text="${status}"></option>
+                </select>
+            </div>
+            <button class="button btn-add" type="submit">Lọc</button>
+        </form>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Mã yêu cầu</th>
+                    <th>Sinh viên</th>
+                    <th>Phòng</th>
+                    <th>Loại yêu cầu</th>
+                    <th>Mô tả</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày gửi</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="request : ${requests}" class="table-row">
+                    <td th:text="${request.id}"></td>
+                    <td>
+                        <div class="table-meta">
+                            <strong th:text="${request.student != null ? request.student.name : 'Không xác định'}"></strong>
+                            <span th:text="${request.student != null ? request.student.code : ''}" class="meta-sub"></span>
+                        </div>
+                    </td>
+                    <td th:text="${request.room != null ? request.room.number : 'N/A'}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${request.requestType} == 'ROOM_TRANSFER' ? ' badge-warning' :
+                                              (${request.requestType} == 'INCIDENT' ? ' badge-danger' : ' badge-info')}"
+                              th:text="${#strings.replace(request.requestType, '_', ' ')}">MAINTENANCE</span>
+                    </td>
+                    <td th:text="${request.description}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${request.status} == 'COMPLETED' ? ' badge-success' :
+                                              (${request.status} == 'IN_PROGRESS' ? ' badge-warning' :
+                                              (${request.status} == 'REJECTED' ? ' badge-danger' : ' badge-info'))}"
+                              th:text="${request.status}">PENDING</span>
+                    </td>
+                    <td th:text="${#temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td>
+                        <a class="button btn-view" th:href="@{'/maintenance/' + ${request.id}}">Xem</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(requests)}">
+                    <td colspan="8" class="text-center">Chưa có yêu cầu nào</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
