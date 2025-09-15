@@ -76,18 +76,20 @@ public class ContractService {
         Long newStudentId = contract.getStudent() != null ? contract.getStudent().getId() : null;
         Long existingStudentId = existing.getStudent() != null ? existing.getStudent().getId() : null;
 
-        if (!existing.getRoom().getId().equals(contract.getRoom().getId())
-                || (newStudentId != null && !newStudentId.equals(existingStudentId))) {
+        boolean roomChanged = !existing.getRoom().getId().equals(contract.getRoom().getId());
+        boolean studentChanged = newStudentId != null && !newStudentId.equals(existingStudentId);
+
+        if (roomChanged || studentChanged) {
             checkRoomCapacity(contract.getRoom(), newStudentId);
-            if (newStudentId != null && !newStudentId.equals(existingStudentId) &&
-                    contractRepository.existsByStudent_Id(newStudentId)) {
+            if (studentChanged && contractRepository.existsByStudent_Id(newStudentId)) {
                 throw new IllegalStateException("Đã có hợp đồng");
             }
-           if (existingStudentId != null && (newStudentId == null || !existingStudentId.equals(newStudentId))) {
-               studentRepository.findById(existingStudentId).ifPresent(s -> {
-                   s.setRoom(null);
-                   studentRepository.save(s);
-               });
+            if (existingStudentId != null && (newStudentId == null || !existingStudentId.equals(newStudentId))) {
+                studentRepository.findById(existingStudentId).ifPresent(s -> {
+                    s.setRoom(null);
+                    studentRepository.save(s);
+                });
+            }
         }
 
         if (newStudentId != null) {
@@ -99,17 +101,21 @@ public class ContractService {
         } else {
             existing.setStudent(null);
         }
-      
+
         existing.setRoom(contract.getRoom());
         existing.setStartDate(contract.getStartDate());
         existing.setEndDate(contract.getEndDate());
         existing.setStatus(contract.getStatus());
-        }
+
         return contractRepository.save(existing);
     }
 
     public void deleteContract(Long id) {
         contractRepository.deleteById(id);
+    }
+
+    public List<Contract> getContractsByStudent(Long studentId) {
+        return contractRepository.findByStudent_Id(studentId);
     }
 
     public Page<Contract> searchContracts(String search, Pageable pageable) {

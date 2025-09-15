@@ -2,12 +2,14 @@ package com.example.dorm.service;
 
 import com.example.dorm.model.Fee;
 import com.example.dorm.model.FeeType;
+import com.example.dorm.model.PaymentStatus;
 import com.example.dorm.repository.FeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -41,6 +43,14 @@ public class FeeService {
 
     public void deleteFee(Long id) {
         feeRepository.deleteById(id);
+    }
+
+    public List<Fee> getFeesByStudent(Long studentId) {
+        return feeRepository.findByContract_Student_Id(studentId);
+    }
+
+    public List<Fee> getUnpaidFeesByStudent(Long studentId) {
+        return feeRepository.findByContract_Student_IdAndPaymentStatus(studentId, PaymentStatus.UNPAID);
     }
 
     public Page<Fee> searchFees(String search, Pageable pageable) {
