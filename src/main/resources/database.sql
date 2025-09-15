@@ -141,6 +141,11 @@ INSERT INTO role (name, description) VALUES
 -- ============================================
 -- SAMPLE DATA: USERS
 -- ============================================
+-- Các tài khoản đăng nhập mẫu để thử nghiệm nhanh:
+--   • Quản lý KTX:    admin / password
+--   • Nhân viên hỗ trợ: staff / password
+--   • Sinh viên 1:     sv01 / password
+--   • Sinh viên 2:     sv02 / password
 INSERT INTO users (username, password, email) VALUES
     ('admin','{noop}password','admin@example.com'),
     ('staff','{noop}password','staff@example.com'),
