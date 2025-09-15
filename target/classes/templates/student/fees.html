@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Fees</title>
+</head>
+<body>
+<div th:replace="fragments/header :: header"></div>
+<h2>Phí</h2>
+<table border="1">
+<tr><th>Loại</th><th>Số tiền</th><th>Hạn</th><th>Trạng thái</th></tr>
+<tr th:each="f : ${fees}">
+    <td th:text="${f.type}"></td>
+    <td th:text="${f.amount}"></td>
+    <td th:text="${f.dueDate}"></td>
+    <td th:text="${f.paymentStatus}"></td>
+</tr>
+</table>
+</body>
+</html>

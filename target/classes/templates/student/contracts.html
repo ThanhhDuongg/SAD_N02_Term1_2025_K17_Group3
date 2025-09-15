@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Contracts</title>
+</head>
+<body>
+<div th:replace="fragments/header :: header"></div>
+<h2>Hợp đồng</h2>
+<table border="1">
+<tr><th>ID</th><th>Phòng</th><th>Trạng thái</th></tr>
+<tr th:each="c : ${contracts}">
+    <td th:text="${c.id}"></td>
+    <td th:text="${c.room.number}"></td>
+    <td th:text="${c.status}"></td>
+</tr>
+</table>
+</body>
+</html>

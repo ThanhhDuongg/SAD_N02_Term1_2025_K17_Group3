@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm Vi Phạm</title>
+</head>
+<body>
+<div th:replace="fragments/header :: header"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<h2>Ghi nhận vi phạm</h2>
+<form th:action="@{/violations}" method="post" th:object="${violation}">
+    <label>ID Sinh viên</label>
+    <input th:field="*{student.id}" />
+    <label>ID Phòng</label>
+    <input th:field="*{room.id}" />
+    <label>Mô tả</label>
+    <input th:field="*{description}" />
+    <label>Mức độ</label>
+    <input th:field="*{severity}" />
+    <button type="submit">Lưu</button>
+</form>
+</body>
+</html>
