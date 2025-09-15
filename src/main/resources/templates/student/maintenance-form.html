@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Maintenance Request</title>
+</head>
+<body>
+<div th:replace="fragments/header :: header"></div>
+<h2>Yêu cầu sửa chữa</h2>
+<form th:action="@{/student/maintenance}" method="post" th:object="${maintenanceRequest}">
+    <label>Mô tả</label>
+    <textarea th:field="*{description}"></textarea>
+    <button type="submit">Gửi</button>
+</form>
+</body>
+</html>

@@ -1,5 +1,4 @@
-/ Updated Student.java
-        package com.example.dorm.model;
+package com.example.dorm.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;

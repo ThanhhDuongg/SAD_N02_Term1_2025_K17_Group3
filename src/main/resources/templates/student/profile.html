@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Profile</title>
+</head>
+<body>
+<div th:replace="fragments/header :: header"></div>
+<h2>Thông tin cá nhân</h2>
+<p th:text="'Mã SV: ' + ${student.code}"></p>
+<p th:text="'Họ tên: ' + ${student.name}"></p>
+<p th:text="'Email: ' + ${student.email}"></p>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Violations</title>
+</head>
+<body>
+<div th:replace="fragments/header :: header"></div>
+<h2>Vi phạm của tôi</h2>
+<table border="1">
+<tr><th>Phòng</th><th>Mô tả</th><th>Mức độ</th><th>Ngày</th></tr>
+<tr th:each="v : ${violations}">
+    <td th:text="${v.room.number}"></td>
+    <td th:text="${v.description}"></td>
+    <td th:text="${v.severity}"></td>
+    <td th:text="${v.date}"></td>
+</tr>
+</table>
+</body>
+</html>

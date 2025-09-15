@@ -11,31 +11,17 @@ USE dormitory_db;
 -- TABLE: STUDENT
 -- ============================================
 CREATE TABLE student (
-<<<<<<< HEAD
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    code        VARCHAR(50) UNIQUE,
-    name        VARCHAR(255) NOT NULL,
-    dob         DATE,
-    gender      ENUM('Nam', 'Nữ'),
-    phone       VARCHAR(20),
-    address     VARCHAR(255),
-    email       VARCHAR(255),
-    department  VARCHAR(255),
-    study_year  INT, -- Suggest: Add CHECK (study_year BETWEEN 1 AND 4) if supported
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(50) UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    dob DATE,
+    gender ENUM('Nam', 'Nữ'),
+    phone VARCHAR(20),
+    address VARCHAR(255),
+    email VARCHAR(255),
+    department VARCHAR(255),
+    year INT,
     CONSTRAINT chk_email UNIQUE (email)
-=======
-                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                         code VARCHAR(50) UNIQUE,
-                         name VARCHAR(255) NOT NULL,
-                         dob DATE,
-                         gender ENUM('Nam', 'Nữ'),
-                         phone VARCHAR(20),
-                         address VARCHAR(255),
-                         email VARCHAR(255),
-                         department VARCHAR(255),
-                         year INT, -- Suggest: Add CHECK (year BETWEEN 1 AND 4) if supported
-                         CONSTRAINT chk_email UNIQUE (email)
->>>>>>> codex/fix-thêm-sinh-viên-không-thành-công
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- ============================================
@@ -77,65 +63,93 @@ CREATE TABLE fee (
     FOREIGN KEY (contract_id) REFERENCES contract(id) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+
+-- ============================================
+-- TABLE: ROLE
+-- ============================================
+CREATE TABLE role (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description VARCHAR(255)
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLE: USERS
+-- ============================================
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE,
+    password VARCHAR(255),
+    email VARCHAR(255) UNIQUE,
+    enabled BOOLEAN DEFAULT TRUE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLE: USER_ROLES
+-- ============================================
+CREATE TABLE user_roles (
+    user_id BIGINT,
+    role_id BIGINT,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLE: MAINTENANCE_REQUEST
+-- ============================================
+CREATE TABLE maintenance_request (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    student_id BIGINT,
+    room_id BIGINT,
+    description TEXT,
+    status VARCHAR(50),
+    created_at DATETIME,
+    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES room(id) ON DELETE SET NULL
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLE: VIOLATION
+-- ============================================
+CREATE TABLE violation (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    student_id BIGINT,
+    room_id BIGINT,
+    description TEXT,
+    severity VARCHAR(50),
+    date DATE,
+    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES room(id) ON DELETE SET NULL
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ============================================
+-- SAMPLE DATA: ROLE
+-- ============================================
+INSERT INTO role (name, description) VALUES
+    ('ROLE_ADMIN','Quản lý KTX'),
+    ('ROLE_STAFF','Nhân viên hỗ trợ'),
+    ('ROLE_STUDENT','Sinh viên');
+
+-- ============================================
+-- SAMPLE DATA: USERS
+-- ============================================
+INSERT INTO users (username, password, email) VALUES
+    ('admin','{noop}password','admin@example.com');
+
+-- ============================================
+-- SAMPLE DATA: USER_ROLES
+-- ============================================
+INSERT INTO user_roles (user_id, role_id) VALUES
+    (1,1);
+
 -- ============================================
 -- SAMPLE DATA: STUDENT
 -- ============================================
 -- 25 sinh viên, mã SV01 ... SV25
-<<<<<<< HEAD
-INSERT INTO student (code, name, dob, gender, phone, address, email, department, study_year) VALUES
-    ('SV01', 'Nguyễn Văn An',     '2005-03-15', 'Nam', '0912345601', 'Hà Nội',      'sv01@example.com', 'Công nghệ Thông tin', 3),
-    ('SV02', 'Trần Thị Bình',     '2005-07-22', 'Nữ',  '0912345602', 'Ninh Bình',   'sv02@example.com', 'Kinh tế',              2),
-    ('SV03', 'Lê Minh Châu',      '2003-11-30', 'Nam', '0912345603', 'Nghệ An',     'sv03@example.com', 'Kỹ thuật Điện',        4),
-    ('SV04', 'Phạm Quốc Đạt',     '2004-05-10', 'Nam', '0912345604', 'Thái Nguyên', 'sv04@example.com', 'Kỹ thuật Ô tô',        3),
-    ('SV05', 'Hoàng Thị Mai',     '2005-09-25', 'Nữ',  '0912345605', 'Thanh Hóa',   'sv05@example.com', 'Tâm lý học',           2),
-    ('SV06', 'Nguyễn Văn Hùng',   '2004-08-05', 'Nam', '0912345606', 'Hải Phòng',   'sv06@example.com', 'Sư phạm Toán',         3),
-    ('SV07', 'Trần Thị Lan',      '2003-10-10', 'Nữ',  '0912345607', 'Đà Nẵng',     'sv07@example.com', 'Kỹ thuật phần mềm',    4),
-    ('SV08', 'Lê Văn Nam',        '2005-04-20', 'Nam', '0912345608', 'Hồ Chí Minh', 'sv08@example.com', 'Khoa học Máy tính',    2),
-    ('SV09', 'Phạm Thị Oanh',     '2004-09-30', 'Nữ',  '0912345609', 'Cần Thơ',     'sv09@example.com', 'Ngôn ngữ Anh',         3),
-    ('SV10', 'Nguyễn Văn Quân',   '2003-10-10', 'Nam', '0912345610', 'Bắc Ninh',    'sv10@example.com', 'Quản trị Kinh doanh',  4),
-    ('SV11', 'Đỗ Thị Yến',        '2005-03-21', 'Nữ',  '0912345611', 'Vĩnh Phúc',   'sv11@example.com', 'Kinh tế',              1),
-    ('SV12', 'Vũ Hoàng Sơn',      '2004-06-16', 'Nam', '0912345612', 'Hải Dương',   'sv12@example.com', 'Kỹ thuật Điện',        2),
-    ('SV13', 'Trịnh Văn Bình',    '2005-09-07', 'Nam', '0912345613', 'Bình Dương',  'sv13@example.com', 'Kỹ thuật Điện',        3),
-    ('SV14', 'Mai Thị Hạnh',      '2003-05-28', 'Nữ',  '0912345614', 'Nghệ An',     'sv14@example.com', 'Quản trị Kinh doanh',  2),
-    ('SV15', 'Nguyễn Tuấn Dũng',  '2004-07-13', 'Nam', '0912345615', 'Phú Thọ',     'sv15@example.com', 'Công nghệ Thông tin',  4),
-    ('SV16', 'Trần Minh Hòa',     '2005-01-09', 'Nam', '0912345616', 'Quảng Ninh',  'sv16@example.com', 'Công nghệ Thông tin',  1),
-    ('SV17', 'Lê Thị Xuân',       '2004-02-15', 'Nữ',  '0912345617', 'Hà Tĩnh',     'sv17@example.com', 'Tâm lý học',           3),
-    ('SV18', 'Ngô Quang Phúc',    '2005-04-26', 'Nam', '0912345618', 'Nam Định',    'sv18@example.com', 'Ngôn ngữ Anh',         2),
-    ('SV19', 'Phạm Thị Thảo',     '2003-12-20', 'Nữ',  '0912345619', 'Sơn La',      'sv19@example.com', 'Kỹ thuật phần mềm',    4),
-    ('SV20', 'Vũ Minh Tuấn',      '2004-03-11', 'Nam', '0912345620', 'Bắc Giang',   'sv20@example.com', 'Kỹ thuật phần mềm',    3),
-    ('SV21', 'Đặng Thị Thu',      '2005-05-18', 'Nữ',  '0912345621', 'Hà Nam',      'sv21@example.com', 'Quản trị Kinh doanh',  2),
-    ('SV22', 'Trịnh Văn Toàn',    '2005-08-14', 'Nam', '0912345622', 'Quảng Bình',  'sv22@example.com', 'Tâm lý học',           1),
-    ('SV23', 'Nguyễn Thu Hằng',   '2004-10-05', 'Nữ',  '0912345623', 'Thái Bình',   'sv23@example.com', 'Ngôn ngữ Anh',         4),
-    ('SV24', 'Phan Quang Huy',    '2003-09-23', 'Nam', '0912345624', 'Bình Phước',  'sv24@example.com', 'Kinh tế',              3),
-    ('SV25', 'Lê Thị Hường',      '2005-11-02', 'Nữ',  '0912345625', 'Long An',     'sv25@example.com', 'Công nghệ Thông tin',  2);
-=======
 INSERT INTO student (code, name, dob, gender, phone, address, email, department, year) VALUES
-                                                                                                 ('SV01','Nguyễn Văn An', '2005-03-15', 'Nam', '0912345601', 'Hà Nội', 'sv01@example.com', 'Công nghệ Thông tin', 3),
-                                                                                                 ('SV02','Trần Thị Bình', '2005-07-22', 'Nữ', '0912345602', 'Ninh Bình', 'sv02@example.com', 'Kinh tế', 2),
-                                                                                                 ('SV03','Lê Minh Châu', '2003-11-30', 'Nam', '0912345603', 'Nghệ An', 'sv03@example.com', 'Kỹ thuật Điện', 4),
-                                                                                                 ('SV04','Phạm Quốc Đạt', '2004-05-10', 'Nam', '0912345604', 'Thái Nguyên', 'sv04@example.com', 'Kỹ thuật Ô tô', 3),
-                                                                                                 ('SV05','Hoàng Thị Mai', '2005-09-25', 'Nữ', '0912345605', 'Thanh Hóa', 'sv05@example.com', 'Tâm lý học', 2),
-                                                                                                 ('SV06','Nguyễn Văn Hùng', '2004-08-05', 'Nam', '0912345606', 'Hải Phòng', 'sv06@example.com', 'Sư phạm Toán', 3),
-                                                                                                 ('SV07','Trần Thị Lan', '2003-10-10', 'Nữ', '0912345607', 'Đà Nẵng', 'sv07@example.com', 'Kỹ thuật phần mềm', 4),
-                                                                                                 ('SV08','Lê Văn Nam', '2005-04-20', 'Nam', '0912345608', 'Hồ Chí Minh', 'sv08@example.com', 'Khoa học Máy tính', 2),
-                                                                                                 ('SV09','Phạm Thị Oanh', '2004-09-30', 'Nữ', '0912345609', 'Cần Thơ', 'sv09@example.com', 'Ngôn ngữ Anh', 3),
-                                                                                                 ('SV10','Nguyễn Văn Quân', '2003-10-10', 'Nam', '0912345610', 'Bắc Ninh', 'sv10@example.com', 'Quản trị Kinh doanh', 4),
-                                                                                                 ('SV11','Đỗ Thị Yến', '2005-03-21', 'Nữ', '0912345611', 'Vĩnh Phúc', 'sv11@example.com', 'Kinh tế', 1),
-                                                                                                 ('SV12','Vũ Hoàng Sơn', '2004-06-16', 'Nam', '0912345612', 'Hải Dương', 'sv12@example.com', 'Kỹ thuật Điện', 2),
-                                                                                                 ('SV13','Trịnh Văn Bình', '2005-09-07', 'Nam', '0912345613', 'Bình Dương', 'sv13@example.com', 'Kỹ thuật Điện', 3),
-                                                                                                 ('SV14','Mai Thị Hạnh', '2003-05-28', 'Nữ', '0912345614', 'Nghệ An', 'sv14@example.com', 'Quản trị Kinh doanh', 2),
-                                                                                                 ('SV15','Nguyễn Tuấn Dũng', '2004-07-13', 'Nam', '0912345615', 'Phú Thọ', 'sv15@example.com', 'Công nghệ Thông tin', 4),
-                                                                                                 ('SV16','Trần Minh Hòa', '2005-01-09', 'Nam', '0912345616', 'Quảng Ninh', 'sv16@example.com', 'Công nghệ Thông tin', 1),
-                                                                                                 ('SV17','Lê Thị Xuân', '2004-02-15', 'Nữ', '0912345617', 'Hà Tĩnh', 'sv17@example.com', 'Tâm lý học', 3),
-                                                                                                 ('SV18','Ngô Quang Phúc', '2005-04-26', 'Nam', '0912345618', 'Nam Định', 'sv18@example.com', 'Ngôn ngữ Anh', 2),
-                                                                                                 ('SV19','Phạm Thị Thảo', '2003-12-20', 'Nữ', '0912345619', 'Sơn La', 'sv19@example.com', 'Kỹ thuật phần mềm', 4),
-                                                                                                 ('SV20','Vũ Minh Tuấn', '2004-03-11', 'Nam', '0912345620', 'Bắc Giang', 'sv20@example.com', 'Kỹ thuật phần mềm', 3),
-                                                                                                 ('SV21','Đặng Thị Thu', '2005-05-18', 'Nữ', '0912345621', 'Hà Nam', 'sv21@example.com', 'Quản trị Kinh doanh', 2),
-                                                                                                 ('SV22','Trịnh Văn Toàn', '2005-08-14', 'Nam', '0912345622', 'Quảng Bình', 'sv22@example.com', 'Tâm lý học', 1),
-                                                                                                 ('SV23','Nguyễn Thu Hằng', '2004-10-05', 'Nữ', '0912345623', 'Thái Bình', 'sv23@example.com', 'Ngôn ngữ Anh', 4),
-                                                                                                 ('SV24','Phan Quang Huy', '2003-09-23', 'Nam', '0912345624', 'Bình Phước', 'sv24@example.com', 'Kinh tế', 3),
-                                                                                                 ('SV25','Lê Thị Hường', '2005-11-02', 'Nữ', '0912345625', 'Long An', 'sv25@example.com', 'Công nghệ Thông tin', 2);
->>>>>>> codex/fix-thêm-sinh-viên-không-thành-công
+    ('SV01','Nguyễn Văn An','2005-03-15','Nam','0912345601','Hà Nội','sv01@example.com','Công nghệ Thông tin',3),
+    ('SV02','Trần Thị Bình','2005-07-22','Nữ','0912345602','Ninh Bình','sv02@example.com','Kinh tế',2);
 
 -- ============================================
 -- SAMPLE DATA: ROOM
