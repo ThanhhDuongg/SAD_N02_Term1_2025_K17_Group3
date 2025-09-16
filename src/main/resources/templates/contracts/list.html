@@ -7,12 +7,12 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div th:replace="fragments/header :: header"></div>
+    <div th:replace="~{fragments/header :: header}"></div>
     <div th:replace="fragments/sidebar :: sidebar"></div>
     <div class="content-with-sidebar">
         <div class="container">
         <h2>Danh Sách Hợp Đồng</h2>
-        <div th:replace="fragments/header :: popup"></div>
+        <div th:replace="~{fragments/header :: popup}"></div>
         <div class="search-container">
             <form th:action="@{/contracts}" method="get">
                 <input type="text" name="search" placeholder="Tìm kiếm hợp đồng..." th:value="${search}">

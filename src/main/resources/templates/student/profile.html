@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" referrerpolicy="no-referrer" />
 </head>
 <body>
-<div th:replace="fragments/header :: header"></div>
-<div th:replace="fragments/header :: popup"></div>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
 <div class="student-layout">
     <div th:replace="fragments/student-sidebar :: studentSidebar"></div>
     <div class="student-content">
