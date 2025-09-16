@@ -81,6 +81,10 @@ public class StudentService {
         return studentRepository.findByEmail(email);
     }
 
+    public long countStudents() {
+        return studentRepository.count();
+    }
+
     private void checkRoomCapacity(Room room, Long studentId) {
         Room actual = roomRepository.findById(room.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Room not found"));

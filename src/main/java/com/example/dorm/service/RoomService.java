@@ -66,4 +66,8 @@ public class RoomService {
         }
         return roomRepository.findByNumberContainingIgnoreCaseOrTypeContainingIgnoreCase(search, search, pageable);
     }
+
+    public long countRooms() {
+        return roomRepository.count();
+    }
 }

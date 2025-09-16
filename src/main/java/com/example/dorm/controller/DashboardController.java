@@ -38,10 +38,21 @@ public class DashboardController {
 
     @GetMapping("/dashboard")
     public String showDashboard(Model model) {
-        model.addAttribute("studentCount", studentService.getAllStudents(org.springframework.data.domain.Pageable.unpaged()).getTotalElements());
-        model.addAttribute("roomCount", roomService.getAllRooms(org.springframework.data.domain.Pageable.unpaged()).getTotalElements());
-        model.addAttribute("contractCount", contractService.getAllContracts(org.springframework.data.domain.Pageable.unpaged()).getTotalElements());
-        model.addAttribute("feeCount", feeService.getAllFees(org.springframework.data.domain.Pageable.unpaged()).getTotalElements());
+        long studentCount = studentService.countStudents();
+        long roomCount = roomService.countRooms();
+        long contractCount = contractService.countContracts();
+        long feeCount = feeService.countFees();
+
+        model.addAttribute("studentCount", studentCount);
+        model.addAttribute("roomCount", roomCount);
+        model.addAttribute("contractCount", contractCount);
+        model.addAttribute("feeCount", feeCount);
+
+        // Backwards compatibility for templates expecting pluralized attribute names
+        model.addAttribute("studentsCount", studentCount);
+        model.addAttribute("roomsCount", roomCount);
+        model.addAttribute("contractsCount", contractCount);
+        model.addAttribute("feesCount", feeCount);
         return "dashboard";
     }
 }

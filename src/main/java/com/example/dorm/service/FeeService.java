@@ -72,4 +72,8 @@ public class FeeService {
         return feeRepository
                 .searchByContractStudentWord(search, pageable);
     }
+
+    public long countFees() {
+        return feeRepository.count();
+    }
 }

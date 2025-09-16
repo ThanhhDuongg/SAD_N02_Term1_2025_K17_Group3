@@ -136,4 +136,8 @@ public class ContractService {
     public Contract findLatestContractByStudentId(Long studentId) {
         return contractRepository.findTopByStudent_IdOrderByEndDateDesc(studentId);
     }
+
+    public long countContracts() {
+        return contractRepository.count();
+    }
 }
