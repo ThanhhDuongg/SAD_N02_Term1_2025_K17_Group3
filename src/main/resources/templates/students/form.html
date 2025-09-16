@@ -63,9 +63,9 @@
                 <span class="error" th:if="${#fields.hasErrors('department')}" th:errors="*{department}"></span>
             </div>
             <div class="form-group">
-                <label for="year">Năm Học:</label>
-                <input type="number" id="year" th:field="*{year}" required min="1" max="6">
-                <span class="error" th:if="${#fields.hasErrors('year')}" th:errors="*{year}"></span>
+                <label for="studyYear">Năm Học:</label>
+                <input type="number" id="studyYear" th:field="*{studyYear}" required min="1" max="6">
+                <span class="error" th:if="${#fields.hasErrors('studyYear')}" th:errors="*{studyYear}"></span>
             </div>
             <div class="form-group">
                 <label for="room">Phòng:</label>

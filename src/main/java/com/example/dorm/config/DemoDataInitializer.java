@@ -180,7 +180,7 @@ public class DemoDataInitializer implements ApplicationRunner {
                                   String address,
                                   String email,
                                   String department,
-                                  int year,
+                                  int studyYear,
                                   User user,
                                   Room room) {
         Student student = studentRepository.findByCode(code).orElseGet(Student::new);
@@ -192,7 +192,7 @@ public class DemoDataInitializer implements ApplicationRunner {
         student.setAddress(address);
         student.setEmail(email);
         student.setDepartment(department);
-        student.setYear(year);
+        student.setStudyYear(studyYear);
         student.setRoom(room);
         if (user != null) {
             student.setUser(user);

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
 
 @Entity
+@Access(AccessType.FIELD)
 public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +28,7 @@ public class Student {
     @Min(1)
     @Max(6)
     @Column(name = "study_year")
-    private Integer year;
+    private Integer studyYear;
 
     @ManyToOne
     @JoinColumn(name = "room_id")
@@ -61,8 +62,8 @@ public class Student {
     public void setEmail(String email) { this.email = email; }
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }
-    public Integer getYear() { return year; }
-    public void setYear(Integer year) { this.year = year; }
+    public Integer getStudyYear() { return studyYear; }
+    public void setStudyYear(Integer studyYear) { this.studyYear = studyYear; }
     public Room getRoom() { return room; }
     public void setRoom(Room room) { this.room = room; }
 }
