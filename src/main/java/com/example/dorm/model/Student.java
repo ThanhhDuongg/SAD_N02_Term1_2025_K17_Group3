@@ -26,7 +26,7 @@ public class Student {
     @NotNull(message = "Năm học không được để trống")
     @Min(1)
     @Max(6)
-    @Column(name = "year")
+    @Column(name = "study_year")
     private Integer year;
 
     @ManyToOne
