@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ViolationRepository extends JpaRepository<Violation, Long> {
@@ -19,4 +20,6 @@ public interface ViolationRepository extends JpaRepository<Violation, Long> {
 
     @org.springframework.data.jpa.repository.Query("SELECT v.student.code, COUNT(v) FROM Violation v WHERE v.student IS NOT NULL GROUP BY v.student.code")
     List<Object[]> countByStudent();
+
+    Optional<Violation> findByStudent_IdAndDescription(Long studentId, String description);
 }

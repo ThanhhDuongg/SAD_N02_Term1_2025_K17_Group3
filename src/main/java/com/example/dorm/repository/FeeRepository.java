@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import java.time.LocalDate;
+import java.util.Optional;
 
 @Repository
 public interface FeeRepository extends JpaRepository<Fee, Long> {
@@ -42,4 +44,6 @@ public interface FeeRepository extends JpaRepository<Fee, Long> {
     Page<Fee> searchByTypeOrContractStudentWord(@org.springframework.data.repository.query.Param("type") FeeType type,
                                                 @org.springframework.data.repository.query.Param("search") String search,
                                                 Pageable pageable);
+
+    Optional<Fee> findByContract_IdAndTypeAndDueDate(Long contractId, FeeType type, LocalDate dueDate);
 }

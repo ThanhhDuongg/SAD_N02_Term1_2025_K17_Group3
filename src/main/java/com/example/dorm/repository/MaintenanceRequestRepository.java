@@ -4,6 +4,7 @@ import com.example.dorm.model.MaintenanceRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceRequest, Long> {
     List<MaintenanceRequest> findByStudent_Id(Long studentId);
@@ -11,4 +12,6 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
     List<MaintenanceRequest> findByStatusOrderByCreatedAtDesc(String status);
 
     List<MaintenanceRequest> findAllByOrderByCreatedAtDesc();
+
+    Optional<MaintenanceRequest> findByStudent_IdAndDescription(Long studentId, String description);
 }

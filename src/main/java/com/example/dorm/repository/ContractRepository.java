@@ -44,4 +44,6 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
     boolean existsByStudent_Id(Long studentId);
 
     Contract findTopByStudent_IdOrderByEndDateDesc(Long studentId);
+
+    java.util.Optional<Contract> findByStudent_IdAndRoom_IdAndStartDate(Long studentId, Long roomId, java.time.LocalDate startDate);
 }
