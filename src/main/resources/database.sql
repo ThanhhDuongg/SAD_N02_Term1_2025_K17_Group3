@@ -284,3 +284,19 @@ FROM users u
          JOIN user_roles ur ON u.id = ur.user_id
          JOIN role r ON ur.role_id = r.id
 WHERE u.username = 'admin';
+
+
+USE dormitory_db;
+SELECT DATABASE();  -- kiểm tra đã chọn đúng DB
+
+UPDATE users
+SET password = '$2b$10$M3oiNW5nwPFCycTQFeU1MO8QFSHE.y5QlcvQcqbji6ZPFVU9H5OP6'
+WHERE username = 'admin';
+
+UPDATE users
+SET password = '$2b$10$M3oiNW5nwPFCycTQFeU1MO8QFSHE.y5QlcvQcqbji6ZPFVU9H5OP6'
+WHERE username IN ('staff','sv01','sv02');
+
+-- kiểm tra lại
+SELECT username, password FROM users
+WHERE username IN ('admin','staff','sv01','sv02');
