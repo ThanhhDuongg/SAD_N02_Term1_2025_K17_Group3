@@ -13,7 +13,7 @@
                 <div class="user-meta">
                     <span class="user-name" th:text="${#authentication.name}">Người dùng</span>
                     <span class="user-role"
-                          th:text="${#lists.join(#authentication.authorities.![#strings.replace(authority, 'ROLE_', '')], ', ')}">ROLE</span>
+                          th:text="${#lists.join(#authentication.authorities.![authority.replace('ROLE_', '')], ', ')}">ROLE</span>
                 </div>
                 <form th:action="@{/logout}" method="post" class="logout-form">
                     <button type="submit" class="logout-btn">Đăng xuất</button>
