@@ -5,10 +5,11 @@ import com.example.dorm.service.RoomService;
 import com.example.dorm.service.StudentService;
 import com.example.dorm.service.ContractService;
 import com.example.dorm.model.Contract;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
 import jakarta.validation.Valid;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -20,6 +21,8 @@ import org.springframework.validation.BindingResult;
 @Controller
 @RequestMapping("/students")
 public class StudentController {
+    private static final Logger log = LoggerFactory.getLogger(StudentController.class);
+
     @Autowired
     private StudentService studentService;
 
@@ -34,35 +37,24 @@ public class StudentController {
                                @RequestParam(name = "page", defaultValue = "0") int page,
                                @RequestParam(name = "size", defaultValue = "10") int size,
                                Model model) {
-        try {
-            var pageable = org.springframework.data.domain.PageRequest.of(page, size);
-            var studentsPage = studentService.searchStudents(search, pageable);
-            model.addAttribute("studentsPage", studentsPage);
-            int totalPages = studentsPage.getTotalPages();
-            if (totalPages > 0) {
-                java.util.List<Integer> pageNumbers =
-                        java.util.stream.IntStream.rangeClosed(1, totalPages)
-                                .boxed().toList();
-                model.addAttribute("pageNumbers", pageNumbers);
-            }
-            model.addAttribute("search", search);
-            return "students/list";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tải danh sách sinh viên: " + e.getMessage());
-            return "error";
-        }
+        var pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        var studentsPage = studentService.searchStudents(search, pageable);
+        model.addAttribute("studentsPage", studentsPage);
+        int totalPages = studentsPage.getTotalPages();
+        java.util.List<Integer> pageNumbers = totalPages > 0
+                ? java.util.stream.IntStream.rangeClosed(1, totalPages)
+                .boxed().toList()
+                : java.util.Collections.emptyList();
+        model.addAttribute("pageNumbers", pageNumbers);
+        model.addAttribute("search", search);
+        return "students/list";
     }
 
     @GetMapping("/new")
     public String showCreateForm(Model model) {
-        try {
-            model.addAttribute("student", new Student());
-            model.addAttribute("rooms", roomService.getAllRooms());
-            return "students/form";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi hiển thị form tạo sinh viên: " + e.getMessage());
-            return "error";
-        }
+        model.addAttribute("student", new Student());
+        model.addAttribute("rooms", roomService.getAllRooms());
+        return "students/form";
     }
 
     @PostMapping
@@ -96,6 +88,7 @@ public class StudentController {
             redirectAttributes.addFlashAttribute("alertClass", "alert-success");
             return "redirect:/students";
         } catch (Exception e) {
+            log.error("Không thể tạo sinh viên", e);
             redirectAttributes.addFlashAttribute("message", "Thêm sinh viên thất bại: " + e.getMessage());
             redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
             return "redirect:/students";
@@ -105,42 +98,24 @@ public class StudentController {
 
     @GetMapping("/{id}")
     public String viewStudent(@PathVariable("id") Long id, Model model) {
-        try {
-            Optional<Student> studentOptional = studentService.getStudent(id);
-            if (studentOptional.isPresent()) {
-                model.addAttribute("student", studentOptional.get());
-                return "students/detail";
-            } else {
-                model.addAttribute("errorMessage", "Không tìm thấy sinh viên với ID: " + id);
-                return "error";
-            }
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi xem thông tin sinh viên: " + e.getMessage());
-            return "error";
-        }
+        Student student = studentService.getStudent(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sinh viên với ID: " + id));
+        model.addAttribute("student", student);
+        return "students/detail";
     }
 
     @GetMapping("/{id}/edit")
     public String showUpdateForm(@PathVariable("id") Long id, Model model) {
-        try {
-            Optional<Student> studentOptional = studentService.getStudent(id);
-            if (studentOptional.isPresent()) {
-                model.addAttribute("student", studentOptional.get());
-                model.addAttribute("rooms", roomService.getAllRooms());
-                Contract latestContract = contractService.findLatestContractByStudentId(id);
-                if (latestContract != null) {
-                    model.addAttribute("contractStartDate", latestContract.getStartDate());
-                    model.addAttribute("contractEndDate", latestContract.getEndDate());
-                }
-                return "students/form";
-            } else {
-                model.addAttribute("errorMessage", "Không tìm thấy sinh viên với ID: " + id);
-                return "error";
-            }
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi hiển thị form cập nhật: " + e.getMessage());
-            return "error";
+        Student student = studentService.getStudent(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sinh viên với ID: " + id));
+        model.addAttribute("student", student);
+        model.addAttribute("rooms", roomService.getAllRooms());
+        Contract latestContract = contractService.findLatestContractByStudentId(id);
+        if (latestContract != null) {
+            model.addAttribute("contractStartDate", latestContract.getStartDate());
+            model.addAttribute("contractEndDate", latestContract.getEndDate());
         }
+        return "students/form";
     }
 
     @PostMapping("/{id}")
@@ -156,20 +131,16 @@ public class StudentController {
             return "students/form";
         }
         try {
-            Optional<Student> studentOptional = studentService.getStudent(id);
-            if (studentOptional.isPresent()) {
-                student.setId(id);
-                studentService.saveStudent(student);
-                redirectAttributes.addFlashAttribute("message", "Cập nhật sinh viên thành công!");
-                redirectAttributes.addFlashAttribute("alertClass", "alert-success");
-                return "redirect:/students";
-            } else {
-                redirectAttributes.addFlashAttribute("message", "Không tìm thấy sinh viên với ID: " + id);
-                redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
-                return "redirect:/students";
-            }
+            studentService.getStudent(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sinh viên với ID: " + id));
+            student.setId(id);
+            studentService.saveStudent(student);
+            redirectAttributes.addFlashAttribute("message", "Cập nhật sinh viên thành công!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
+            return "redirect:/students";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "Cập nhật sinh viên thất bại!");
+            log.error("Không thể cập nhật sinh viên với id {}", id, e);
+            redirectAttributes.addFlashAttribute("message", "Cập nhật sinh viên thất bại: " + e.getMessage());
             redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
             return "redirect:/students";
         }
@@ -179,19 +150,15 @@ public class StudentController {
     @GetMapping("/{id}/delete")
     public String deleteStudent(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Model model) {
         try {
-            Optional<Student> studentOptional = studentService.getStudent(id);
-            if (studentOptional.isPresent()) {
-                studentService.deleteStudent(id);
-                redirectAttributes.addFlashAttribute("message", "Xoá sinh viên thành công!");
-                redirectAttributes.addFlashAttribute("alertClass", "alert-success");
-                return "redirect:/students";
-            } else {
-                redirectAttributes.addFlashAttribute("message", "Không tìm thấy sinh viên với ID: " + id);
-                redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
-                return "redirect:/students";
-            }
+            studentService.getStudent(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sinh viên với ID: " + id));
+            studentService.deleteStudent(id);
+            redirectAttributes.addFlashAttribute("message", "Xoá sinh viên thành công!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
+            return "redirect:/students";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "Xoá sinh viên thất bại!");
+            log.error("Không thể xoá sinh viên với id {}", id, e);
+            redirectAttributes.addFlashAttribute("message", "Xoá sinh viên thất bại: " + e.getMessage());
             redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
             return "redirect:/students";
         }

@@ -36,11 +36,14 @@
                 </tr>
             </thead>
             <tbody>
+                <tr th:if="${studentsPage == null or studentsPage.content.isEmpty()}">
+                    <td colspan="10" class="no-data">Chưa có dữ liệu.</td>
+                </tr>
                 <tr th:each="student : ${studentsPage.content}" class="table-row">
                     <td th:text="${student.id}"></td>
                     <td th:text="${student.code}"></td>
                     <td th:text="${student.name}"></td>
-                    <td th:text="${#temporals.format(student.dob, 'dd/MM/yyyy')}"></td>
+                    <td th:text="${student.dob != null ? #temporals.format(student.dob, 'dd/MM/yyyy') : 'Chưa cập nhật'}"></td>
                     <td th:text="${student.gender}"></td>
                     <td th:text="${student.phone}"></td>
                     <td th:text="${student.email}"></td>
