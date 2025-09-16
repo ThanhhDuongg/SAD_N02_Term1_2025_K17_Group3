@@ -8,12 +8,14 @@
             </div>
         </div>
         <div class="header-right">
-            <div class="user-profile" sec:authorize="isAuthenticated()">
-                <div class="user-avatar" th:text="${#strings.substring(#authentication.name,0,1).toUpperCase()}">U</div>
+            <div class="user-profile" sec:authorize="isAuthenticated()" th:with="auth=${#authentication}">
+                <div class="user-avatar"
+                     th:text="${auth != null && auth.name != null && auth.name.length() > 0 ? auth.name.substring(0,1).toUpperCase() : 'U'}">U</div>
                 <div class="user-meta">
-                    <span class="user-name" th:text="${#authentication.name}">Người dùng</span>
+                    <span class="user-name"
+                          th:text="${auth != null && auth.name != null ? auth.name : 'Người dùng'}">Người dùng</span>
                     <span class="user-role"
-                          th:text="${#lists.join(#authentication.authorities.![authority.replace('ROLE_', '')], ', ')}">ROLE</span>
+                          th:text="${auth != null && auth.authorities != null ? #lists.join(auth.authorities.?[authority != null].![#strings.replace(authority, 'ROLE_', '')], ', ') : ''}">ROLE</span>
                 </div>
                 <form th:action="@{/logout}" method="post" class="logout-form">
                     <button type="submit" class="logout-btn">Đăng xuất</button>

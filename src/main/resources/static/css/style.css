@@ -1049,3 +1049,28 @@ h2 {
     font-weight: 600;
     text-decoration: none;
 }
+
+.error-meta {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    line-height: 1.6;
+}
+
+.btn-back {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.6rem 1.2rem;
+    background-color: var(--primary-color);
+    color: #fff;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.btn-back:hover {
+    background-color: #1d4ed8;
+}
