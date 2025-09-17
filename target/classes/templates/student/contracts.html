@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hợp đồng ký túc xá</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" referrerpolicy="no-referrer" />
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+<div class="student-layout">
+    <div th:replace="fragments/student-sidebar :: studentSidebar"></div>
+    <div class="student-content">
+        <div class="student-page-header">
+            <div>
+                <h1>Hợp đồng lưu trú</h1>
+                <p class="text-muted">Theo dõi thời hạn và trạng thái hợp đồng ký túc xá của bạn</p>
+            </div>
+        </div>
+
+        <div class="contract-grid" th:if="${!#lists.isEmpty(contracts)}">
+            <div class="contract-card" th:each="contract : ${contracts}">
+                <div class="contract-header">
+                    <span>Mã hợp đồng</span>
+                    <strong th:text="${contract.id}"></strong>
+                </div>
+                <p><strong>Phòng:</strong> <span th:text="${contract.room.number}"></span></p>
+                <p><strong>Thời gian:</strong>
+                    <span th:text="${#temporals.format(contract.startDate, 'dd/MM/yyyy')}"></span>
+                    -
+                    <span th:text="${#temporals.format(contract.endDate, 'dd/MM/yyyy')}"></span>
+                </p>
+                <p><strong>Trạng thái:</strong> <span class="contract-status" th:text="${contract.status}"></span></p>
+            </div>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(contracts)}">
+            Bạn chưa có hợp đồng lưu trú nào.
+        </div>
+    </div>
+</div>
+</body>
+</html>

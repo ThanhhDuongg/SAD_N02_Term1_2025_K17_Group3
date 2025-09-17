@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý vi phạm</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+
+<div class="content-with-sidebar">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h2>Theo dõi vi phạm nội quy</h2>
+                <p class="text-muted">Phân tích tình trạng vi phạm theo sinh viên, phòng và mức độ nghiêm trọng</p>
+            </div>
+            <a class="button btn-add" th:href="@{/violations/new}">Ghi nhận vi phạm</a>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h4>Theo mức độ</h4>
+                <ul>
+                    <li th:each="entry : ${severitySummary.entrySet()}"
+                        th:text="${entry.key} + ': ' + ${entry.value}">High: 2</li>
+                </ul>
+            </div>
+            <div class="summary-card">
+                <h4>Phòng có nhiều vi phạm</h4>
+                <ul>
+                    <li th:each="entry : ${roomSummary.entrySet()}"
+                        th:text="'Phòng ' + ${entry.key} + ': ' + ${entry.value}">101: 1</li>
+                </ul>
+            </div>
+            <div class="summary-card">
+                <h4>Sinh viên vi phạm nhiều</h4>
+                <ul>
+                    <li th:each="entry : ${studentSummary.entrySet()}"
+                        th:text="${entry.key} + ': ' + ${entry.value}">SV01: 1</li>
+                </ul>
+            </div>
+        </div>
+
+        <form class="filter-bar" method="get">
+            <div class="filter-group">
+                <label for="studentId">Sinh viên</label>
+                <select id="studentId" name="studentId">
+                    <option value="">Tất cả</option>
+                    <option th:each="student : ${students}"
+                            th:value="${student.id}"
+                            th:selected="${student.id == selectedStudentId}"
+                            th:text="${student.code + ' - ' + student.name}"></option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="roomId">Phòng</label>
+                <select id="roomId" name="roomId">
+                    <option value="">Tất cả</option>
+                    <option th:each="room : ${rooms}"
+                            th:value="${room.id}"
+                            th:selected="${room.id == selectedRoomId}"
+                            th:text="${room.number}"></option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="severity">Mức độ</label>
+                <select id="severity" name="severity">
+                    <option value="">Tất cả</option>
+                    <option th:each="level : ${severityLevels}"
+                            th:value="${level}"
+                            th:selected="${level.equalsIgnoreCase(selectedSeverity)}"
+                            th:text="${level}"></option>
+                </select>
+            </div>
+            <button class="button btn-add" type="submit">Lọc</button>
+        </form>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Ngày</th>
+                    <th>Sinh viên</th>
+                    <th>Phòng</th>
+                    <th>Mô tả</th>
+                    <th>Mức độ</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="violation : ${violations}" class="table-row">
+                    <td th:text="${violation.date}"></td>
+                    <td>
+                        <div class="table-meta">
+                            <strong th:text="${violation.student != null ? violation.student.name : 'Không xác định'}"></strong>
+                            <span class="meta-sub" th:text="${violation.student != null ? violation.student.code : ''}"></span>
+                        </div>
+                    </td>
+                    <td th:text="${violation.room != null ? violation.room.number : 'N/A'}"></td>
+                    <td th:text="${violation.description}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${violation.severity} == 'HIGH' ? ' badge-danger' : (${violation.severity} == 'MEDIUM' ? ' badge-warning' : ' badge-info')}"
+                              th:text="${violation.severity}">LOW</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(violations)}">
+                    <td colspan="5" class="text-center">Chưa có dữ liệu vi phạm</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

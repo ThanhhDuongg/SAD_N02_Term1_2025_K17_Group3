@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ghi nhận vi phạm</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+
+<div class="content-with-sidebar">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h2>Ghi nhận vi phạm nội quy</h2>
+                <p class="text-muted">Liên kết vi phạm với hồ sơ sinh viên và phòng ở để tiện theo dõi</p>
+            </div>
+            <a class="button btn-view" th:href="@{/violations}">Quay lại danh sách</a>
+        </div>
+
+        <form class="form-grid" th:action="@{/violations}" method="post">
+            <div class="form-group">
+                <label for="studentId">Sinh viên</label>
+                <select id="studentId" name="studentId" required>
+                    <option value="" disabled selected>Chọn sinh viên</option>
+                    <option th:each="student : ${students}"
+                            th:value="${student.id}"
+                            th:text="${student.code + ' - ' + student.name}"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="roomId">Phòng</label>
+                <select id="roomId" name="roomId">
+                    <option value="">Không chọn</option>
+                    <option th:each="room : ${rooms}"
+                            th:value="${room.id}"
+                            th:text="${room.number}"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="severity">Mức độ</label>
+                <select id="severity" name="severity" required>
+                    <option value="" disabled selected>Chọn mức độ</option>
+                    <option th:each="level : ${severityLevels}"
+                            th:value="${level}"
+                            th:text="${level}"></option>
+                </select>
+            </div>
+            <div class="form-group form-group-full">
+                <label for="description">Mô tả chi tiết</label>
+                <textarea id="description" name="description" rows="4" required
+                          placeholder="Mô tả hành vi vi phạm, thời gian, nhân chứng..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="button btn-add" type="submit">Lưu vi phạm</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
