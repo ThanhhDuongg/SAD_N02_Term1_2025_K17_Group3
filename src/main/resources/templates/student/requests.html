@@ -39,7 +39,7 @@
                     <td th:text="${request.desiredRoomNumber != null ? request.desiredRoomNumber : '-'}"></td>
                     <td>
                         <span class="badge"
-                              th:classappend="${request.status} == 'COMPLETED' ? ' badge-success' : (${request.status} == 'IN_PROGRESS' ? ' badge-warning' : ' badge-info')}"
+                              th:class="${request.status == 'COMPLETED' ? 'badge-success' : (request.status == 'IN_PROGRESS' ? 'badge-warning' : 'badge-info')}"
                               th:text="${request.status}"></span>
                     </td>
                 </tr>

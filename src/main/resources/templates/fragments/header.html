@@ -1,4 +1,4 @@
-<!-- templates/fragments/header.html -->
+<<!-- templates/fragments/header.html -->
 <div th:fragment="header"
      xmlns:th="http://www.thymeleaf.org"
      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
@@ -19,8 +19,8 @@
                 <div class="user-meta">
                     <span class="user-name"
                           th:text="${auth != null && auth.name != null ? auth.name : 'Người dùng'}">Người dùng</span>
-                    <span class="user-role"
-                          th:text="${auth != null && auth.authorities != null ? #lists.join(auth.authorities.?[authority != null].![#strings.replace(authority, 'ROLE_', '')], ', ') : ''}">ROLE</span>
+                    <!-- Hiển thị danh sách roles -->
+                    <span th:text="${#strings.arrayJoin(auth.authorities.![authority], ', ')}"></span>
                 </div>
                 <form th:action="@{/logout}" method="post" class="logout-form">
                     <button type="submit" class="logout-btn">Đăng xuất</button>

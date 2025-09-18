@@ -35,10 +35,16 @@
                     <td th:text="${violation.room != null ? violation.room.number : 'N/A'}"></td>
                     <td th:text="${violation.description}"></td>
                     <td>
-                        <span class="badge"
-                              th:classappend="${violation.severity} == 'HIGH' ? ' badge-danger' : (${violation.severity} == 'MEDIUM' ? ' badge-warning' : ' badge-info')}"
-                              th:text="${violation.severity}"></span>
+  <span class="badge"
+        th:switch="${#strings.toString(violation.severity)}">
+    <span th:case="'HIGH'"   th:classappend="' badge-danger'"  th:text="${#strings.toString(violation.severity)}"></span>
+    <span th:case="'MEDIUM'" th:classappend="' badge-warning'" th:text="${#strings.toString(violation.severity)}"></span>
+    <span th:case="*"
+          th:classappend="' badge-info'"
+          th:text="${#strings.toString(violation.severity)}"></span>
+  </span>
                     </td>
+
                 </tr>
                 <tr th:if="${#lists.isEmpty(violations)}">
                     <td colspan="4" class="text-center">Bạn chưa có vi phạm nào</td>
