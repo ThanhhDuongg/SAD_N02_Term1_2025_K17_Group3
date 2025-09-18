@@ -627,3 +627,62 @@ flowchart TD
 ### Made with ❤️ by **Group 9**
 
 
+
+---
+
+# 🆘 Support Request Management Module (SRS Update)
+
+## Functional Scope
+- Students submit support requests that capture their account, the topic, description, and timestamps. Each submission is stored with status **PENDING** by default.
+- Staff and administrators review every request, update the status through **IN_PROGRESS → RESOLVED/REJECTED**, add resolution notes, and optionally assign themselves (or another staff member) to maintain accountability.
+- Responses provided by staff are stored with the request so students can review guidance alongside the latest status.
+- Any request containing inappropriate content can be flagged as a violation. The system raises a dedicated flag and note that administrators can audit separately.
+- The admin portal consumes a real-time event stream so new or updated requests appear without manual refresh.
+
+## Roles & Permissions
+| Role | Capabilities |
+|------|--------------|
+| **Student** | Create support requests, list and filter their own tickets, inspect ticket history and staff responses. |
+| **Staff** | View every ticket, change status, assign requests, add responses, flag or clear violations, and consume the live event stream. |
+| **Administrator** | Full staff capabilities plus user management (outside the scope of this module) and authority to override any support decision. |
+
+Access control is enforced through Spring Security request matchers and the persisted role metadata (ROLE_STUDENT, ROLE_STAFF, ROLE_ADMIN).
+
+## Workflow Overview
+1. **Submit** – Student posts a ticket via `POST /api/support-requests`.
+2. **Notify** – Staff dashboards subscribe to `GET /api/support-requests/stream` (Server-Sent Events) and immediately receive the newly created ticket.
+3. **Triage** – Staff member retrieves the ticket, optionally assigns themselves, and switches the status to `IN_PROGRESS` while crafting a response.
+4. **Resolve / Reject** – Ticket is marked `RESOLVED` (with guidance) or `REJECTED` (with justification). Resolution timestamps and the acting staff account are persisted automatically.
+5. **Student Review** – Student polls `GET /api/support-requests/mine` or fetches a specific ticket to see the final outcome and response.
+6. **Violation Handling** – If policy is breached, staff calls `POST /api/support-requests/{id}/violation` with a note. Admins can filter flagged tickets via `GET /api/support-requests?violationOnly=true`.
+
+## REST API Surface
+| Method | Endpoint | Roles | Description |
+|--------|----------|-------|-------------|
+| `POST` | `/api/support-requests` | STUDENT | Submit a new support ticket tied to the authenticated student profile. |
+| `GET` | `/api/support-requests` | STAFF, ADMIN | Paginated listing with optional `status` and `violationOnly` filters for operations dashboards. |
+| `GET` | `/api/support-requests/mine` | STUDENT | Paginated view of the student’s own tickets (filterable by `status`). |
+| `GET` | `/api/support-requests/{id}` | STUDENT, STAFF, ADMIN | Retrieve full ticket details when the caller is the owner or has elevated privileges. |
+| `PATCH` | `/api/support-requests/{id}` | STAFF, ADMIN | Update status, response notes, assignments, or violation flags while recording the acting user. |
+| `POST` | `/api/support-requests/{id}/violation` | STAFF, ADMIN | Explicitly flag or clear a violation with contextual notes. |
+| `GET` | `/api/support-requests/stream` | STAFF, ADMIN | Server-Sent Events channel delivering `created`, `updated`, and `violation` notifications in near real time. |
+
+All endpoints return structured JSON DTOs. Validation errors surface as HTTP 400 with descriptive messages, while unauthorized access yields HTTP 403/401 responses.
+
+## Data Model Highlights
+- `SupportRequest` entity stores the student link, optional assigned staff, latest status, response message, violation metadata, timestamps (`createdAt`, `updatedAt`, `resolvedAt`), and the last actor who modified the record.
+- `SupportRequestStatus` enum guarantees consistent status transitions: `PENDING`, `IN_PROGRESS`, `RESOLVED`, `REJECTED`.
+- Auditability is provided through `lastUpdatedBy` and automatic timestamp updates on every change.
+
+## Real-Time Delivery & Monitoring
+- Staff dashboards maintain an SSE connection; the backend broadcasts events on ticket creation, updates, and violation changes.
+- Emitters are cleaned up on timeout or disconnect to avoid resource leaks and guarantee stable long-lived connections.
+
+## Non-Functional Guarantees
+- Role-based authorization is enforced at the HTTP layer; business logic performs owner checks and validates staff assignments.
+- Input payloads leverage Bean Validation (size and non-blank constraints) to prevent malformed requests.
+- Pagination and filtering keep responses performant even with large ticket volumes.
+- Password hashing (BCrypt) and HTTPS readiness from the existing Spring Boot stack remain applicable to this module.
+- Structured exception handling relies on `ResponseStatusException`, ensuring consistent HTTP semantics for clients.
+
+This SRS extension formalizes the Support Request Management requirements and documents the workflow expected by both student and staff actors.

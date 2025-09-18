@@ -4,6 +4,7 @@ import com.example.dorm.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -32,6 +33,13 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**", "/h2-console/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/support-requests").hasRole("STUDENT")
+                        .requestMatchers(HttpMethod.GET, "/api/support-requests/mine/**").hasRole("STUDENT")
+                        .requestMatchers(HttpMethod.GET, "/api/support-requests/stream").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers(HttpMethod.GET, "/api/support-requests").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers(HttpMethod.GET, "/api/support-requests/*").hasAnyRole("ADMIN", "STAFF", "STUDENT")
+                        .requestMatchers(HttpMethod.PATCH, "/api/support-requests/*").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers(HttpMethod.POST, "/api/support-requests/*/violation").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers("/student/**").hasRole("STUDENT")
                         .requestMatchers(
                                 "/dashboard", "/dashboard/**",

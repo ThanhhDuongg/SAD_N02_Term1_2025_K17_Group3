@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.Set;
 
 @Component
@@ -26,6 +27,7 @@ public class DemoDataInitializer implements ApplicationRunner {
     private final FeeRepository feeRepository;
     private final MaintenanceRequestRepository maintenanceRequestRepository;
     private final ViolationRepository violationRepository;
+    private final SupportRequestRepository supportRequestRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DemoDataInitializer(RoleRepository roleRepository,
@@ -36,6 +38,7 @@ public class DemoDataInitializer implements ApplicationRunner {
                                FeeRepository feeRepository,
                                MaintenanceRequestRepository maintenanceRequestRepository,
                                ViolationRepository violationRepository,
+                               SupportRequestRepository supportRequestRepository,
                                PasswordEncoder passwordEncoder) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
@@ -45,6 +48,7 @@ public class DemoDataInitializer implements ApplicationRunner {
         this.feeRepository = feeRepository;
         this.maintenanceRequestRepository = maintenanceRequestRepository;
         this.violationRepository = violationRepository;
+        this.supportRequestRepository = supportRequestRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -93,6 +97,15 @@ public class DemoDataInitializer implements ApplicationRunner {
 
         ensureViolation(sv01, room101, "Tụ tập quá giờ quy định", "MEDIUM", LocalDate.of(2025, 2, 15));
         ensureViolation(sv03, room201, "Không tuân thủ quy định dọn vệ sinh", "LOW", LocalDate.of(2025, 3, 1));
+
+        ensureSupportRequest(sv01, "Wifi in room 101 is unstable",
+                "The internet connection drops every evening.", SupportRequestStatus.PENDING,
+                null, null, false, null);
+
+        ensureSupportRequest(sv02, "Need help with tuition payment portal",
+                "I cannot access the payment portal even after resetting my password.",
+                SupportRequestStatus.IN_PROGRESS, staffUser,
+                "We are checking with the finance department.", false, null);
     }
 
     private Role ensureRole(RoleName name, String description) {
@@ -330,6 +343,67 @@ public class DemoDataInitializer implements ApplicationRunner {
                     violation.setSeverity(severity);
                     violation.setDate(date);
                     return violationRepository.save(violation);
+                });
+    }
+
+    private SupportRequest ensureSupportRequest(Student student,
+                                                String title,
+                                                String description,
+                                                SupportRequestStatus status,
+                                                User assignedStaff,
+                                                String responseMessage,
+                                                boolean violationFlag,
+                                                String violationNote) {
+        return supportRequestRepository.findByStudent_IdAndTitleIgnoreCase(student.getId(), title)
+                .map(existing -> {
+                    boolean changed = false;
+                    if (!Objects.equals(existing.getDescription(), description)) {
+                        existing.setDescription(description);
+                        changed = true;
+                    }
+                    if (existing.getStatus() != status) {
+                        existing.setStatus(status);
+                        changed = true;
+                    }
+                    if (!Objects.equals(existing.getAssignedStaff(), assignedStaff)) {
+                        existing.setAssignedStaff(assignedStaff);
+                        changed = true;
+                    }
+                    if (!Objects.equals(existing.getResponseMessage(), responseMessage)) {
+                        existing.setResponseMessage(responseMessage);
+                        changed = true;
+                    }
+                    if (existing.isViolationFlag() != violationFlag) {
+                        existing.setViolationFlag(violationFlag);
+                        changed = true;
+                    }
+                    if (!Objects.equals(existing.getViolationNote(), violationNote)) {
+                        existing.setViolationNote(violationNote);
+                        changed = true;
+                    }
+                    LocalDateTime resolvedAt = (status == SupportRequestStatus.RESOLVED || status == SupportRequestStatus.REJECTED)
+                            ? Optional.ofNullable(existing.getResolvedAt()).orElse(LocalDateTime.now())
+                            : null;
+                    if (!Objects.equals(existing.getResolvedAt(), resolvedAt)) {
+                        existing.setResolvedAt(resolvedAt);
+                        changed = true;
+                    }
+                    return changed ? supportRequestRepository.save(existing) : existing;
+                })
+                .orElseGet(() -> {
+                    SupportRequest request = new SupportRequest();
+                    request.setStudent(student);
+                    request.setTitle(title);
+                    request.setDescription(description);
+                    request.setStatus(status);
+                    request.setAssignedStaff(assignedStaff);
+                    request.setResponseMessage(responseMessage);
+                    request.setViolationFlag(violationFlag);
+                    request.setViolationNote(violationNote);
+                    if (status == SupportRequestStatus.RESOLVED || status == SupportRequestStatus.REJECTED) {
+                        request.setResolvedAt(LocalDateTime.now());
+                    }
+                    return supportRequestRepository.save(request);
                 });
     }
 }
