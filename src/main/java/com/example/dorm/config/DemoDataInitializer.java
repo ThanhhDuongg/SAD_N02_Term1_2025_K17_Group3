@@ -60,7 +60,7 @@ public class DemoDataInitializer implements ApplicationRunner {
         Role studentRole = ensureRole(RoleName.ROLE_STUDENT, "Sinh viên");
 
         ensureUser("admin", "admin@example.com", "password", adminRole);
-        ensureUser("staff", "staff@example.com", "password", staffRole);
+        User staffUser = ensureUser("staff", "staff@example.com", "password", staffRole);
         User sv01User = ensureUser("sv01", "sv01-login@example.com", "password", studentRole);
         User sv02User = ensureUser("sv02", "sv02-login@example.com", "password", studentRole);
 
