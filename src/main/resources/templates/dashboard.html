@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Quản lý kí túc xá</title>
@@ -21,7 +21,7 @@
         <p class="dashboard-subtitle">Quản lý thông tin ký túc xá một cách dễ dàng và hiệu quả</p>
     </div>
 
-    <div class="stats-grid">
+    <div class="stats-grid" sec:authorize="hasRole('ADMIN')">
         <!-- Tổng Sinh Viên -->
         <div class="stat-card">
             <div class="stat-icon student-icon">
@@ -67,6 +67,39 @@
             <div class="stat-value" th:text="${feeCount} ?: '0'">85</div>
             <a th:href="@{/fees}" class="stat-action">
                 <span>Xem Chi Tiết</span><i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="stats-grid" sec:authorize="hasAnyRole('ADMIN','STAFF')">
+        <!-- Yêu cầu hỗ trợ -->
+        <div class="stat-card">
+            <div class="stat-icon support-icon">
+                <i class="fas fa-headset"></i>
+            </div>
+            <h3 class="stat-title">Yêu cầu hỗ trợ</h3>
+            <div class="stat-value" th:text="${maintenanceTotal} ?: '0'">0</div>
+            <p class="stat-meta">
+                <span th:text="'Đang chờ: ' + (${maintenancePending} ?: 0)">Đang chờ: 0</span>
+                <span th:text="'Đang xử lý: ' + (${maintenanceInProgress} ?: 0)">Đang xử lý: 0</span>
+            </p>
+            <a th:href="@{/maintenance}" class="stat-action">
+                <span>Quản lý yêu cầu</span><i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <!-- Vi phạm đã ghi nhận -->
+        <div class="stat-card">
+            <div class="stat-icon violation-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="stat-title">Thông báo vi phạm</h3>
+            <div class="stat-value" th:text="${violationTotal} ?: '0'">0</div>
+            <p class="stat-meta">
+                <span th:text="'Mức cao: ' + (${violationHigh} ?: 0)">Mức cao: 0</span>
+            </p>
+            <a th:href="@{/violations}" class="stat-action">
+                <span>Theo dõi vi phạm</span><i class="fas fa-arrow-right"></i>
             </a>
         </div>
     </div>

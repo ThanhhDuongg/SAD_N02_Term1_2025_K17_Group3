@@ -53,4 +53,15 @@ public class ViolationService {
         return getAllViolations().stream()
                 .collect(Collectors.groupingBy(Violation::getSeverity, LinkedHashMap::new, Collectors.counting()));
     }
+
+    public long countViolations() {
+        return violationRepository.count();
+    }
+
+    public long countViolationsBySeverity(String severity) {
+        if (severity == null || severity.isBlank()) {
+            return countViolations();
+        }
+        return violationRepository.countBySeverity(severity.trim().toUpperCase());
+    }
 }

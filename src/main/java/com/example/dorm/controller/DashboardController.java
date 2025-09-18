@@ -2,8 +2,10 @@ package com.example.dorm.controller;
 
 import com.example.dorm.service.ContractService;
 import com.example.dorm.service.FeeService;
+import com.example.dorm.service.MaintenanceRequestService;
 import com.example.dorm.service.RoomService;
 import com.example.dorm.service.StudentService;
+import com.example.dorm.service.ViolationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,6 +24,10 @@ public class DashboardController {
     private ContractService contractService;
     @Autowired
     private FeeService feeService;
+    @Autowired
+    private MaintenanceRequestService maintenanceRequestService;
+    @Autowired
+    private ViolationService violationService;
 
     @GetMapping("/")
     public String home(Authentication authentication) {
@@ -42,11 +48,21 @@ public class DashboardController {
         long roomCount = roomService.countRooms();
         long contractCount = contractService.countContracts();
         long feeCount = feeService.countFees();
+        long totalRequests = maintenanceRequestService.countAllRequests();
+        long pendingRequests = maintenanceRequestService.countRequestsByStatus("PENDING");
+        long inProgressRequests = maintenanceRequestService.countRequestsByStatus("IN_PROGRESS");
+        long totalViolations = violationService.countViolations();
+        long highSeverityViolations = violationService.countViolationsBySeverity("HIGH");
 
         model.addAttribute("studentCount", studentCount);
         model.addAttribute("roomCount", roomCount);
         model.addAttribute("contractCount", contractCount);
         model.addAttribute("feeCount", feeCount);
+        model.addAttribute("maintenanceTotal", totalRequests);
+        model.addAttribute("maintenancePending", pendingRequests);
+        model.addAttribute("maintenanceInProgress", inProgressRequests);
+        model.addAttribute("violationTotal", totalViolations);
+        model.addAttribute("violationHigh", highSeverityViolations);
 
         // Backwards compatibility for templates expecting pluralized attribute names
         model.addAttribute("studentsCount", studentCount);

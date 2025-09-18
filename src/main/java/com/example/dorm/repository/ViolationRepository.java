@@ -22,4 +22,6 @@ public interface ViolationRepository extends JpaRepository<Violation, Long> {
     List<Object[]> countByStudent();
 
     Optional<Violation> findByStudent_IdAndDescription(Long studentId, String description);
+
+    long countBySeverity(String severity);
 }

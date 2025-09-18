@@ -14,4 +14,6 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
     List<MaintenanceRequest> findAllByOrderByCreatedAtDesc();
 
     Optional<MaintenanceRequest> findByStudent_IdAndDescription(Long studentId, String description);
+
+    long countByStatus(String status);
 }

@@ -50,6 +50,17 @@ public class MaintenanceRequestService {
         return maintenanceRequestRepository.save(request);
     }
 
+    public long countAllRequests() {
+        return maintenanceRequestRepository.count();
+    }
+
+    public long countRequestsByStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return countAllRequests();
+        }
+        return maintenanceRequestRepository.countByStatus(status.trim().toUpperCase());
+    }
+
     private void normalizeRequest(MaintenanceRequest request) {
         if (request.getStatus() == null || request.getStatus().isBlank()) {
             request.setStatus("PENDING");

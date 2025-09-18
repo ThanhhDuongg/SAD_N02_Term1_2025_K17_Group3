@@ -1,19 +1,26 @@
 <!-- Sidebar Fragment -->
 <div th:fragment="sidebar"
-     xmlns:th="http://www.thymeleaf.org">
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
     <aside class="sidebar">
 
-        <!-- Quản lý chính -->
-        <div class="sidebar-section">
-            <h3 class="sidebar-title">Quản lý chính</h3>
+        <div class="sidebar-section" sec:authorize="hasAnyRole('ADMIN','STAFF')">
+            <h3 class="sidebar-title">Bảng điều khiển</h3>
             <nav class="sidebar-nav">
-                <a th:href="@{/}" class="sidebar-link">
+                <a th:href="@{/dashboard}" class="sidebar-link">
                     <i class="fas fa-chart-pie"></i>
-                    <span>Trang chủ</span>
+                    <span>Tổng quan</span>
                 </a>
+            </nav>
+        </div>
+
+        <!-- Quản lý chính -->
+        <div class="sidebar-section" sec:authorize="hasRole('ADMIN')">
+            <h3 class="sidebar-title">Quản trị hệ thống</h3>
+            <nav class="sidebar-nav">
                 <a th:href="@{/students}" class="sidebar-link">
                     <i class="fas fa-user-graduate"></i>
-                    <span>Sinh Viên</span>
+                    <span>Sinh viên</span>
                 </a>
                 <a th:href="@{/rooms}" class="sidebar-link">
                     <i class="fas fa-bed"></i>
@@ -21,11 +28,25 @@
                 </a>
                 <a th:href="@{/contracts}" class="sidebar-link">
                     <i class="fas fa-file-contract"></i>
-                    <span>Hợp Đồng</span>
+                    <span>Hợp đồng</span>
                 </a>
                 <a th:href="@{/fees}" class="sidebar-link">
                     <i class="fas fa-money-bill-wave"></i>
-                    <span>Phí</span>
+                    <span>Phí & thanh toán</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="sidebar-section" sec:authorize="hasAnyRole('ADMIN','STAFF')">
+            <h3 class="sidebar-title">Hỗ trợ sinh viên</h3>
+            <nav class="sidebar-nav">
+                <a th:href="@{/maintenance}" class="sidebar-link">
+                    <i class="fas fa-headset"></i>
+                    <span>Yêu cầu hỗ trợ</span>
+                </a>
+                <a th:href="@{/violations}" class="sidebar-link">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Thông báo vi phạm</span>
                 </a>
             </nav>
         </div>
