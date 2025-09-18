@@ -25,7 +25,16 @@ public class MaintenanceRequest {
 
     private String status;
 
+    @ManyToOne
+    @JoinColumn(name = "handled_by_id")
+    private User handledBy;
+
+    @Column(length = 2000)
+    private String resolutionNotes;
+
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    private LocalDateTime updatedAt;
 
     public Long getId() {
         return id;
@@ -89,5 +98,29 @@ public class MaintenanceRequest {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public User getHandledBy() {
+        return handledBy;
+    }
+
+    public void setHandledBy(User handledBy) {
+        this.handledBy = handledBy;
+    }
+
+    public String getResolutionNotes() {
+        return resolutionNotes;
+    }
+
+    public void setResolutionNotes(String resolutionNotes) {
+        this.resolutionNotes = resolutionNotes;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

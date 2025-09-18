@@ -78,7 +78,8 @@
                 <ul th:if="${!#lists.isEmpty(maintenanceRequests)}">
                     <li th:each="req : ${maintenanceRequests}">
                         <span th:text="${#strings.replace(req.requestType, '_', ' ')}"></span>
-                        <span class="meta-sub" th:text="${req.status}"></span>
+                        <span class="meta-sub" th:text="${req.status + (req.updatedAt != null ? ' • ' + #temporals.format(req.updatedAt, 'dd/MM') : '')}"></span>
+                        <span class="meta-note truncate" th:if="${req.resolutionNotes != null}" th:text="${req.resolutionNotes}"></span>
                     </li>
                 </ul>
                 <a class="button btn-add btn-small" th:href="@{/student/maintenance/new}">Tạo yêu cầu mới</a>
@@ -92,7 +93,10 @@
                 <ul th:if="${!#lists.isEmpty(violations)}">
                     <li th:each="violation : ${violations}">
                         <span th:text="${violation.description}"></span>
-                        <span class="meta-sub" th:text="${violation.date}"></span>
+                        <span class="meta-sub"
+                              th:text="${(violation.type != null ? #strings.replace(violation.type, '_', ' ') + ' • ' : '') + violation.date}"></span>
+                        <span class="meta-note truncate"
+                              th:text="${'Mức độ: ' + violation.severity}"></span>
                     </li>
                 </ul>
             </div>

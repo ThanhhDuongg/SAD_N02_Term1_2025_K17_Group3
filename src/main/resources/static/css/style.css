@@ -648,6 +648,23 @@ h2 {
     min-width: 180px;
 }
 
+.checkbox-group {
+    min-width: 160px;
+}
+
+.checkbox-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.checkbox-inline input {
+    width: 16px;
+    height: 16px;
+}
+
 .filter-group label {
     font-weight: 600;
     color: var(--text-secondary);
@@ -673,7 +690,22 @@ h2 {
     flex-direction: column;
 }
 
+.truncate {
+    display: inline-block;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .meta-sub {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.meta-note {
+    display: block;
+    margin-top: 0.25rem;
     font-size: 0.75rem;
     color: var(--text-secondary);
 }
@@ -971,15 +1003,28 @@ h2 {
 
 .status-form {
     display: flex;
+    flex-direction: column;
     gap: 1rem;
-    align-items: center;
     margin-top: 0.75rem;
 }
 
-.status-form select {
+.status-form .form-group-inline,
+.status-form .form-group-full {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.status-form select,
+.status-form textarea {
     padding: 0.5rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
+    width: 100%;
+}
+
+.status-form button {
+    align-self: flex-start;
 }
 
 .auth-body {

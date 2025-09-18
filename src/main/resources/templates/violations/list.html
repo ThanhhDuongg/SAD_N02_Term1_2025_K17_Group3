@@ -15,7 +15,7 @@
         <div class="page-header">
             <div>
                 <h2>Theo dõi vi phạm nội quy</h2>
-                <p class="text-muted">Phân tích tình trạng vi phạm theo sinh viên, phòng và mức độ nghiêm trọng</p>
+                <p class="text-muted">Phân tích tình trạng vi phạm theo sinh viên, phòng, mức độ và phân loại vi phạm</p>
             </div>
             <a class="button btn-add" th:href="@{/violations/new}">Ghi nhận vi phạm</a>
         </div>
@@ -40,6 +40,13 @@
                 <ul>
                     <li th:each="entry : ${studentSummary.entrySet()}"
                         th:text="${entry.key} + ': ' + ${entry.value}">SV01: 1</li>
+                </ul>
+            </div>
+            <div class="summary-card">
+                <h4>Phân loại vi phạm</h4>
+                <ul>
+                    <li th:each="entry : ${typeSummary.entrySet()}"
+                        th:text="${#strings.replace(entry.key, '_', ' ')} + ': ' + ${entry.value}">DORM RULE: 2</li>
                 </ul>
             </div>
         </div>
@@ -75,6 +82,16 @@
                             th:text="${level}"></option>
                 </select>
             </div>
+            <div class="filter-group">
+                <label for="type">Loại vi phạm</label>
+                <select id="type" name="type">
+                    <option value="">Tất cả</option>
+                    <option th:each="typeOption : ${violationTypes}"
+                            th:value="${typeOption}"
+                            th:selected="${typeOption.equalsIgnoreCase(selectedType)}"
+                            th:text="${#strings.replace(typeOption, '_', ' ')}"></option>
+                </select>
+            </div>
             <button class="button btn-add" type="submit">Lọc</button>
         </form>
 
@@ -86,7 +103,9 @@
                     <th>Sinh viên</th>
                     <th>Phòng</th>
                     <th>Mô tả</th>
+                    <th>Loại vi phạm</th>
                     <th>Mức độ</th>
+                    <th>Người ghi nhận</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -99,15 +118,23 @@
                         </div>
                     </td>
                     <td th:text="${violation.room != null ? violation.room.number : 'N/A'}"></td>
-                    <td th:text="${violation.description}"></td>
+                    <td class="truncate" th:text="${violation.description}"></td>
+                    <td th:text="${violation.type != null ? #strings.replace(violation.type, '_', ' ') : '-'}"></td>
                     <td>
                         <span class="badge"
                               th:classappend="${violation.severity} == 'HIGH' ? ' badge-danger' : (${violation.severity} == 'MEDIUM' ? ' badge-warning' : ' badge-info')}"
                               th:text="${violation.severity}">LOW</span>
                     </td>
+                    <td>
+                        <div class="table-meta" th:if="${violation.createdBy != null}">
+                            <strong th:text="${violation.createdBy.username}"></strong>
+                            <span class="meta-sub" th:text="${violation.createdBy.email}"></span>
+                        </div>
+                        <span th:if="${violation.createdBy == null}" class="text-muted">Chưa xác định</span>
+                    </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(violations)}">
-                    <td colspan="5" class="text-center">Chưa có dữ liệu vi phạm</td>
+                    <td colspan="7" class="text-center">Chưa có dữ liệu vi phạm</td>
                 </tr>
                 </tbody>
             </table>

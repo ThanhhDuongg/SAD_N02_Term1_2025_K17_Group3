@@ -20,6 +20,9 @@ public class ViolationService {
         if (violation.getSeverity() != null) {
             violation.setSeverity(violation.getSeverity().trim().toUpperCase());
         }
+        if (violation.getType() != null) {
+            violation.setType(violation.getType().trim().toUpperCase());
+        }
         return violationRepository.save(violation);
     }
 
@@ -52,6 +55,13 @@ public class ViolationService {
     public Map<String, Long> countBySeverity() {
         return getAllViolations().stream()
                 .collect(Collectors.groupingBy(Violation::getSeverity, LinkedHashMap::new, Collectors.counting()));
+    }
+
+    public Map<String, Long> countByType() {
+        return violationRepository.countByType().stream()
+                .collect(LinkedHashMap::new,
+                        (map, arr) -> map.put((String) arr[0], (Long) arr[1]),
+                        Map::putAll);
     }
 
     public long countViolations() {

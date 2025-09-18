@@ -23,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -252,11 +253,46 @@ public class StudentPortalController {
             notifications.add("Bạn có yêu cầu đang chờ xử lý. Vui lòng theo dõi phản hồi từ ban quản lý.");
         }
 
+        requests.stream()
+                .filter(request -> request.getUpdatedAt() != null && "COMPLETED".equalsIgnoreCase(request.getStatus()))
+                .max(Comparator.comparing(MaintenanceRequest::getUpdatedAt))
+                .ifPresent(request -> notifications.add(
+                        "Yêu cầu " + formatRequestType(request) + " của bạn đã được xử lý"
+                                + buildResolutionSuffix(request)));
+
+        requests.stream()
+                .filter(request -> request.getUpdatedAt() != null && "REJECTED".equalsIgnoreCase(request.getStatus()))
+                .max(Comparator.comparing(MaintenanceRequest::getUpdatedAt))
+                .ifPresent(request -> notifications.add(
+                        "Yêu cầu " + formatRequestType(request) + " đã bị từ chối"
+                                + buildResolutionSuffix(request)));
+
         violations.stream()
                 .filter(violation -> "HIGH".equalsIgnoreCase(violation.getSeverity()))
                 .findFirst()
-                .ifPresent(violation -> notifications.add("Cảnh báo: Bạn có vi phạm mức nghiêm trọng (" + violation.getDate() + ")"));
+                .ifPresent(violation -> notifications.add("Cảnh báo: Vi phạm mức nghiêm trọng" +
+                        (violation.getType() != null ? " - " + violation.getType().replace('_', ' ') : "") +
+                        " (" + violation.getDate() + ")"));
 
         return notifications;
+    }
+
+    private String formatRequestType(MaintenanceRequest request) {
+        if (request.getRequestType() == null || request.getRequestType().isBlank()) {
+            return "hỗ trợ";
+        }
+        String normalized = request.getRequestType().replace('_', ' ').toLowerCase();
+        return Character.toUpperCase(normalized.charAt(0)) + normalized.substring(1);
+    }
+
+    private String buildResolutionSuffix(MaintenanceRequest request) {
+        StringBuilder builder = new StringBuilder();
+        if (request.getHandledBy() != null) {
+            builder.append(" bởi ").append(request.getHandledBy().getUsername());
+        }
+        if (request.getResolutionNotes() != null && !request.getResolutionNotes().isBlank()) {
+            builder.append(" – ").append(request.getResolutionNotes());
+        }
+        return builder.toString();
     }
 }

@@ -24,4 +24,7 @@ public interface ViolationRepository extends JpaRepository<Violation, Long> {
     Optional<Violation> findByStudent_IdAndDescription(Long studentId, String description);
 
     long countBySeverity(String severity);
+
+    @org.springframework.data.jpa.repository.Query("SELECT v.type, COUNT(v) FROM Violation v WHERE v.type IS NOT NULL GROUP BY v.type ORDER BY COUNT(v) DESC")
+    List<Object[]> countByType();
 }

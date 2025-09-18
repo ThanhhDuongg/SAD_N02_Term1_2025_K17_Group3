@@ -23,6 +23,12 @@ public class Violation {
 
     private LocalDate date = LocalDate.now();
 
+    private String type;
+
+    @ManyToOne
+    @JoinColumn(name = "created_by_id")
+    private User createdBy;
+
     public Long getId() {
         return id;
     }
@@ -69,5 +75,21 @@ public class Violation {
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
     }
 }
