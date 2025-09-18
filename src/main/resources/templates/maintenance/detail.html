@@ -45,11 +45,13 @@
         <div class="detail-grid">
             <div class="detail-card">
                 <h3>Thông tin xử lý</h3>
-                <p><strong>Trạng thái hiện tại:</strong> <span class="badge"
-                    th:classappend="${request.status} == 'COMPLETED' ? ' badge-success' :
-                                    (${request.status} == 'IN_PROGRESS' ? ' badge-warning' :
-                                    (${request.status} == 'REJECTED' ? ' badge-danger' : ' badge-info'))}"
-                    th:text="${request.status}"></span></p>
+                <p><strong>Trạng thái hiện tại:</strong>
+                    <span class="badge"
+                          th:classappend="${request.status == 'COMPLETED' ? ' badge-success' :
+                                           (request.status == 'IN_PROGRESS' ? ' badge-warning' :
+                                           (request.status == 'REJECTED' ? ' badge-danger' : ' badge-info'))}"
+                          th:text="${request.status}"></span>
+                </p>
                 <p><strong>Người phụ trách:</strong>
                     <span th:if="${request.handledBy != null}" th:text="${request.handledBy.username}"></span>
                     <span th:if="${request.handledBy == null}">Chưa phân công</span>

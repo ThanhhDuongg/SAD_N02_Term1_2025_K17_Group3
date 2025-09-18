@@ -25,28 +25,28 @@
                 <h4>Theo mức độ</h4>
                 <ul>
                     <li th:each="entry : ${severitySummary.entrySet()}"
-                        th:text="${entry.key} + ': ' + ${entry.value}">High: 2</li>
+                        th:text="${entry.key + ': ' + entry.value}">High: 2</li>
                 </ul>
             </div>
             <div class="summary-card">
                 <h4>Phòng có nhiều vi phạm</h4>
                 <ul>
                     <li th:each="entry : ${roomSummary.entrySet()}"
-                        th:text="'Phòng ' + ${entry.key} + ': ' + ${entry.value}">101: 1</li>
+                        th:text="${'Phòng ' + entry.key + ': ' + entry.value}">101: 1</li>
                 </ul>
             </div>
             <div class="summary-card">
                 <h4>Sinh viên vi phạm nhiều</h4>
                 <ul>
                     <li th:each="entry : ${studentSummary.entrySet()}"
-                        th:text="${entry.key} + ': ' + ${entry.value}">SV01: 1</li>
+                        th:text="${entry.key + ': ' + entry.value}">SV01: 1</li>
                 </ul>
             </div>
             <div class="summary-card">
                 <h4>Phân loại vi phạm</h4>
                 <ul>
                     <li th:each="entry : ${typeSummary.entrySet()}"
-                        th:text="${#strings.replace(entry.key, '_', ' ')} + ': ' + ${entry.value}">DORM RULE: 2</li>
+                        th:text="${#strings.replace(entry.key, '_', ' ') + ': ' + entry.value}">DORM RULE: 2</li>
                 </ul>
             </div>
         </div>
@@ -122,7 +122,8 @@
                     <td th:text="${violation.type != null ? #strings.replace(violation.type, '_', ' ') : '-'}"></td>
                     <td>
                         <span class="badge"
-                              th:classappend="${violation.severity} == 'HIGH' ? ' badge-danger' : (${violation.severity} == 'MEDIUM' ? ' badge-warning' : ' badge-info')}"
+                              th:classappend="${violation.severity == 'HIGH' ? ' badge-danger' :
+                                               (violation.severity == 'MEDIUM' ? ' badge-warning' : ' badge-info')}"
                               th:text="${violation.severity}">LOW</span>
                     </td>
                     <td>

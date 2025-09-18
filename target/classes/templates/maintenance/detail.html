@@ -42,16 +42,53 @@
             <p th:text="${request.description}"></p>
         </div>
 
+        <div class="detail-grid">
+            <div class="detail-card">
+                <h3>Thông tin xử lý</h3>
+                <p><strong>Trạng thái hiện tại:</strong>
+                    <span class="badge"
+                          th:classappend="${request.status == 'COMPLETED' ? ' badge-success' :
+                                           (request.status == 'IN_PROGRESS' ? ' badge-warning' :
+                                           (request.status == 'REJECTED' ? ' badge-danger' : ' badge-info'))}"
+                          th:text="${request.status}"></span>
+                </p>
+                <p><strong>Người phụ trách:</strong>
+                    <span th:if="${request.handledBy != null}" th:text="${request.handledBy.username}"></span>
+                    <span th:if="${request.handledBy == null}">Chưa phân công</span>
+                </p>
+                <p><strong>Liên hệ:</strong>
+                    <span th:if="${request.handledBy != null}" th:text="${request.handledBy.email}"></span>
+                    <span th:if="${request.handledBy == null}">-</span>
+                </p>
+                <p><strong>Ngày cập nhật:</strong>
+                    <span th:text="${request.updatedAt != null ? #temporals.format(request.updatedAt, 'dd/MM/yyyy HH:mm') : #temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                </p>
+            </div>
+            <div class="detail-card">
+                <h3>Ghi chú cho sinh viên</h3>
+                <p th:if="${request.resolutionNotes != null}" th:text="${request.resolutionNotes}"></p>
+                <p th:if="${request.resolutionNotes == null}" class="text-muted">Chưa có ghi chú xử lý</p>
+            </div>
+        </div>
+
         <div class="detail-card">
             <h3>Cập nhật trạng thái</h3>
             <form th:action="@{'/maintenance/' + ${request.id} + '/status'}" method="post" class="status-form">
-                <label for="status">Trạng thái</label>
-                <select id="status" name="status">
-                    <option th:each="status : ${statusOptions}"
-                            th:value="${status}"
-                            th:selected="${status.equals(request.status)}"
-                            th:text="${status}"></option>
-                </select>
+                <div class="form-group-inline">
+                    <label for="status">Trạng thái</label>
+                    <select id="status" name="status">
+                        <option th:each="status : ${statusOptions}"
+                                th:value="${status}"
+                                th:selected="${status.equals(request.status)}"
+                                th:text="${status}"></option>
+                    </select>
+                </div>
+                <div class="form-group-full">
+                    <label for="resolutionNotes">Ghi chú gửi sinh viên</label>
+                    <textarea id="resolutionNotes" name="resolutionNotes" rows="3"
+                              placeholder="Nhập hướng dẫn hoặc phản hồi cho sinh viên"
+                              th:text="${request.resolutionNotes}"></textarea>
+                </div>
                 <button class="button btn-add" type="submit">Lưu thay đổi</button>
             </form>
         </div>

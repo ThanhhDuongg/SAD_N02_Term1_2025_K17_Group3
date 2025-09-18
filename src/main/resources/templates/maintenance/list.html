@@ -91,16 +91,16 @@
                     <td th:text="${request.room != null ? request.room.number : 'N/A'}"></td>
                     <td>
                         <span class="badge"
-                              th:classappend="${request.requestType} == 'ROOM_TRANSFER' ? ' badge-warning' :
-                                              (${request.requestType} == 'INCIDENT' ? ' badge-danger' : ' badge-info')}"
+                              th:classappend="${request.requestType == 'ROOM_TRANSFER' ? ' badge-warning' :
+                                              (request.requestType == 'INCIDENT' ? ' badge-danger' : ' badge-info')}"
                               th:text="${#strings.replace(request.requestType, '_', ' ')}">MAINTENANCE</span>
                     </td>
                     <td class="truncate" th:text="${request.description}"></td>
                     <td>
                         <span class="badge"
-                              th:classappend="${request.status} == 'COMPLETED' ? ' badge-success' :
-                                              (${request.status} == 'IN_PROGRESS' ? ' badge-warning' :
-                                              (${request.status} == 'REJECTED' ? ' badge-danger' : ' badge-info'))}"
+                              th:classappend="${request.status == 'COMPLETED' ? ' badge-success' :
+                                              (request.status == 'IN_PROGRESS' ? ' badge-warning' :
+                                              (request.status == 'REJECTED' ? ' badge-danger' : ' badge-info'))}"
                               th:text="${request.status}">PENDING</span>
                     </td>
                     <td>

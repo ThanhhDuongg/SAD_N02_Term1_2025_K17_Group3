@@ -6,94 +6,30 @@
   <component name="ChangeListManager">
     <list default="true" id="3fd30b30-e29d-4608-8e3d-7f324d2c1262" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/dorm/controller/FaviconController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/favicon.ico" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/favicon.ico" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/dashboard.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/student/requests.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/student/requests.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/student/violations.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/student/violations.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/application-mysql.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/application.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/DormitoryApplication.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/config/DatasetAccountInitializer.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/config/DemoDataInitializer.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/config/RoleAwareAuthenticationSuccessHandler.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/config/SecurityConfig.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/AuthController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/ContractController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/CustomErrorController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/DashboardController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/FaviconController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/FeeController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/MaintenanceRequestController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/RoomController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/StudentController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/StudentPortalController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/ViolationController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/dto/StudentRegistrationForm.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/exception/GlobalExceptionHandler.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/model/Contract.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/model/Fee.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/model/FeeType.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/model/MaintenanceRequest.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/model/PaymentStatus.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/model/Role.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/model/RoleName.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/model/Room.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/model/Student.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/model/User.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/model/Violation.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/repository/ContractRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/repository/FeeRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/repository/MaintenanceRequestRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/repository/RoleRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/repository/RoomRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/repository/StudentRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/repository/UserRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/repository/ViolationRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/service/ContractService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/service/CustomUserDetailsService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/service/FeeService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/service/MaintenanceRequestService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/service/RoomService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/service/StudentService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/service/UserService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/service/ViolationService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/database.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/static/css/style.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/static/favicon.ico" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/static/images/logo-phenikaa.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/auth/login.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/auth/register.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/contracts/detail.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/contracts/form.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/contracts/list.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/dashboard.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/error.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/fees/detail.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/fees/form.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/fees/list.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/fragments/header.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/fragments/sidebar.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/fragments/student-sidebar.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/maintenance/detail.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/maintenance/list.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/rooms/detail.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/rooms/form.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/rooms/list.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/student/contracts.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/student/dashboard.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/student/fees.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/student/maintenance-form.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/student/profile.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/student/requests.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/student/violations.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/students/detail.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/students/form.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/students/list.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/violations/form.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/violations/list.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/maintenance/detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/maintenance/detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/maintenance/list.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/maintenance/list.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/violations/list.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/violations/list.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/config/SecurityConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/dorm/config/SecurityConfig.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/DashboardController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/DashboardController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/MaintenanceRequestController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/MaintenanceRequestController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/StudentPortalController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/StudentPortalController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/ViolationController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/dorm/controller/ViolationController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/model/MaintenanceRequest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/dorm/model/MaintenanceRequest.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/model/Violation.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/dorm/model/Violation.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/repository/MaintenanceRequestRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/dorm/repository/MaintenanceRequestRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/repository/ViolationRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/dorm/repository/ViolationRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/service/MaintenanceRequestService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/dorm/service/MaintenanceRequestService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/dorm/service/ViolationService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/dorm/service/ViolationService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/css/style.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/fragments/sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/fragments/sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/maintenance/detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/maintenance/detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/maintenance/list.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/maintenance/list.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/student/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/student/dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/student/requests.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/student/requests.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/student/violations.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/student/violations.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/violations/form.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/violations/form.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/violations/list.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/violations/list.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -133,33 +69,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.DormitoryApplication.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;Spring Boot.DormitoryApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/SAD/SAD_N02_Term1_2025_K17_Group3&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.DormitoryApplication.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Spring Boot.DormitoryApplication.executor": "Run",
+    "git-widget-placeholder": "#9 on codex/add-admin-feature-to-view-s…uests",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "D:/SAD/SAD_N02_Term1_2025_K17_Group3",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="D:\SAD\SAD_N02_Term1_2025_K17_Group3\src\main\resources\static" />
@@ -212,6 +148,7 @@
       <workItem from="1758115936428" duration="2631000" />
       <workItem from="1758162656077" duration="4535000" />
       <workItem from="1758180536227" duration="422000" />
+      <workItem from="1758202963765" duration="1949000" />
     </task>
     <servers />
   </component>
