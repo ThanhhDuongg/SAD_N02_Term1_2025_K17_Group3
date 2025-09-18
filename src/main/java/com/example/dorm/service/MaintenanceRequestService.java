@@ -28,44 +28,58 @@ public class MaintenanceRequestService {
     }
 
     public List<MaintenanceRequest> getAllRequests() {
-        List<MaintenanceRequest> requests = maintenanceRequestRepository.findAllByOrderByUpdatedAtDesc();
-        if (requests.isEmpty()) {
-            return maintenanceRequestRepository.findAllByOrderByCreatedAtDesc();
-        }
-        return requests;
+        return maintenanceRequestRepository.findAll().stream()
+                .sorted(requestRecencyComparator())
+                .toList();
     }
 
     public List<MaintenanceRequest> getRequestsByStatus(String status) {
-        return getRequests(status, null, null, null);
+        if (status == null || status.isBlank()) {
+            return getAllRequests();
+        }
+        return maintenanceRequestRepository.findByStatusIgnoreCaseOrderByUpdatedAtDesc(status.trim().toUpperCase())
+                .stream()
+                .sorted(requestRecencyComparator())
+                .toList();
     }
 
     public List<MaintenanceRequest> getRequests(String status, String type, String keyword, String assignedUsername) {
-        Stream<MaintenanceRequest> stream = getAllRequests().stream();
+        String normalizedStatus = status != null && !status.isBlank() ? status.trim().toUpperCase() : null;
+        String normalizedType = type != null && !type.isBlank() ? type.trim().toUpperCase() : null;
+        String normalizedKeyword = keyword != null && !keyword.isBlank() ? keyword.trim().toLowerCase() : null;
+        String normalizedAssignee = assignedUsername != null && !assignedUsername.isBlank()
+                ? assignedUsername.trim()
+                : null;
 
-        if (status != null && !status.isBlank()) {
-            String normalizedStatus = status.trim().toUpperCase();
-            stream = stream.filter(request -> normalizedStatus.equalsIgnoreCase(request.getStatus()));
+        List<MaintenanceRequest> baseRequests;
+        boolean filterByStatus = normalizedStatus != null;
+        boolean filterByAssignee = normalizedAssignee != null;
+
+        if (filterByStatus && filterByAssignee) {
+            baseRequests = maintenanceRequestRepository
+                    .findByStatusIgnoreCaseAndHandledBy_UsernameIgnoreCaseOrderByUpdatedAtDesc(
+                            normalizedStatus, normalizedAssignee);
+        } else if (filterByStatus) {
+            baseRequests = maintenanceRequestRepository
+                    .findByStatusIgnoreCaseOrderByUpdatedAtDesc(normalizedStatus);
+        } else if (filterByAssignee) {
+            baseRequests = maintenanceRequestRepository
+                    .findByHandledBy_UsernameIgnoreCaseOrderByUpdatedAtDesc(normalizedAssignee);
+        } else {
+            baseRequests = getAllRequests();
         }
 
-        if (type != null && !type.isBlank()) {
-            String normalizedType = type.trim().toUpperCase();
+        Stream<MaintenanceRequest> stream = baseRequests.stream();
+
+        if (normalizedType != null) {
             stream = stream.filter(request -> normalizedType.equalsIgnoreCase(request.getRequestType()));
         }
 
-        if (keyword != null && !keyword.isBlank()) {
-            String normalizedKeyword = keyword.trim().toLowerCase();
+        if (normalizedKeyword != null) {
             stream = stream.filter(request -> matchesKeyword(request, normalizedKeyword));
         }
 
-        if (assignedUsername != null && !assignedUsername.isBlank()) {
-            stream = stream.filter(request -> request.getHandledBy() != null
-                    && assignedUsername.equalsIgnoreCase(request.getHandledBy().getUsername()));
-        }
-
-        return stream.sorted(Comparator.comparing(
-                        MaintenanceRequest::getUpdatedAt,
-                        Comparator.nullsLast(Comparator.naturalOrder()))
-                .reversed())
+        return stream.sorted(requestRecencyComparator())
                 .toList();
     }
 
@@ -154,5 +168,15 @@ public class MaintenanceRequestService {
                 && request.getDescription().toLowerCase().contains(keyword)
                 || (request.getResolutionNotes() != null
                 && request.getResolutionNotes().toLowerCase().contains(keyword));
+    }
+
+    private Comparator<MaintenanceRequest> requestRecencyComparator() {
+        Comparator<MaintenanceRequest> byUpdatedAt = Comparator.comparing(
+                MaintenanceRequest::getUpdatedAt,
+                Comparator.nullsLast(Comparator.naturalOrder()));
+        Comparator<MaintenanceRequest> byCreatedAt = Comparator.comparing(
+                MaintenanceRequest::getCreatedAt,
+                Comparator.nullsLast(Comparator.naturalOrder()));
+        return byUpdatedAt.thenComparing(byCreatedAt).reversed();
     }
 }

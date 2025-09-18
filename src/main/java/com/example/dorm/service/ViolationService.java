@@ -5,6 +5,7 @@ import com.example.dorm.repository.ViolationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,17 +14,54 @@ import java.util.stream.Collectors;
 @Service
 public class ViolationService {
 
+    private static final List<String> SEVERITY_LEVELS = List.of("LOW", "MEDIUM", "HIGH");
+
     @Autowired
     private ViolationRepository violationRepository;
 
-    public Violation recordViolation(Violation violation) {
-        if (violation.getSeverity() != null) {
-            violation.setSeverity(violation.getSeverity().trim().toUpperCase());
+    public Violation createViolation(Violation violation) {
+        if (violation == null) {
+            throw new IllegalArgumentException("Violation must not be null");
         }
-        if (violation.getType() != null) {
+
+        if (violation.getStudent() == null) {
+            throw new IllegalArgumentException("Vi phạm phải gắn với sinh viên");
+        }
+
+        if (violation.getDescription() == null || violation.getDescription().trim().isEmpty()) {
+            throw new IllegalArgumentException("Mô tả vi phạm không được để trống");
+        }
+        violation.setDescription(violation.getDescription().trim());
+
+        if (violation.getSeverity() != null && !violation.getSeverity().isBlank()) {
+            String normalizedSeverity = violation.getSeverity().trim().toUpperCase();
+            if (!SEVERITY_LEVELS.contains(normalizedSeverity)) {
+                throw new IllegalArgumentException("Mức độ vi phạm không hợp lệ");
+            }
+            violation.setSeverity(normalizedSeverity);
+        } else {
+            violation.setSeverity("LOW");
+        }
+
+        if (violation.getType() != null && !violation.getType().isBlank()) {
             violation.setType(violation.getType().trim().toUpperCase());
+        } else {
+            violation.setType("OTHER");
         }
+
+        if (violation.getDate() == null) {
+            violation.setDate(LocalDate.now());
+        }
+
         return violationRepository.save(violation);
+    }
+
+    /**
+     * @deprecated use {@link #createViolation(Violation)} instead.
+     */
+    @Deprecated
+    public Violation recordViolation(Violation violation) {
+        return createViolation(violation);
     }
 
     public List<Violation> getViolationsByStudent(Long studentId) {

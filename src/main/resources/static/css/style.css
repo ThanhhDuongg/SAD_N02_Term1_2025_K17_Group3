@@ -780,6 +780,23 @@ h2 {
     margin-bottom: 2rem;
 }
 
+.student-alerts-critical {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    box-shadow: 0 10px 20px -10px rgba(239, 68, 68, 0.6);
+}
+
+.student-alerts-critical h3 {
+    color: var(--danger-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.student-alerts-critical strong {
+    color: var(--danger-color);
+}
+
 .student-alerts ul {
     margin-top: 0.75rem;
     list-style: disc;

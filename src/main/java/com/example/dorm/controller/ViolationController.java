@@ -128,8 +128,15 @@ public class ViolationController {
                                   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate violationDate,
                                   Authentication authentication,
                                   RedirectAttributes redirectAttributes) {
+        Violation violation = new Violation();
+        violation.setDescription(description);
+        violation.setSeverity(severity);
+        violation.setType(violationType);
+        if (violationDate != null) {
+            violation.setDate(violationDate);
+        }
+
         try {
-            Violation violation = new Violation();
             Student student = studentService.getStudent(studentId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sinh viên"));
             violation.setStudent(student);
@@ -139,25 +146,20 @@ public class ViolationController {
                         .ifPresent(violation::setRoom);
             }
 
-            violation.setDescription(description);
-            violation.setSeverity(severity);
-            violation.setType(violationType);
-            if (violationDate != null) {
-                violation.setDate(violationDate);
-            }
-
             if (authentication != null) {
                 userService.findByUsername(authentication.getName())
                         .ifPresent(violation::setCreatedBy);
             }
-            violationService.recordViolation(violation);
+            violationService.createViolation(violation);
 
             redirectAttributes.addFlashAttribute("message", "Đã ghi nhận vi phạm");
             redirectAttributes.addFlashAttribute("alertClass", "alert-success");
+            return "redirect:/violations";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("message", "Không thể ghi nhận vi phạm: " + e.getMessage());
             redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            redirectAttributes.addFlashAttribute("violation", violation);
+            return "redirect:/violations/new";
         }
-        return "redirect:/violations";
     }
 }

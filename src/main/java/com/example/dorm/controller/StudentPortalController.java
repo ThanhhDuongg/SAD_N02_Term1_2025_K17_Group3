@@ -79,6 +79,14 @@ public class StudentPortalController {
             model.addAttribute("violations", violations);
             model.addAttribute("violationCount", violations.size());
 
+            Optional<Violation> latestHighSeverity = violations.stream()
+                    .filter(violation -> "HIGH".equalsIgnoreCase(violation.getSeverity()))
+                    .max(Comparator.comparing(
+                            Violation::getDate,
+                            Comparator.nullsLast(Comparator.naturalOrder())));
+            model.addAttribute("hasHighSeverityViolation", latestHighSeverity.isPresent());
+            model.addAttribute("latestHighSeverityViolation", latestHighSeverity.orElse(null));
+
             List<String> notifications = buildNotifications(unpaidFees, maintenanceRequests, violations);
             model.addAttribute("notifications", notifications);
             model.addAttribute("hasNotifications", !notifications.isEmpty());

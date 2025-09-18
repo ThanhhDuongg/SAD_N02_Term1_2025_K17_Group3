@@ -24,9 +24,10 @@
             <div class="form-group">
                 <label for="studentId">Sinh viên</label>
                 <select id="studentId" name="studentId" required>
-                    <option value="" disabled selected>Chọn sinh viên</option>
+                    <option value="" disabled th:selected="${violation == null || violation.student == null}">Chọn sinh viên</option>
                     <option th:each="student : ${students}"
                             th:value="${student.id}"
+                            th:selected="${violation != null and violation.student != null and student.id == violation.student.id}"
                             th:text="${student.code + ' - ' + student.name}"></option>
                 </select>
             </div>
@@ -36,35 +37,40 @@
                     <option value="">Không chọn</option>
                     <option th:each="room : ${rooms}"
                             th:value="${room.id}"
+                            th:selected="${violation != null and violation.room != null and room.id == violation.room.id}"
                             th:text="${room.number}"></option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="severity">Mức độ</label>
                 <select id="severity" name="severity" required>
-                    <option value="" disabled selected>Chọn mức độ</option>
+                    <option value="" disabled th:selected="${violation == null || violation.severity == null}">Chọn mức độ</option>
                     <option th:each="level : ${severityLevels}"
                             th:value="${level}"
+                            th:selected="${violation != null and level.equalsIgnoreCase(violation.severity)}"
                             th:text="${level}"></option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="violationType">Loại vi phạm</label>
                 <select id="violationType" name="violationType" required>
-                    <option value="" disabled selected>Chọn loại vi phạm</option>
+                    <option value="" disabled th:selected="${violation == null || violation.type == null}">Chọn loại vi phạm</option>
                     <option th:each="type : ${violationTypes}"
                             th:value="${type}"
+                            th:selected="${violation != null and type.equalsIgnoreCase(violation.type)}"
                             th:text="${#strings.replace(type, '_', ' ')}"></option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="date">Ngày vi phạm</label>
-                <input id="date" name="date" type="date" th:value="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}">
+                <input id="date" name="date" type="date"
+                       th:value="${violation != null && violation.date != null ? violation.date : #dates.format(#dates.createNow(), 'yyyy-MM-dd')}"/>
             </div>
             <div class="form-group form-group-full">
                 <label for="description">Mô tả chi tiết</label>
                 <textarea id="description" name="description" rows="4" required
-                          placeholder="Mô tả hành vi vi phạm, thời gian, nhân chứng..."></textarea>
+                          placeholder="Mô tả hành vi vi phạm, thời gian, nhân chứng..."
+                          th:text="${violation != null ? violation.description : ''}"></textarea>
             </div>
             <div class="form-actions">
                 <button class="button btn-add" type="submit">Lưu vi phạm</button>
