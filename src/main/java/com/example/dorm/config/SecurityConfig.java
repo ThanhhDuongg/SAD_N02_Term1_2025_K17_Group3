@@ -1,7 +1,6 @@
 package com.example.dorm.config;
 
 import com.example.dorm.service.CustomUserDetailsService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,11 +15,14 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
+    private final RoleAwareAuthenticationSuccessHandler authenticationSuccessHandler;
 
-    @Autowired
-    private RoleAwareAuthenticationSuccessHandler authenticationSuccessHandler;
+    public SecurityConfig(CustomUserDetailsService userDetailsService,
+                          RoleAwareAuthenticationSuccessHandler authenticationSuccessHandler) {
+        this.userDetailsService = userDetailsService;
+        this.authenticationSuccessHandler = authenticationSuccessHandler;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {

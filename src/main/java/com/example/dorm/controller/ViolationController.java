@@ -7,7 +7,6 @@ import com.example.dorm.service.StudentService;
 import com.example.dorm.service.RoomService;
 import com.example.dorm.service.UserService;
 import com.example.dorm.service.ViolationService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,17 +27,20 @@ public class ViolationController {
     private static final List<String> VIOLATION_TYPES = List.of(
             "DORM_RULE", "ACADEMIC", "SAFETY", "FINANCE", "OTHER");
 
-    @Autowired
-    private ViolationService violationService;
+    private final ViolationService violationService;
+    private final StudentService studentService;
+    private final RoomService roomService;
+    private final UserService userService;
 
-    @Autowired
-    private StudentService studentService;
-
-    @Autowired
-    private RoomService roomService;
-
-    @Autowired
-    private UserService userService;
+    public ViolationController(ViolationService violationService,
+                               StudentService studentService,
+                               RoomService roomService,
+                               UserService userService) {
+        this.violationService = violationService;
+        this.studentService = studentService;
+        this.roomService = roomService;
+        this.userService = userService;
+    }
 
     @ModelAttribute("severityLevels")
     public List<String> severityLevels() {

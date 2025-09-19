@@ -3,7 +3,6 @@ package com.example.dorm.service;
 import com.example.dorm.model.MaintenanceRequest;
 import com.example.dorm.model.User;
 import com.example.dorm.repository.MaintenanceRequestRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,8 +14,11 @@ import java.util.stream.Stream;
 @Service
 public class MaintenanceRequestService {
 
-    @Autowired
-    private MaintenanceRequestRepository maintenanceRequestRepository;
+    private final MaintenanceRequestRepository maintenanceRequestRepository;
+
+    public MaintenanceRequestService(MaintenanceRequestRepository maintenanceRequestRepository) {
+        this.maintenanceRequestRepository = maintenanceRequestRepository;
+    }
 
     public MaintenanceRequest createRequest(MaintenanceRequest request) {
         normalizeRequest(request);
@@ -85,6 +87,11 @@ public class MaintenanceRequestService {
 
     public Optional<MaintenanceRequest> getRequest(Long id) {
         return maintenanceRequestRepository.findById(id);
+    }
+
+    public MaintenanceRequest getRequiredRequest(Long id) {
+        return getRequest(id)
+                .orElseThrow(() -> new IllegalArgumentException("Maintenance request not found"));
     }
 
     public MaintenanceRequest updateStatus(Long id, String status, String resolutionNotes, User handledBy) {

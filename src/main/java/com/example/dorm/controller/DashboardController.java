@@ -6,7 +6,6 @@ import com.example.dorm.service.MaintenanceRequestService;
 import com.example.dorm.service.RoomService;
 import com.example.dorm.service.StudentService;
 import com.example.dorm.service.ViolationService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -16,18 +15,26 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class DashboardController {
 
-    @Autowired
-    private StudentService studentService;
-    @Autowired
-    private RoomService roomService;
-    @Autowired
-    private ContractService contractService;
-    @Autowired
-    private FeeService feeService;
-    @Autowired
-    private MaintenanceRequestService maintenanceRequestService;
-    @Autowired
-    private ViolationService violationService;
+    private final StudentService studentService;
+    private final RoomService roomService;
+    private final ContractService contractService;
+    private final FeeService feeService;
+    private final MaintenanceRequestService maintenanceRequestService;
+    private final ViolationService violationService;
+
+    public DashboardController(StudentService studentService,
+                               RoomService roomService,
+                               ContractService contractService,
+                               FeeService feeService,
+                               MaintenanceRequestService maintenanceRequestService,
+                               ViolationService violationService) {
+        this.studentService = studentService;
+        this.roomService = roomService;
+        this.contractService = contractService;
+        this.feeService = feeService;
+        this.maintenanceRequestService = maintenanceRequestService;
+        this.violationService = violationService;
+    }
 
     @GetMapping("/")
     public String home(Authentication authentication) {

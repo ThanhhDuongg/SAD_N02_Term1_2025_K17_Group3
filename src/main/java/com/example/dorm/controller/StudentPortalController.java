@@ -10,7 +10,6 @@ import com.example.dorm.service.FeeService;
 import com.example.dorm.service.MaintenanceRequestService;
 import com.example.dorm.service.StudentService;
 import com.example.dorm.service.ViolationService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,20 +32,23 @@ public class StudentPortalController {
 
     private static final List<String> REQUEST_TYPES = List.of("MAINTENANCE", "INCIDENT", "ROOM_TRANSFER");
 
-    @Autowired
-    private StudentService studentService;
+    private final StudentService studentService;
+    private final ContractService contractService;
+    private final FeeService feeService;
+    private final MaintenanceRequestService maintenanceRequestService;
+    private final ViolationService violationService;
 
-    @Autowired
-    private ContractService contractService;
-
-    @Autowired
-    private FeeService feeService;
-
-    @Autowired
-    private MaintenanceRequestService maintenanceRequestService;
-
-    @Autowired
-    private ViolationService violationService;
+    public StudentPortalController(StudentService studentService,
+                                   ContractService contractService,
+                                   FeeService feeService,
+                                   MaintenanceRequestService maintenanceRequestService,
+                                   ViolationService violationService) {
+        this.studentService = studentService;
+        this.contractService = contractService;
+        this.feeService = feeService;
+        this.maintenanceRequestService = maintenanceRequestService;
+        this.violationService = violationService;
+    }
 
     @ModelAttribute("requestTypes")
     public List<String> requestTypes() {
@@ -55,134 +57,75 @@ public class StudentPortalController {
 
     @GetMapping("/dashboard")
     public String studentDashboard(Model model, Authentication authentication) {
-        try {
-            Optional<Student> studentOpt = getAuthenticatedStudent(authentication);
-            if (studentOpt.isEmpty()) {
-                model.addAttribute("errorMessage", "Không tìm thấy thông tin sinh viên");
-                return "error";
-            }
+        Student student = requireAuthenticatedStudent(authentication);
+        model.addAttribute("student", student);
 
-            Student student = studentOpt.get();
-            model.addAttribute("student", student);
+        Contract currentContract = contractService.findLatestContractByStudentId(student.getId());
+        model.addAttribute("currentContract", currentContract);
 
-            Contract currentContract = contractService.findLatestContractByStudentId(student.getId());
-            model.addAttribute("currentContract", currentContract);
+        List<Fee> unpaidFees = feeService.getUnpaidFeesByStudent(student.getId());
+        model.addAttribute("unpaidFees", unpaidFees);
+        model.addAttribute("unpaidCount", unpaidFees.size());
 
-            List<Fee> unpaidFees = feeService.getUnpaidFeesByStudent(student.getId());
-            model.addAttribute("unpaidFees", unpaidFees);
-            model.addAttribute("unpaidCount", unpaidFees.size());
+        List<MaintenanceRequest> maintenanceRequests = maintenanceRequestService.getRequestsByStudent(student.getId());
+        model.addAttribute("maintenanceRequests", maintenanceRequests);
 
-            List<MaintenanceRequest> maintenanceRequests = maintenanceRequestService.getRequestsByStudent(student.getId());
-            model.addAttribute("maintenanceRequests", maintenanceRequests);
+        List<Violation> violations = violationService.getViolationsByStudent(student.getId());
+        model.addAttribute("violations", violations);
+        model.addAttribute("violationCount", violations.size());
 
-            List<Violation> violations = violationService.getViolationsByStudent(student.getId());
-            model.addAttribute("violations", violations);
-            model.addAttribute("violationCount", violations.size());
+        Optional<Violation> latestHighSeverity = violations.stream()
+                .filter(violation -> "HIGH".equalsIgnoreCase(violation.getSeverity()))
+                .max(Comparator.comparing(
+                        Violation::getDate,
+                        Comparator.nullsLast(Comparator.naturalOrder())));
+        model.addAttribute("hasHighSeverityViolation", latestHighSeverity.isPresent());
+        model.addAttribute("latestHighSeverityViolation", latestHighSeverity.orElse(null));
 
-            Optional<Violation> latestHighSeverity = violations.stream()
-                    .filter(violation -> "HIGH".equalsIgnoreCase(violation.getSeverity()))
-                    .max(Comparator.comparing(
-                            Violation::getDate,
-                            Comparator.nullsLast(Comparator.naturalOrder())));
-            model.addAttribute("hasHighSeverityViolation", latestHighSeverity.isPresent());
-            model.addAttribute("latestHighSeverityViolation", latestHighSeverity.orElse(null));
+        List<String> notifications = buildNotifications(unpaidFees, maintenanceRequests, violations);
+        model.addAttribute("notifications", notifications);
+        model.addAttribute("hasNotifications", !notifications.isEmpty());
 
-            List<String> notifications = buildNotifications(unpaidFees, maintenanceRequests, violations);
-            model.addAttribute("notifications", notifications);
-            model.addAttribute("hasNotifications", !notifications.isEmpty());
-
-            return "student/dashboard";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tải dashboard: " + e.getMessage());
-            return "error";
-        }
+        return "student/dashboard";
     }
 
     @GetMapping("/profile")
     public String viewProfile(Model model, Authentication authentication) {
-        try {
-            Optional<Student> studentOpt = getAuthenticatedStudent(authentication);
-            if (studentOpt.isPresent()) {
-                model.addAttribute("student", studentOpt.get());
-                return "student/profile";
-            }
-            model.addAttribute("errorMessage", "Không tìm thấy thông tin sinh viên");
-            return "error";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tải profile: " + e.getMessage());
-            return "error";
-        }
+        Student student = requireAuthenticatedStudent(authentication);
+        model.addAttribute("student", student);
+        return "student/profile";
     }
 
     @GetMapping("/contracts")
     public String viewContracts(Model model, Authentication authentication) {
-        try {
-            Optional<Student> studentOpt = getAuthenticatedStudent(authentication);
-            if (studentOpt.isPresent()) {
-                Student student = studentOpt.get();
-                model.addAttribute("student", student);
-                model.addAttribute("contracts", contractService.getContractsByStudent(student.getId()));
-                return "student/contracts";
-            }
-            model.addAttribute("errorMessage", "Không tìm thấy thông tin sinh viên");
-            return "error";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tải hợp đồng: " + e.getMessage());
-            return "error";
-        }
+        Student student = requireAuthenticatedStudent(authentication);
+        model.addAttribute("student", student);
+        model.addAttribute("contracts", contractService.getContractsByStudent(student.getId()));
+        return "student/contracts";
     }
 
     @GetMapping("/fees")
     public String viewFees(Model model, Authentication authentication) {
-        try {
-            Optional<Student> studentOpt = getAuthenticatedStudent(authentication);
-            if (studentOpt.isPresent()) {
-                Student student = studentOpt.get();
-                model.addAttribute("student", student);
-                model.addAttribute("fees", feeService.getFeesByStudent(student.getId()));
-                return "student/fees";
-            }
-            model.addAttribute("errorMessage", "Không tìm thấy thông tin sinh viên");
-            return "error";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tải phí: " + e.getMessage());
-            return "error";
-        }
+        Student student = requireAuthenticatedStudent(authentication);
+        model.addAttribute("student", student);
+        model.addAttribute("fees", feeService.getFeesByStudent(student.getId()));
+        return "student/fees";
     }
 
     @GetMapping("/maintenance/new")
     public String newMaintenanceRequest(Model model, Authentication authentication) {
-        try {
-            Optional<Student> studentOpt = getAuthenticatedStudent(authentication);
-            if (studentOpt.isPresent()) {
-                model.addAttribute("student", studentOpt.get());
-                model.addAttribute("maintenanceRequest", new MaintenanceRequest());
-                return "student/maintenance-form";
-            }
-            model.addAttribute("errorMessage", "Không tìm thấy thông tin sinh viên");
-            return "error";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tải form: " + e.getMessage());
-            return "error";
-        }
+        Student student = requireAuthenticatedStudent(authentication);
+        model.addAttribute("student", student);
+        model.addAttribute("maintenanceRequest", new MaintenanceRequest());
+        return "student/maintenance-form";
     }
 
     @GetMapping("/requests")
     public String viewRequests(Model model, Authentication authentication) {
-        try {
-            Optional<Student> studentOpt = getAuthenticatedStudent(authentication);
-            if (studentOpt.isPresent()) {
-                Student student = studentOpt.get();
-                model.addAttribute("student", student);
-                model.addAttribute("requests", maintenanceRequestService.getRequestsByStudent(student.getId()));
-                return "student/requests";
-            }
-            model.addAttribute("errorMessage", "Không tìm thấy thông tin sinh viên");
-            return "error";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tải yêu cầu: " + e.getMessage());
-            return "error";
-        }
+        Student student = requireAuthenticatedStudent(authentication);
+        model.addAttribute("student", student);
+        model.addAttribute("requests", maintenanceRequestService.getRequestsByStudent(student.getId()));
+        return "student/requests";
     }
 
     @PostMapping("/maintenance")
@@ -190,22 +133,16 @@ public class StudentPortalController {
                                            Authentication authentication,
                                            RedirectAttributes redirectAttributes) {
         try {
-            Optional<Student> studentOpt = getAuthenticatedStudent(authentication);
-            if (studentOpt.isPresent()) {
-                Student student = studentOpt.get();
-                request.setStudent(student);
-                request.setRoom(student.getRoom());
-                if (request.getRequestType() == null || request.getRequestType().isBlank()) {
-                    request.setRequestType("MAINTENANCE");
-                }
-                maintenanceRequestService.createRequest(request);
-                redirectAttributes.addFlashAttribute("message", "Yêu cầu của bạn đã được gửi thành công!");
-                redirectAttributes.addFlashAttribute("alertClass", "alert-success");
-                return "redirect:/student/requests";
+            Student student = requireAuthenticatedStudent(authentication);
+            request.setStudent(student);
+            request.setRoom(student.getRoom());
+            if (request.getRequestType() == null || request.getRequestType().isBlank()) {
+                request.setRequestType("MAINTENANCE");
             }
-            redirectAttributes.addFlashAttribute("message", "Không tìm thấy thông tin sinh viên");
-            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
-            return "redirect:/student/dashboard";
+            maintenanceRequestService.createRequest(request);
+            redirectAttributes.addFlashAttribute("message", "Yêu cầu của bạn đã được gửi thành công!");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
+            return "redirect:/student/requests";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("message", "Lỗi khi tạo yêu cầu: " + e.getMessage());
             redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
@@ -215,20 +152,10 @@ public class StudentPortalController {
 
     @GetMapping("/violations")
     public String viewViolations(Model model, Authentication authentication) {
-        try {
-            Optional<Student> studentOpt = getAuthenticatedStudent(authentication);
-            if (studentOpt.isPresent()) {
-                Student student = studentOpt.get();
-                model.addAttribute("student", student);
-                model.addAttribute("violations", violationService.getViolationsByStudent(student.getId()));
-                return "student/violations";
-            }
-            model.addAttribute("errorMessage", "Không tìm thấy thông tin sinh viên");
-            return "error";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi tải vi phạm: " + e.getMessage());
-            return "error";
-        }
+        Student student = requireAuthenticatedStudent(authentication);
+        model.addAttribute("student", student);
+        model.addAttribute("violations", violationService.getViolationsByStudent(student.getId()));
+        return "student/violations";
     }
 
     private Optional<Student> getAuthenticatedStudent(Authentication authentication) {
@@ -236,6 +163,11 @@ public class StudentPortalController {
             return Optional.empty();
         }
         return studentService.findByUsername(authentication.getName());
+    }
+
+    private Student requireAuthenticatedStudent(Authentication authentication) {
+        return getAuthenticatedStudent(authentication)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy thông tin sinh viên"));
     }
 
     private List<String> buildNotifications(List<Fee> unpaidFees,

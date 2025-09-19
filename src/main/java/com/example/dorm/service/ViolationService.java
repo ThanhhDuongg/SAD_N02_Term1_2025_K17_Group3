@@ -2,7 +2,6 @@ package com.example.dorm.service;
 
 import com.example.dorm.model.Violation;
 import com.example.dorm.repository.ViolationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -16,8 +15,11 @@ public class ViolationService {
 
     private static final List<String> SEVERITY_LEVELS = List.of("LOW", "MEDIUM", "HIGH");
 
-    @Autowired
-    private ViolationRepository violationRepository;
+    private final ViolationRepository violationRepository;
+
+    public ViolationService(ViolationRepository violationRepository) {
+        this.violationRepository = violationRepository;
+    }
 
     public Violation createViolation(Violation violation) {
         if (violation == null) {

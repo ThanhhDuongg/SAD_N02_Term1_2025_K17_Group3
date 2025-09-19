@@ -3,7 +3,6 @@ package com.example.dorm.service;
 import com.example.dorm.model.Room;
 import com.example.dorm.repository.RoomRepository;
 import com.example.dorm.repository.StudentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Page;
@@ -14,11 +13,13 @@ import java.util.Optional;
 @Service
 public class RoomService {
 
-    @Autowired
-    private RoomRepository roomRepository;
+    private final RoomRepository roomRepository;
+    private final StudentRepository studentRepository;
 
-    @Autowired
-    private StudentRepository studentRepository;
+    public RoomService(RoomRepository roomRepository, StudentRepository studentRepository) {
+        this.roomRepository = roomRepository;
+        this.studentRepository = studentRepository;
+    }
 
 
     public Page<Room> getAllRooms(Pageable pageable) {
@@ -33,32 +34,31 @@ public class RoomService {
         return roomRepository.findById(id);
     }
 
+    public Room getRequiredRoom(Long id) {
+        return getRoom(id).orElseThrow(() -> new IllegalArgumentException("Room not found"));
+    }
+
     public Room createRoom(Room room) {
-        if ("Phòng bốn".equals(room.getType())) {
-            room.setPrice(2000000);
-        } else if ("Phòng tám".equals(room.getType())) {
-            room.setPrice(1200000);
-        }
+        room.setPrice(resolvePrice(room));
         return roomRepository.save(room);
     }
 
     public Room updateRoom(Long id, Room room) {
-        Room existing = roomRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
-        room.setId(id);
-        room.setType(existing.getType());
-        room.setPrice(existing.getPrice());
-        return roomRepository.save(room);
+        Room existing = getRequiredRoom(id);
+        existing.setNumber(room.getNumber());
+        existing.setType(room.getType());
+        existing.setCapacity(room.getCapacity());
+        existing.setPrice(resolvePrice(room));
+        return roomRepository.save(existing);
     }
 
     public void deleteRoom(Long id) {
         roomRepository.deleteById(id);
     }
 
-     public long getCurrentOccupancy(Long roomId) {
+    public long getCurrentOccupancy(Long roomId) {
         return studentRepository.countByRoom_Id(roomId);
     }
-
 
     public Page<Room> searchRooms(String search, Pageable pageable) {
         if (search == null || search.trim().isEmpty()) {
@@ -69,5 +69,17 @@ public class RoomService {
 
     public long countRooms() {
         return roomRepository.count();
+    }
+
+    private int resolvePrice(Room room) {
+        String type = room.getType();
+        if (type == null) {
+            return room.getPrice();
+        }
+        return switch (type) {
+            case "Phòng bốn" -> 2_000_000;
+            case "Phòng tám" -> 1_200_000;
+            default -> room.getPrice();
+        };
     }
 }

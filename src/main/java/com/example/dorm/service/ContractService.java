@@ -5,7 +5,6 @@ import com.example.dorm.model.Room;
 import com.example.dorm.repository.ContractRepository;
 import com.example.dorm.repository.StudentRepository;
 import com.example.dorm.repository.RoomRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Page;
@@ -16,14 +15,17 @@ import java.util.Optional;
 @Service
 public class ContractService {
 
-    @Autowired
-    private ContractRepository contractRepository;
+    private final ContractRepository contractRepository;
+    private final StudentRepository studentRepository;
+    private final RoomRepository roomRepository;
 
-    @Autowired
-    private StudentRepository studentRepository;
-
-    @Autowired
-    private RoomRepository roomRepository;
+    public ContractService(ContractRepository contractRepository,
+                           StudentRepository studentRepository,
+                           RoomRepository roomRepository) {
+        this.contractRepository = contractRepository;
+        this.studentRepository = studentRepository;
+        this.roomRepository = roomRepository;
+    }
 
     public Page<Contract> getAllContracts(Pageable pageable) {
         return contractRepository.findAll(pageable);
@@ -37,33 +39,26 @@ public class ContractService {
         return contractRepository.findById(id);
     }
 
-    private void checkRoomCapacity(Room room, Long studentId) {
-        Room actual = roomRepository.findById(room.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
-        long current = studentRepository.countByRoom_Id(room.getId());
-        if (studentId != null) {
-            Optional<com.example.dorm.model.Student> existingOpt = studentRepository.findById(studentId);
-            if (existingOpt.isPresent()) {
-                com.example.dorm.model.Student existing = existingOpt.get();
-                if (existing.getRoom() != null && existing.getRoom().getId().equals(room.getId())) {
-                    current -= 1;
-                }
-            }
-        }
-        if (current >= actual.getCapacity()) {
-            throw new IllegalStateException("Room capacity exceeded");
-        }
+    public Contract getRequiredContract(Long id) {
+        return getContract(id).orElseThrow(() -> new IllegalArgumentException("Contract not found"));
     }
 
     public Contract createContract(Contract contract) {
-        checkRoomCapacity(contract.getRoom(), contract.getStudent() != null ? contract.getStudent().getId() : null);
-        if (contract.getStudent() != null && contract.getStudent().getId() != null) {
-            if (contractRepository.existsByStudent_Id(contract.getStudent().getId())) {
+        Long roomId = extractRoomId(contract);
+        Long studentId = extractStudentId(contract);
+
+        checkRoomCapacity(roomId, studentId);
+
+        Room room = getRequiredRoom(roomId);
+        contract.setRoom(room);
+
+        if (studentId != null) {
+            if (contractRepository.existsByStudent_Id(studentId)) {
                 throw new IllegalStateException("Đã có hợp đồng");
             }
-            var student = studentRepository.findById(contract.getStudent().getId())
+            var student = studentRepository.findById(studentId)
                     .orElseThrow(() -> new IllegalArgumentException("Student not found"));
-            student.setRoom(contract.getRoom());
+            student.setRoom(room);
             studentRepository.save(student);
             contract.setStudent(student);
         }
@@ -71,16 +66,16 @@ public class ContractService {
     }
 
     public Contract updateContract(Long id, Contract contract) {
-        Contract existing = contractRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Contract not found"));
-        Long newStudentId = contract.getStudent() != null ? contract.getStudent().getId() : null;
+        Contract existing = getRequiredContract(id);
+        Long newStudentId = extractStudentId(contract);
         Long existingStudentId = existing.getStudent() != null ? existing.getStudent().getId() : null;
+        Long newRoomId = extractRoomId(contract);
 
-        boolean roomChanged = !existing.getRoom().getId().equals(contract.getRoom().getId());
+        boolean roomChanged = !existing.getRoom().getId().equals(newRoomId);
         boolean studentChanged = newStudentId != null && !newStudentId.equals(existingStudentId);
 
         if (roomChanged || studentChanged) {
-            checkRoomCapacity(contract.getRoom(), newStudentId);
+            checkRoomCapacity(newRoomId, newStudentId);
             if (studentChanged && contractRepository.existsByStudent_Id(newStudentId)) {
                 throw new IllegalStateException("Đã có hợp đồng");
             }
@@ -92,17 +87,19 @@ public class ContractService {
             }
         }
 
+        Room room = getRequiredRoom(newRoomId);
+
         if (newStudentId != null) {
             var student = studentRepository.findById(newStudentId)
                     .orElseThrow(() -> new IllegalArgumentException("Student not found"));
-            student.setRoom(contract.getRoom());
+            student.setRoom(room);
             studentRepository.save(student);
             existing.setStudent(student);
         } else {
             existing.setStudent(null);
         }
 
-        existing.setRoom(contract.getRoom());
+        existing.setRoom(room);
         existing.setStartDate(contract.getStartDate());
         existing.setEndDate(contract.getEndDate());
         existing.setStatus(contract.getStatus());
@@ -139,5 +136,36 @@ public class ContractService {
 
     public long countContracts() {
         return contractRepository.count();
+    }
+
+    private Room getRequiredRoom(Long roomId) {
+        return roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
+    }
+
+    private void checkRoomCapacity(Long roomId, Long studentId) {
+        Room actual = getRequiredRoom(roomId);
+        long current = studentRepository.countByRoom_Id(roomId);
+        if (studentId != null) {
+            studentRepository.findById(studentId)
+                    .map(com.example.dorm.model.Student::getRoom)
+                    .map(Room::getId)
+                    .filter(roomId::equals)
+                    .ifPresent(ignored -> current--);
+        }
+        if (current >= actual.getCapacity()) {
+            throw new IllegalStateException("Room capacity exceeded");
+        }
+    }
+
+    private Long extractStudentId(Contract contract) {
+        return contract.getStudent() != null ? contract.getStudent().getId() : null;
+    }
+
+    private Long extractRoomId(Contract contract) {
+        if (contract.getRoom() == null || contract.getRoom().getId() == null) {
+            throw new IllegalArgumentException("Room must be provided");
+        }
+        return contract.getRoom().getId();
     }
 }

@@ -4,7 +4,6 @@ import com.example.dorm.model.Fee;
 import com.example.dorm.model.FeeType;
 import com.example.dorm.model.PaymentStatus;
 import com.example.dorm.repository.FeeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,8 +14,11 @@ import java.util.Optional;
 @Service
 public class FeeService {
 
-    @Autowired
-    private FeeRepository feeRepository;
+    private final FeeRepository feeRepository;
+
+    public FeeService(FeeRepository feeRepository) {
+        this.feeRepository = feeRepository;
+    }
 
     public Page<Fee> getAllFees(Pageable pageable) {
         return feeRepository.findAll(pageable);
@@ -24,6 +26,10 @@ public class FeeService {
 
     public Optional<Fee> getFee(Long id) {
         return feeRepository.findById(id);
+    }
+
+    public Fee getRequiredFee(Long id) {
+        return getFee(id).orElseThrow(() -> new IllegalArgumentException("Fee not found"));
     }
 
     public Fee createFee(Fee fee) {

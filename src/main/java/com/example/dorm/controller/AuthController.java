@@ -7,7 +7,6 @@ import com.example.dorm.model.RoleName;
 import com.example.dorm.service.StudentService;
 import com.example.dorm.service.UserService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -21,11 +20,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class AuthController {
 
-    @Autowired
-    private StudentService studentService;
+    private final StudentService studentService;
+    private final UserService userService;
 
-    @Autowired
-    private UserService userService;
+    public AuthController(StudentService studentService, UserService userService) {
+        this.studentService = studentService;
+        this.userService = userService;
+    }
 
     @GetMapping("/login")
     public String login(Authentication authentication) {
@@ -57,14 +58,15 @@ public class AuthController {
 
         studentService.findByCode(form.getStudentCode()).ifPresentOrElse(student -> {
             validateStudentRegistration(form, student, bindingResult);
-            if (!bindingResult.hasErrors()) {
-                try {
-                    User user = userService.createUser(form.getUsername(), form.getEmail(), form.getPassword(), RoleName.ROLE_STUDENT);
-                    student.setUser(user);
-                    studentService.saveStudent(student);
-                } catch (IllegalStateException ex) {
-                    bindingResult.reject("registration.error", ex.getMessage());
-                }
+            if (bindingResult.hasErrors()) {
+                return;
+            }
+            try {
+                User user = userService.createUser(form.getUsername(), form.getEmail(), form.getPassword(), RoleName.ROLE_STUDENT);
+                student.setUser(user);
+                studentService.saveStudent(student);
+            } catch (IllegalStateException ex) {
+                bindingResult.reject("registration.error", ex.getMessage());
             }
         }, () -> bindingResult.rejectValue("studentCode", "student.notFound", "Không tìm thấy sinh viên với mã này"));
 

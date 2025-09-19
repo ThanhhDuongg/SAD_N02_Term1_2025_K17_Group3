@@ -3,7 +3,6 @@ package com.example.dorm.controller;
 import com.example.dorm.model.MaintenanceRequest;
 import com.example.dorm.service.MaintenanceRequestService;
 import com.example.dorm.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,11 +20,14 @@ public class MaintenanceRequestController {
     private static final List<String> STATUS_OPTIONS = List.of("PENDING", "IN_PROGRESS", "COMPLETED", "REJECTED");
     private static final List<String> REQUEST_TYPES = List.of("MAINTENANCE", "INCIDENT", "ROOM_TRANSFER");
 
-    @Autowired
-    private MaintenanceRequestService maintenanceRequestService;
+    private final MaintenanceRequestService maintenanceRequestService;
+    private final UserService userService;
 
-    @Autowired
-    private UserService userService;
+    public MaintenanceRequestController(MaintenanceRequestService maintenanceRequestService,
+                                        UserService userService) {
+        this.maintenanceRequestService = maintenanceRequestService;
+        this.userService = userService;
+    }
 
     @ModelAttribute("statusOptions")
     public List<String> statusOptions() {

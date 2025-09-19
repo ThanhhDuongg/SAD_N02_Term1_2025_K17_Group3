@@ -4,7 +4,6 @@ import com.example.dorm.model.Student;
 import com.example.dorm.repository.StudentRepository;
 import com.example.dorm.repository.RoomRepository;
 import com.example.dorm.model.Room;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Page;
@@ -15,11 +14,13 @@ import java.util.Optional;
 @Service
 public class StudentService {
 
-    @Autowired
-    private StudentRepository studentRepository;
+    private final StudentRepository studentRepository;
+    private final RoomRepository roomRepository;
 
-    @Autowired
-    private RoomRepository roomRepository;
+    public StudentService(StudentRepository studentRepository, RoomRepository roomRepository) {
+        this.studentRepository = studentRepository;
+        this.roomRepository = roomRepository;
+    }
 
     public Page<Student> getAllStudents(Pageable pageable) {
         return studentRepository.findAll(pageable);
@@ -33,25 +34,17 @@ public class StudentService {
         return studentRepository.findById(id);
     }
 
+    public Student getRequiredStudent(Long id) {
+        return getStudent(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sinh viên với ID: " + id));
+    }
+
     public Student saveStudent(Student student) {
-        if (student.getCode() != null) {
-            var existingOpt = studentRepository.findByCode(student.getCode());
-            if (existingOpt.isPresent()) {
-                if (student.getId() == null || !existingOpt.get().getId().equals(student.getId())) {
-                    throw new IllegalStateException("Mã sinh viên đã tồn tại");
-                }
-            }
-        }
-        if (student.getEmail() != null) {
-            var existingEmailOpt = studentRepository.findByEmail(student.getEmail());
-            if (existingEmailOpt.isPresent()) {
-                if (student.getId() == null || !existingEmailOpt.get().getId().equals(student.getId())) {
-                    throw new IllegalStateException("Email đã tồn tại");
-                }
-            }
-        }
+        validateUniqueCode(student);
+        validateUniqueEmail(student);
+
         if (student.getRoom() != null && student.getRoom().getId() != null) {
-            checkRoomCapacity(student.getRoom(), student.getId());
+            checkRoomCapacity(student.getRoom().getId(), student.getId());
         } else {
             student.setRoom(null);
         }
@@ -85,20 +78,42 @@ public class StudentService {
         return studentRepository.count();
     }
 
-    private void checkRoomCapacity(Room room, Long studentId) {
-        Room actual = roomRepository.findById(room.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
-        long current = studentRepository.countByRoom_Id(room.getId());
-        if (studentId != null) {
-            Optional<Student> existingOpt = studentRepository.findById(studentId);
-            if (existingOpt.isPresent()) {
-                Student existing = existingOpt.get();
-                if (existing.getRoom() != null && existing.getRoom().getId().equals(room.getId())) {
-                    current -= 1;
-                }
-            }
+    private void validateUniqueCode(Student student) {
+        if (student.getCode() == null || student.getCode().isBlank()) {
+            return;
         }
-        if (current >= actual.getCapacity()) {
+        studentRepository.findByCode(student.getCode())
+                .filter(existing -> !existing.getId().equals(student.getId()))
+                .ifPresent(existing -> {
+                    throw new IllegalStateException("Mã sinh viên đã tồn tại");
+                });
+    }
+
+    private void validateUniqueEmail(Student student) {
+        if (student.getEmail() == null || student.getEmail().isBlank()) {
+            return;
+        }
+        studentRepository.findByEmail(student.getEmail())
+                .filter(existing -> !existing.getId().equals(student.getId()))
+                .ifPresent(existing -> {
+                    throw new IllegalStateException("Email đã tồn tại");
+                });
+    }
+
+    private void checkRoomCapacity(Long roomId, Long studentId) {
+        Room actual = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
+        long currentOccupancy = studentRepository.countByRoom_Id(roomId);
+
+        if (studentId != null) {
+            studentRepository.findById(studentId)
+                    .map(Student::getRoom)
+                    .map(Room::getId)
+                    .filter(roomId::equals)
+                    .ifPresent(ignored -> currentOccupancy--);
+        }
+
+        if (currentOccupancy >= actual.getCapacity()) {
             throw new IllegalStateException("Room capacity exceeded");
         }
     }
