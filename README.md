@@ -1,6 +1,6 @@
 # Dormitory Management System
 
-Ứng dụng quản lý ký túc xá cho phép ban quản lý và sinh viên theo dõi thông tin phòng ở, hợp đồng, phí dịch vụ, yêu cầu bảo trì và vi phạm nội quy. Dự án được phát triển bởi nhóm K17 Group 3 trong học phần Lập trình Hướng đối tượng.
+Ứng dụng quản lý ký túc xá cho phép ban quản lý và sinh viên theo dõi thông tin phòng ở, hợp đồng, phí dịch vụ, yêu cầu bảo trì và vi phạm nội quy. Dự án được phát triển bởi nhóm K17 Group 3 trong học phần Phân tích và thiết kế phần mềm.
 
 ## 🎯 Tính năng chính
 - Quản lý sinh viên, phòng, hợp đồng và phí với đầy đủ thao tác CRUD.
