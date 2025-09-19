@@ -177,7 +177,7 @@ public class StudentController {
     public List<Map<String, Object>> autocomplete(@RequestParam("term") String term) {
         Page<Student> studentsPage = studentService.searchStudents(term, PageRequest.of(0, 10));
         return studentsPage.getContent().stream()
-                .map(student -> Map.of(
+                .map(student -> Map.<String, Object>of(
                         "id", student.getId(),
                         "label", student.getCode() + " - " + student.getName()))
                 .toList();

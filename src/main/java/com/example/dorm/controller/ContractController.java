@@ -146,7 +146,7 @@ public class ContractController {
                     String label = contract.getStudent() != null
                             ? contract.getId() + " - " + contract.getStudent().getCode() + " - " + contract.getStudent().getName()
                             : String.valueOf(contract.getId());
-                    return Map.of("id", contract.getId(), "label", label);
+                    return Map.<String, Object>of("id", contract.getId(), "label", label);
                 })
                 .toList();
     }

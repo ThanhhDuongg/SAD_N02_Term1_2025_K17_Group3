@@ -146,17 +146,22 @@ public class ContractService {
     private void checkRoomCapacity(Long roomId, Long studentId) {
         Room actual = getRequiredRoom(roomId);
         long current = studentRepository.countByRoom_Id(roomId);
+
         if (studentId != null) {
-            studentRepository.findById(studentId)
-                    .map(com.example.dorm.model.Student::getRoom)
-                    .map(Room::getId)
+            boolean sameRoom = studentRepository.findById(studentId)
+                    .map(s -> s.getRoom() != null ? s.getRoom().getId() : null)
                     .filter(roomId::equals)
-                    .ifPresent(ignored -> current--);
+                    .isPresent();
+            if (sameRoom) {
+                current -= 1;
+            }
         }
+
         if (current >= actual.getCapacity()) {
             throw new IllegalStateException("Room capacity exceeded");
         }
     }
+
 
     private Long extractStudentId(Contract contract) {
         return contract.getStudent() != null ? contract.getStudent().getId() : null;

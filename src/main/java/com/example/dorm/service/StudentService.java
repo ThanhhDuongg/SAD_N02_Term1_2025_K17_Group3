@@ -106,11 +106,14 @@ public class StudentService {
         long currentOccupancy = studentRepository.countByRoom_Id(roomId);
 
         if (studentId != null) {
-            studentRepository.findById(studentId)
+            boolean sameRoom = studentRepository.findById(studentId)
                     .map(Student::getRoom)
                     .map(Room::getId)
                     .filter(roomId::equals)
-                    .ifPresent(ignored -> currentOccupancy--);
+                    .isPresent();
+            if (sameRoom) {
+                currentOccupancy -= 1;
+            }
         }
 
         if (currentOccupancy >= actual.getCapacity()) {
