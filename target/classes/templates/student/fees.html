@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Phí ký túc xá</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" referrerpolicy="no-referrer" />
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+<div class="student-layout">
+    <div th:replace="fragments/student-sidebar :: studentSidebar"></div>
+    <div class="student-content">
+        <div class="student-page-header">
+            <div>
+                <h1>Danh sách phí</h1>
+                <p class="text-muted">Theo dõi chi tiết các khoản phí và trạng thái thanh toán</p>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Loại phí</th>
+                    <th>Số tiền</th>
+                    <th>Hạn thanh toán</th>
+                    <th>Trạng thái</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="fee : ${fees}" class="table-row">
+                    <td th:text="${fee.type}"></td>
+                    <td th:text="${#numbers.formatCurrency(fee.amount)}"></td>
+                    <td th:text="${#temporals.format(fee.dueDate, 'dd/MM/yyyy')}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${fee.paymentStatus.name()} == 'PAID' ? ' badge-success' : ' badge-warning'"
+                              th:text="${fee.paymentStatus}"></span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(fees)}">
+                    <td colspan="4" class="text-center">Chưa có khoản phí nào</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

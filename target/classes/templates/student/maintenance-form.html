@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tạo yêu cầu hỗ trợ</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" referrerpolicy="no-referrer" />
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+<div class="student-layout">
+    <div th:replace="fragments/student-sidebar :: studentSidebar"></div>
+    <div class="student-content">
+        <div class="student-page-header">
+            <div>
+                <h1>Gửi yêu cầu hỗ trợ</h1>
+                <p class="text-muted">Thông báo sự cố, yêu cầu sửa chữa hoặc đăng ký chuyển phòng</p>
+            </div>
+        </div>
+
+        <form class="form-grid" th:action="@{/student/maintenance}" method="post" th:object="${maintenanceRequest}">
+            <div class="form-group">
+                <label for="requestType">Loại yêu cầu</label>
+                <select id="requestType" th:field="*{requestType}" required>
+                    <option value="" disabled selected>Chọn loại yêu cầu</option>
+                    <option th:each="type : ${requestTypes}" th:value="${type}" th:text="${#strings.replace(type, '_', ' ')}"></option>
+                </select>
+            </div>
+            <div class="form-group" th:if="${student.room != null}">
+                <label>Phòng hiện tại</label>
+                <input type="text" th:value="${student.room.number}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="desiredRoomNumber">Phòng mong muốn (nếu chuyển phòng)</label>
+                <input id="desiredRoomNumber" th:field="*{desiredRoomNumber}" placeholder="Nhập số phòng muốn chuyển đến">
+            </div>
+            <div class="form-group form-group-full">
+                <label for="description">Mô tả chi tiết</label>
+                <textarea id="description" th:field="*{description}" rows="4" required
+                          placeholder="Trình bày sự cố hoặc nhu cầu chuyển phòng"></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="button btn-add" type="submit">Gửi yêu cầu</button>
+                <a class="button btn-view" th:href="@{/student/requests}">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

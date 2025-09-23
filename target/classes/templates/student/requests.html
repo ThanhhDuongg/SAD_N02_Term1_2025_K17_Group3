@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Yêu cầu hỗ trợ</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" referrerpolicy="no-referrer" />
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+<div class="student-layout">
+    <div th:replace="fragments/student-sidebar :: studentSidebar"></div>
+    <div class="student-content">
+        <div class="student-page-header">
+            <div>
+                <h1>Yêu cầu đã gửi</h1>
+                <p class="text-muted">Theo dõi tiến độ xử lý các yêu cầu của bạn</p>
+            </div>
+            <a class="button btn-add" th:href="@{/student/maintenance/new}">Tạo yêu cầu mới</a>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Ngày gửi</th>
+                    <th>Loại yêu cầu</th>
+                    <th>Mô tả</th>
+                    <th>Phòng mong muốn</th>
+                    <th>Trạng thái</th>
+                    <th>Người phụ trách</th>
+                    <th>Ngày cập nhật</th>
+                    <th>Ghi chú từ ban quản lý</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="request : ${requests}" class="table-row">
+                    <td th:text="${#temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${#strings.replace(request.requestType, '_', ' ')}"></td>
+                    <td th:text="${request.description}"></td>
+                    <td th:text="${request.desiredRoomNumber != null ? request.desiredRoomNumber : '-'}"></td>
+                    <td>
+                        <span class="badge"
+                              th:class="${request.status == 'COMPLETED' ? 'badge-success' : (request.status == 'IN_PROGRESS' ? 'badge-warning' : (request.status == 'REJECTED' ? 'badge-danger' : 'badge-info'))}"
+                              th:text="${request.status}"></span>
+                    </td>
+                    <td>
+                        <div class="table-meta" th:if="${request.handledBy != null}">
+                            <strong th:text="${request.handledBy.username}"></strong>
+                            <span class="meta-sub" th:text="${request.handledBy.email}"></span>
+                        </div>
+                        <span th:if="${request.handledBy == null}" class="text-muted">Đang chờ phân công</span>
+                    </td>
+                    <td th:text="${request.updatedAt != null ? #temporals.format(request.updatedAt, 'dd/MM/yyyy HH:mm') : #temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td class="truncate" th:text="${request.resolutionNotes != null ? request.resolutionNotes : '-'}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(requests)}">
+                    <td colspan="8" class="text-center">Bạn chưa gửi yêu cầu nào</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

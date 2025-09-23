@@ -1,0 +1,54 @@
+<<!-- templates/fragments/header.html -->
+<div th:fragment="header"
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+    <header class="header">
+        <div class="header-left">
+            <img th:src="@{/images/logo-phenikaa.png}" alt="Phenikaa Logo" class="header-logo" />
+            <div class="header-text">
+                <h1 class="header-title">Phenikaa University</h1>
+                <p class="header-subtitle">Hệ thống quản lý ký túc xá</p>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <div class="user-profile" sec:authorize="isAuthenticated()" th:with="auth=${#authentication}">
+                <div class="user-avatar"
+                     th:text="${auth != null && auth.name != null && auth.name.length() > 0 ? auth.name.substring(0,1).toUpperCase() : 'U'}">U</div>
+                <div class="user-meta">
+                    <span class="user-name"
+                          th:text="${auth != null && auth.name != null ? auth.name : 'Người dùng'}">Người dùng</span>
+                    <!-- Hiển thị danh sách roles -->
+                    <span th:text="${#strings.arrayJoin(auth.authorities.![authority], ', ')}"></span>
+                </div>
+                <form th:action="@{/logout}" method="post" class="logout-form">
+                    <button type="submit" class="logout-btn">Đăng xuất</button>
+                </form>
+            </div>
+
+            <a class="login-link" th:href="@{/login}" sec:authorize="!isAuthenticated()">Đăng nhập</a>
+        </div>
+    </header>
+</div>
+
+<div th:fragment="popup" xmlns:th="http://www.thymeleaf.org">
+    <div id="popup-message" th:if="${message}" th:class="'popup-alert ' + ${alertClass}" style="display:none;">
+        <span th:text="${message}"></span>
+    </div>
+    <script>
+        function closePopup() {
+            const popup = document.getElementById('popup-message');
+            if (popup) {
+                popup.style.display = 'none';
+            }
+        }
+        window.addEventListener('DOMContentLoaded', function() {
+            const popup = document.getElementById('popup-message');
+            if (popup) {
+                popup.style.display = 'flex';
+                setTimeout(function() { popup.style.display = 'none'; }, 3000);
+            }
+        });
+    </script>
+</div>

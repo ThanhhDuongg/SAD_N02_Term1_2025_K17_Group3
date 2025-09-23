@@ -4,9 +4,12 @@ import com.example.dorm.model.Room;
 import com.example.dorm.repository.RoomRepository;
 import com.example.dorm.repository.StudentRepository;
 import org.springframework.stereotype.Service;
+import jakarta.persistence.EntityNotFoundException;
+
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,6 +45,14 @@ public class RoomService {
         room.setPrice(resolvePrice(room));
         return roomRepository.save(room);
     }
+
+    @Transactional(readOnly = true)
+    public Room getRoomWithStudents(Long id) {
+        return roomRepository.findByIdWithStudents(id)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy phòng: " + id));
+    }
+
+
 
     public Room updateRoom(Long id, Room room) {
         Room existing = getRequiredRoom(id);

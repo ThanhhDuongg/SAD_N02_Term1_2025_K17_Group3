@@ -28,6 +28,15 @@ public class RoomController {
         this.roomService = roomService;
     }
 
+    @GetMapping("/{id}")
+    public String detail(@PathVariable Long id, Model model) {
+        Room room = roomService.getRoomWithStudents(id); // đã load students
+        model.addAttribute("room", room);
+        model.addAttribute("occupancy", room.getStudents().size());
+        return "rooms/detail";
+    }
+
+
     @GetMapping
     public String listRooms(@RequestParam(value = "search", required = false) String search,
                             @RequestParam(name = "page", defaultValue = "0") int page,
@@ -65,14 +74,6 @@ public class RoomController {
         return "redirect:/rooms";
     }
 
-    @GetMapping("/{id}")
-    public String viewRoom(@PathVariable("id") Long id, Model model) {
-        Room room = roomService.getRoom(id)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phòng với ID: " + id));
-        model.addAttribute("room", room);
-        model.addAttribute("occupancy", roomService.getCurrentOccupancy(id));
-        return "rooms/detail";
-    }
 
     @GetMapping("/{id}/edit")
     public String showUpdateForm(@PathVariable("id") Long id, Model model) {

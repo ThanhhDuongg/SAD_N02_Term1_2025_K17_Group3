@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Vi phạm nội quy</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" referrerpolicy="no-referrer" />
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+<div class="student-layout">
+    <div th:replace="fragments/student-sidebar :: studentSidebar"></div>
+    <div class="student-content">
+        <div class="student-page-header">
+            <div>
+                <h1>Lịch sử vi phạm</h1>
+                <p class="text-muted">Theo dõi các vi phạm để chủ động điều chỉnh hành vi trong ký túc xá</p>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Ngày</th>
+                    <th>Phòng</th>
+                    <th>Loại</th>
+                    <th>Mô tả</th>
+                    <th>Mức độ</th>
+                    <th>Người ghi nhận</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="violation : ${violations}" class="table-row">
+                    <td th:text="${violation.date}"></td>
+                    <td th:text="${violation.room != null ? violation.room.number : 'N/A'}"></td>
+                    <td th:text="${violation.type != null ? #strings.replace(violation.type, '_', ' ') : '-'}"></td>
+                    <td class="truncate" th:text="${violation.description}"></td>
+                    <td>
+                        <span class="badge" th:switch="${#strings.toString(violation.severity)}">
+                            <span th:case="'HIGH'" th:classappend="' badge-danger'"
+                                  th:text="${#strings.toString(violation.severity)}"></span>
+                            <span th:case="'MEDIUM'" th:classappend="' badge-warning'"
+                                  th:text="${#strings.toString(violation.severity)}"></span>
+                            <span th:case="*" th:classappend="' badge-info'"
+                                  th:text="${#strings.toString(violation.severity)}"></span>
+                        </span>
+                    </td>
+                    <td>
+                        <span th:if="${violation.createdBy != null}" th:text="${violation.createdBy.username}"></span>
+                        <span th:if="${violation.createdBy == null}" class="text-muted">Ban quản lý</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(violations)}">
+                    <td colspan="6" class="text-center">Bạn chưa có vi phạm nào</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
