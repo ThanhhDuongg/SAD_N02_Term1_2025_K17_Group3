@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ghi nhận vi phạm</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+
+<div class="content-with-sidebar">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h2>Ghi nhận vi phạm nội quy</h2>
+                <p class="text-muted">Liên kết vi phạm với hồ sơ sinh viên và phòng ở để tiện theo dõi</p>
+            </div>
+            <a class="button btn-view" th:href="@{/violations}">Quay lại danh sách</a>
+        </div>
+
+        <form class="form-grid" th:action="@{/violations}" method="post">
+            <div class="form-group">
+                <label for="studentId">Sinh viên</label>
+                <select id="studentId" name="studentId" required>
+                    <option value="" disabled th:selected="${violation == null || violation.student == null}">Chọn sinh viên</option>
+                    <option th:each="student : ${students}"
+                            th:value="${student.id}"
+                            th:selected="${violation != null and violation.student != null and student.id == violation.student.id}"
+                            th:text="${student.code + ' - ' + student.name}"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="roomId">Phòng</label>
+                <select id="roomId" name="roomId">
+                    <option value="">Không chọn</option>
+                    <option th:each="room : ${rooms}"
+                            th:value="${room.id}"
+                            th:selected="${violation != null and violation.room != null and room.id == violation.room.id}"
+                            th:text="${room.number}"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="severity">Mức độ</label>
+                <select id="severity" name="severity" required>
+                    <option value="" disabled th:selected="${violation == null || violation.severity == null}">Chọn mức độ</option>
+                    <option th:each="level : ${severityLevels}"
+                            th:value="${level}"
+                            th:selected="${violation != null and level.equalsIgnoreCase(violation.severity)}"
+                            th:text="${level}"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="violationType">Loại vi phạm</label>
+                <select id="violationType" name="violationType" required>
+                    <option value="" disabled th:selected="${violation == null || violation.type == null}">Chọn loại vi phạm</option>
+                    <option th:each="type : ${violationTypes}"
+                            th:value="${type}"
+                            th:selected="${violation != null and type.equalsIgnoreCase(violation.type)}"
+                            th:text="${#strings.replace(type, '_', ' ')}"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="date">Ngày vi phạm</label>
+                <input id="date" name="date" type="date"
+                       th:value="${violation != null && violation.date != null ? violation.date : #dates.format(#dates.createNow(), 'yyyy-MM-dd')}"/>
+            </div>
+            <div class="form-group form-group-full">
+                <label for="description">Mô tả chi tiết</label>
+                <textarea id="description" name="description" rows="4" required
+                          placeholder="Mô tả hành vi vi phạm, thời gian, nhân chứng..."
+                          th:text="${violation != null ? violation.description : ''}"></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="button btn-add" type="submit">Lưu vi phạm</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

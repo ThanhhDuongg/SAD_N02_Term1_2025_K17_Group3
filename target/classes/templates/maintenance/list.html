@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý yêu cầu</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+
+<div class="content-with-sidebar">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h2>Quản lý yêu cầu hỗ trợ sinh viên</h2>
+                <p class="text-muted">Theo dõi toàn bộ yêu cầu sửa chữa, sự cố và chuyển phòng do sinh viên gửi</p>
+            </div>
+            <a class="button btn-add" th:href="@{/student/dashboard}" sec:authorize="hasRole('STUDENT')">Tạo yêu cầu</a>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card" th:each="status : ${statusOptions}">
+                <h4 th:text="${status}"></h4>
+                <p class="summary-value" th:text="${statusSummary[status]} ?: 0">0</p>
+            </div>
+        </div>
+
+        <form class="filter-bar" method="get">
+            <div class="filter-group">
+                <label for="status">Trạng thái</label>
+                <select id="status" name="status">
+                    <option value="">Tất cả</option>
+                    <option th:each="status : ${statusOptions}"
+                            th:value="${status}"
+                            th:selected="${status.equalsIgnoreCase(selectedStatus)}"
+                            th:text="${status}"></option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="type">Loại yêu cầu</label>
+                <select id="type" name="type">
+                    <option value="">Tất cả</option>
+                    <option th:each="typeOption : ${requestTypes}"
+                            th:value="${typeOption}"
+                            th:selected="${typeOption.equalsIgnoreCase(selectedType)}"
+                            th:text="${#strings.replace(typeOption, '_', ' ')}"></option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="query">Từ khóa</label>
+                <input id="query" name="query" type="text" placeholder="Tên sinh viên, phòng hoặc mô tả"
+                       th:value="${searchQuery}">
+            </div>
+            <div class="filter-group checkbox-group">
+                <label class="checkbox-inline">
+                    <input type="checkbox" name="mine" value="true" th:checked="${assignedToMe}">
+                    <span>Yêu cầu của tôi</span>
+                </label>
+            </div>
+            <button class="button btn-add" type="submit">Lọc</button>
+        </form>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Mã yêu cầu</th>
+                    <th>Sinh viên</th>
+                    <th>Phòng</th>
+                    <th>Loại yêu cầu</th>
+                    <th>Mô tả</th>
+                    <th>Trạng thái</th>
+                    <th>Người phụ trách</th>
+                    <th>Ngày gửi</th>
+                    <th>Cập nhật</th>
+                    <th>Ghi chú xử lý</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="request : ${requests}" class="table-row">
+                    <td th:text="${request.id}"></td>
+                    <td>
+                        <div class="table-meta">
+                            <strong th:text="${request.student != null ? request.student.name : 'Không xác định'}"></strong>
+                            <span th:text="${request.student != null ? request.student.code : ''}" class="meta-sub"></span>
+                        </div>
+                    </td>
+                    <td th:text="${request.room != null ? request.room.number : 'N/A'}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${request.requestType == 'ROOM_TRANSFER' ? ' badge-warning' :
+                                              (request.requestType == 'INCIDENT' ? ' badge-danger' : ' badge-info')}"
+                              th:text="${#strings.replace(request.requestType, '_', ' ')}">MAINTENANCE</span>
+                    </td>
+                    <td class="truncate" th:text="${request.description}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${request.status == 'COMPLETED' ? ' badge-success' :
+                                              (request.status == 'IN_PROGRESS' ? ' badge-warning' :
+                                              (request.status == 'REJECTED' ? ' badge-danger' : ' badge-info'))}"
+                              th:text="${request.status}">PENDING</span>
+                    </td>
+                    <td>
+                        <div class="table-meta" th:if="${request.handledBy != null}">
+                            <strong th:text="${request.handledBy.username}"></strong>
+                            <span class="meta-sub" th:text="${request.handledBy.email}"></span>
+                        </div>
+                        <span th:if="${request.handledBy == null}" class="text-muted">Chưa phân công</span>
+                    </td>
+                    <td th:text="${#temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${request.updatedAt != null ? #temporals.format(request.updatedAt, 'dd/MM/yyyy HH:mm') : #temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td class="truncate" th:text="${request.resolutionNotes != null ? request.resolutionNotes : '-'}"></td>
+                    <td>
+                        <a class="button btn-view" th:href="@{'/maintenance/' + ${request.id}}">Xem</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(requests)}">
+                    <td colspan="10" class="text-center">Chưa có yêu cầu nào phù hợp</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

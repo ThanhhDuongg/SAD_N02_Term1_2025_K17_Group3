@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cổng sinh viên</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" referrerpolicy="no-referrer" />
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+<div class="student-layout">
+    <div th:replace="fragments/student-sidebar :: studentSidebar"></div>
+    <div class="student-content">
+        <div class="student-page-header">
+            <div>
+                <h1 th:text="'Xin chào, ' + ${student.name}">Sinh viên</h1>
+                <p class="text-muted">Quản lý hợp đồng, phí và yêu cầu hỗ trợ ký túc xá</p>
+            </div>
+            <div class="student-contract" th:if="${currentContract != null}">
+                <span><i class="fas fa-door-open"></i> Phòng</span>
+                <strong th:text="${currentContract.room.number}">101</strong>
+                <span class="contract-status" th:text="${currentContract.status}"></span>
+            </div>
+        </div>
+
+        <div class="student-alerts student-alerts-critical"
+             th:if="${hasHighSeverityViolation}"
+             th:with="violation=${latestHighSeverityViolation}">
+            <h3><i class="fas fa-exclamation-triangle"></i> Cảnh báo vi phạm nghiêm trọng</h3>
+            <p>
+                Bạn đang có vi phạm mức <strong>HIGH</strong>
+                <span th:if="${violation != null and violation.type != null}"
+                      th:text="${' - ' + #strings.replace(violation.type, '_', ' ')}"></span>
+                xảy ra vào ngày <strong th:text="${violation != null ? violation.date : ''}"></strong>.
+            </p>
+            <p th:if="${violation != null and violation.description != null}"
+               th:text="${violation.description}"></p>
+            <p class="text-muted">
+                Vui lòng liên hệ ban quản lý ký túc xá để làm rõ và khắc phục ngay.
+            </p>
+        </div>
+
+        <div th:if="${hasNotifications}" class="student-alerts">
+            <h3><i class="fas fa-bell"></i> Thông báo quan trọng</h3>
+            <ul>
+                <li th:each="note : ${notifications}" th:text="${note}"></li>
+            </ul>
+        </div>
+
+        <div class="student-stats">
+            <div class="student-stat-card">
+                <i class="fas fa-wallet"></i>
+                <div>
+                    <span>Phí chưa thanh toán</span>
+                    <strong th:text="${unpaidCount}">0</strong>
+                </div>
+            </div>
+            <div class="student-stat-card">
+                <i class="fas fa-tools"></i>
+                <div>
+                    <span>Yêu cầu đã gửi</span>
+                    <strong th:text="${#lists.size(maintenanceRequests)}">0</strong>
+                </div>
+            </div>
+            <div class="student-stat-card">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <span>Số lần vi phạm</span>
+                    <strong th:text="${violationCount}">0</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="student-panels">
+            <div class="student-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-money-bill"></i> Phí cần chú ý</h3>
+                    <a th:href="@{/student/fees}">Xem tất cả</a>
+                </div>
+                <div th:if="${#lists.isEmpty(unpaidFees)}" class="empty-state">Không có phí đến hạn</div>
+                <ul th:if="${!#lists.isEmpty(unpaidFees)}">
+                    <li th:each="fee : ${unpaidFees}">
+                        <span th:text="${fee.type}"></span>
+                        <span class="meta-sub" th:text="${#temporals.format(fee.dueDate, 'dd/MM/yyyy')}"></span>
+                    </li>
+                </ul>
+            </div>
+            <div class="student-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-tools"></i> Yêu cầu gần đây</h3>
+                    <a th:href="@{/student/requests}">Quản lý</a>
+                </div>
+                <div th:if="${#lists.isEmpty(maintenanceRequests)}" class="empty-state">Chưa có yêu cầu nào</div>
+                <ul th:if="${!#lists.isEmpty(maintenanceRequests)}">
+                    <li th:each="req : ${maintenanceRequests}">
+                        <span th:text="${#strings.replace(req.requestType, '_', ' ')}"></span>
+                        <span class="meta-sub" th:text="${req.status + (req.updatedAt != null ? ' • ' + #temporals.format(req.updatedAt, 'dd/MM') : '')}"></span>
+                        <span class="meta-note truncate" th:if="${req.resolutionNotes != null}" th:text="${req.resolutionNotes}"></span>
+                    </li>
+                </ul>
+                <a class="button btn-add btn-small" th:href="@{/student/maintenance/new}">Tạo yêu cầu mới</a>
+            </div>
+            <div class="student-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-exclamation-circle"></i> Vi phạm gần nhất</h3>
+                    <a th:href="@{/student/violations}">Chi tiết</a>
+                </div>
+                <div th:if="${#lists.isEmpty(violations)}" class="empty-state">Không có vi phạm nào</div>
+                <ul th:if="${!#lists.isEmpty(violations)}">
+                    <li th:each="violation : ${violations}">
+                        <span th:text="${violation.description}"></span>
+                        <span class="meta-sub"
+                              th:text="${(violation.type != null ? #strings.replace(violation.type, '_', ' ') + ' • ' : '') + violation.date}"></span>
+                        <span class="meta-note truncate"
+                              th:text="${'Mức độ: ' + violation.severity}"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
