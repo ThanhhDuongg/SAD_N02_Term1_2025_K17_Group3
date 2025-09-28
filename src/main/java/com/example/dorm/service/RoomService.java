@@ -42,6 +42,10 @@ public class RoomService {
     }
 
     public Room createRoom(Room room) {
+        String normalizedNumber = normalizeNumber(room.getNumber());
+        ensureUniqueNumber(normalizedNumber, null);
+
+        room.setNumber(normalizedNumber);
         room.setPrice(resolvePrice(room));
         return roomRepository.save(room);
     }
@@ -56,7 +60,10 @@ public class RoomService {
 
     public Room updateRoom(Long id, Room room) {
         Room existing = getRequiredRoom(id);
-        existing.setNumber(room.getNumber());
+        String normalizedNumber = normalizeNumber(room.getNumber());
+        ensureUniqueNumber(normalizedNumber, id);
+
+        existing.setNumber(normalizedNumber);
         existing.setType(room.getType());
         existing.setCapacity(room.getCapacity());
         existing.setPrice(resolvePrice(room));
@@ -92,5 +99,21 @@ public class RoomService {
             case "Phòng tám" -> 1_200_000;
             default -> room.getPrice();
         };
+    }
+    private String normalizeNumber(String number) {
+        return number == null ? null : number.trim();
+    }
+
+    private void ensureUniqueNumber(String number, Long currentRoomId) {
+        if (number == null || number.isBlank()) {
+            throw new IllegalArgumentException("Tên phòng không được để trống");
+        }
+
+        roomRepository.findByNumberIgnoreCase(number)
+                .filter(existing -> currentRoomId == null || !existing.getId().equals(currentRoomId))
+                .ifPresent(existing -> {
+                    throw new IllegalArgumentException(
+                            "Phòng \"" + existing.getNumber() + "\" đã tồn tại, vui lòng nhập tên phòng khác.");
+                });
     }
 }

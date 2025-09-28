@@ -20,6 +20,8 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     Optional<Room> findByNumber(String number);
 
+    Optional<Room> findByNumberIgnoreCase(String number);
+
     @Query("""
        select r
        from Room r
