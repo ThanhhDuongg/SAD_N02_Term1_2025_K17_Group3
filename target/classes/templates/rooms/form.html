@@ -10,24 +10,26 @@
             var type = document.getElementById('type').value;
             var priceInput = document.getElementById('price');
             var capacityInput = document.getElementById('capacity');
+            if (!type) {
+                priceInput.value = '';
+                capacityInput.value = '';
+                return;
+            }
             if (type === 'Phòng bốn') {
                 priceInput.value = 2000000;
                 capacityInput.value = 4;
             } else if (type === 'Phòng tám') {
                 priceInput.value = 1200000;
                 capacityInput.value = 8;
-            } else {
-                priceInput.value = '';
-                capacityInput.value = '';
             }
         }
     </script>
 </head>
 <body>
-    <div th:replace="~{fragments/header :: header}"></div>
-    <div th:replace="fragments/sidebar :: sidebar"></div>
-    <div class="content-with-sidebar">
-        <div class="form-container">
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div class="content-with-sidebar">
+    <div class="form-container">
         <h2 th:text="${room.id} ? 'Sửa Phòng' : 'Thêm Phòng'"></h2>
         <form th:action="${room.id} ? @{/rooms/{id}(id=${room.id})} : @{/rooms}" th:object="${room}" method="post">
             <div class="form-group">
@@ -36,16 +38,11 @@
             </div>
             <div class="form-group">
                 <label for="type">Loại Phòng</label>
-                <th:block th:if="${room.id == null}">
-                    <select id="type" th:field="*{type}" onchange="updatePriceAndCapacity()" required>
-                        <option value="">--Chọn loại phòng--</option>
-                        <option value="Phòng bốn">Phòng bốn</option>
-                        <option value="Phòng tám">Phòng tám</option>
-                    </select>
-                </th:block>
-                <th:block th:if="${room.id != null}">
-                    <input type="text" id="type" th:field="*{type}" readonly>
-                </th:block>
+                <select id="type" th:field="*{type}" onchange="updatePriceAndCapacity()" required>
+                    <option value="">--Chọn loại phòng--</option>
+                    <option value="Phòng bốn">Phòng bốn</option>
+                    <option value="Phòng tám">Phòng tám</option>
+                </select>
             </div>
             <div class="form-group">
                 <label for="capacity">Sức Chứa</label>
@@ -60,12 +57,12 @@
                 <a th:href="@{/rooms}" class="button btn-cancel">Hủy</a>
             </div>
         </form>
-        </div>
     </div>
-    <script th:if="${room.id == null}">
-        document.addEventListener('DOMContentLoaded', function() {
-            updatePriceAndCapacity();
-        });
-    </script>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePriceAndCapacity();
+    });
+</script>
 </body>
 </html>
