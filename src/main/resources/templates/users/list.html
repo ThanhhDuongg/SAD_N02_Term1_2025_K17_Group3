@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý tài khoản</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div class="content-with-sidebar">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1>Quản lý tài khoản</h1>
+                <p class="page-subtitle">Thêm nhân sự và phân quyền truy cập hệ thống</p>
+            </div>
+            <a th:href="@{/users/new}" class="button btn-add">
+                <i class="fas fa-user-plus"></i>
+                <span>Thêm tài khoản</span>
+            </a>
+        </div>
+
+        <div th:if="${message}" class="alert" th:classappend="${alertClass != null} ? ' ' + alertClass : ' alert-info'">
+            <p th:text="${message}"></p>
+        </div>
+
+        <h2>Danh sách người dùng</h2>
+        <div class="responsive-table">
+            <table>
+                <thead>
+                <tr>
+                    <th>Tên đăng nhập</th>
+                    <th>Email</th>
+                    <th>Trạng thái</th>
+                    <th>Vai trò</th>
+                    <th class="actions-column">Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(users)}">
+                    <td colspan="5" class="no-data">Chưa có tài khoản nào được tạo.</td>
+                </tr>
+                <tr th:each="user : ${users}">
+                    <td>
+                        <span class="table-primary" th:text="${user.username}"></span>
+                    </td>
+                    <td th:text="${user.email}"></td>
+                    <td>
+                        <span class="badge" th:text="${user.enabled ? 'Hoạt động' : 'Bị khóa'}"
+                              th:classappend="${user.enabled} ? ' badge-success' : ' badge-danger'"></span>
+                    </td>
+                    <td>
+                        <div class="role-list">
+                            <span th:each="role : ${user.roles}"
+                                  class="role-chip"
+                                  th:text="${role.description != null ? role.description : role.name.displayName}"></span>
+                        </div>
+                    </td>
+                    <td>
+                        <form th:action="@{/users/{id}/roles(id=${user.id})}" method="post" class="inline-form roles-form">
+                            <div class="role-checkbox-group">
+                                <label th:each="role : ${allRoles}">
+                                    <input type="checkbox" name="roles"
+                                           th:value="${role.name}"
+                                           th:checked="${!#lists.isEmpty(user.roles.?[name == role.name])}">
+                                    <span th:text="${role.description != null ? role.description : role.name.displayName}"></span>
+                                </label>
+                            </div>
+                            <button type="submit" class="button btn-edit">
+                                <i class="fas fa-save"></i>
+                                <span>Cập nhật</span>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
