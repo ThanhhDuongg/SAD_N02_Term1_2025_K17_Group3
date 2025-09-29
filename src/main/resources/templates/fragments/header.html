@@ -14,23 +14,25 @@
 
         <div class="header-right">
             <div class="user-profile" sec:authorize="isAuthenticated()" th:with="auth=${#authentication}">
-                <div class="user-avatar"
-                     th:text="${auth != null && auth.name != null && auth.name.length() > 0 ? auth.name.substring(0,1).toUpperCase() : 'U'}">U</div>
-                <div class="user-meta">
-                    <span class="user-name"
-                          th:text="${auth != null && auth.name != null ? auth.name : 'Người dùng'}">Người dùng</span>
-                    <!-- Hiển thị danh sách roles -->
-                    <span th:text="${#strings.arrayJoin(auth.authorities.![authority], ', ')}"></span>
-                </div>
-                <div class="user-actions">
-                    <a class="change-password-link" th:href="@{/account/profile}" sec:authorize="isAuthenticated()">
-                        Cập nhật thông tin
+                <button type="button" class="user-trigger" aria-haspopup="true" aria-expanded="false">
+                    <span class="user-avatar"
+                          th:text="${auth != null && auth.name != null && auth.name.length() > 0 ? auth.name.substring(0,1).toUpperCase() : 'U'}">U</span>
+                    <span class="user-meta">
+                        <span class="user-name"
+                              th:text="${auth != null && auth.name != null ? auth.name : 'Người dùng'}">Người dùng</span>
+                        <span class="user-role" th:text="${#strings.arrayJoin(auth.authorities.![authority], ', ')}"></span>
+                    </span>
+                    <span class="user-caret" aria-hidden="true">▾</span>
+                </button>
+                <div class="user-dropdown" role="menu">
+                    <a class="user-dropdown-link" th:href="@{/account/profile}" role="menuitem" sec:authorize="isAuthenticated()">
+                        <span>Cập nhật thông tin</span>
                     </a>
-                    <a class="change-password-link" th:href="@{/account/password}" sec:authorize="hasAnyRole('ADMIN','STAFF','STUDENT')">
-                        Đổi mật khẩu
+                    <a class="user-dropdown-link" th:href="@{/account/password}" role="menuitem" sec:authorize="hasAnyRole('ADMIN','STAFF','STUDENT')">
+                        <span>Đổi mật khẩu</span>
                     </a>
-                    <form th:action="@{/logout}" method="post" class="logout-form">
-                        <button type="submit" class="logout-btn">Đăng xuất</button>
+                    <form th:action="@{/logout}" method="post" role="none">
+                        <button type="submit" class="user-dropdown-link user-dropdown-logout" role="menuitem">Đăng xuất</button>
                     </form>
                 </div>
             </div>
@@ -56,6 +58,45 @@
             if (popup) {
                 popup.style.display = 'flex';
                 setTimeout(function() { popup.style.display = 'none'; }, 3000);
+            }
+
+            const userProfile = document.querySelector('.user-profile');
+            if (userProfile) {
+                const trigger = userProfile.querySelector('.user-trigger');
+                const dropdown = userProfile.querySelector('.user-dropdown');
+                const toggleMenu = (expand) => {
+                    const isOpen = expand !== undefined ? expand : !userProfile.classList.contains('open');
+                    userProfile.classList.toggle('open', isOpen);
+                    if (trigger) {
+                        trigger.setAttribute('aria-expanded', isOpen);
+                    }
+                    if (dropdown) {
+                        dropdown.hidden = !isOpen;
+                    }
+                };
+
+                if (dropdown) {
+                    dropdown.hidden = true;
+                }
+
+                if (trigger) {
+                    trigger.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        toggleMenu();
+                    });
+                }
+
+                document.addEventListener('click', (event) => {
+                    if (!userProfile.contains(event.target)) {
+                        toggleMenu(false);
+                    }
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') {
+                        toggleMenu(false);
+                    }
+                });
             }
         });
     </script>
