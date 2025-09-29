@@ -78,6 +78,22 @@ public class StudentService {
         return studentRepository.count();
     }
 
+    public Student updateContactInfo(Long studentId, String phone, String email, String address) {
+        Student student = getRequiredStudent(studentId);
+
+        if (email != null && !email.isBlank()) {
+            student.setEmail(email.trim());
+        } else {
+            student.setEmail(null);
+        }
+        student.setPhone(phone != null && !phone.isBlank() ? phone.trim() : null);
+        student.setAddress(address != null && !address.isBlank() ? address.trim() : null);
+
+        validateUniqueEmail(student);
+
+        return studentRepository.save(student);
+    }
+
     private void validateUniqueCode(Student student) {
         if (student.getCode() == null || student.getCode().isBlank()) {
             return;

@@ -36,7 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**", "/h2-console/**").permitAll()
                         .requestMatchers("/student/**").hasRole("STUDENT")
                         .requestMatchers("/dashboard", "/dashboard/**").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers("/account/**").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers("/account/**").hasAnyRole("ADMIN", "STAFF", "STUDENT")
                         .requestMatchers("/maintenance/**", "/violations/**").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers("/students/**", "/rooms/**", "/contracts/**", "/fees/**", "/users/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
