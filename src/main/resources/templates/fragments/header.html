@@ -22,9 +22,14 @@
                     <!-- Hiển thị danh sách roles -->
                     <span th:text="${#strings.arrayJoin(auth.authorities.![authority], ', ')}"></span>
                 </div>
-                <form th:action="@{/logout}" method="post" class="logout-form">
-                    <button type="submit" class="logout-btn">Đăng xuất</button>
-                </form>
+                <div class="user-actions">
+                    <a class="change-password-link" th:href="@{/account/password}" sec:authorize="hasAnyRole('ADMIN','STAFF')">
+                        Đổi mật khẩu
+                    </a>
+                    <form th:action="@{/logout}" method="post" class="logout-form">
+                        <button type="submit" class="logout-btn">Đăng xuất</button>
+                    </form>
+                </div>
             </div>
 
             <a class="login-link" th:href="@{/login}" sec:authorize="!isAuthenticated()">Đăng nhập</a>

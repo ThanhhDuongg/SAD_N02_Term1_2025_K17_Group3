@@ -9,8 +9,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.Set;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UserService {
@@ -58,6 +58,24 @@ public class UserService {
     public boolean hasRole(User user, RoleName roleName) {
         return user.getRoles().stream()
                 .anyMatch(role -> role.getName() == roleName);
+    }
+
+    public void changePassword(User user, String currentPassword, String newPassword) {
+        if (user == null) {
+            throw new IllegalArgumentException("Không tìm thấy người dùng");
+        }
+
+        String storedPassword = user.getPassword();
+        if (storedPassword == null || storedPassword.isBlank()) {
+            throw new IllegalArgumentException("Tài khoản chưa có mật khẩu để xác thực");
+        }
+
+        if (!passwordEncoder.matches(currentPassword, storedPassword)) {
+            throw new IllegalArgumentException("Mật khẩu hiện tại không chính xác");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 
     public User updateUser(Long id, User userDetails) {
