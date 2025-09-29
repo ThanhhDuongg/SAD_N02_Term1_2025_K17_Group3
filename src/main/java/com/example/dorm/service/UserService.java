@@ -101,10 +101,34 @@ public class UserService {
 
         user.setEmail(userDetails.getEmail());
         user.setEnabled(userDetails.isEnabled());
+        user.setFullName(userDetails.getFullName());
+        user.setPhone(userDetails.getPhone());
 
         if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
         }
+
+        return userRepository.save(user);
+    }
+
+    public User updateProfile(User user, String email, String fullName, String phone) {
+        if (user == null) {
+            throw new IllegalArgumentException("Không tìm thấy người dùng");
+        }
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email không được để trống");
+        }
+
+        userRepository.findByEmail(email)
+                .filter(existing -> !existing.getId().equals(user.getId()))
+                .ifPresent(existing -> {
+                    throw new IllegalArgumentException("Email đã được sử dụng bởi tài khoản khác");
+                });
+
+        user.setEmail(email.trim());
+        user.setFullName(fullName != null && !fullName.isBlank() ? fullName.trim() : null);
+        user.setPhone(phone != null && !phone.isBlank() ? phone.trim() : null);
 
         return userRepository.save(user);
     }

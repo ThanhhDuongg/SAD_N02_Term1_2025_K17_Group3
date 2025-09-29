@@ -23,7 +23,10 @@
                     <span th:text="${#strings.arrayJoin(auth.authorities.![authority], ', ')}"></span>
                 </div>
                 <div class="user-actions">
-                    <a class="change-password-link" th:href="@{/account/password}" sec:authorize="hasAnyRole('ADMIN','STAFF')">
+                    <a class="change-password-link" th:href="@{/account/profile}" sec:authorize="isAuthenticated()">
+                        Cập nhật thông tin
+                    </a>
+                    <a class="change-password-link" th:href="@{/account/password}" sec:authorize="hasAnyRole('ADMIN','STAFF','STUDENT')">
                         Đổi mật khẩu
                     </a>
                     <form th:action="@{/logout}" method="post" class="logout-form">
