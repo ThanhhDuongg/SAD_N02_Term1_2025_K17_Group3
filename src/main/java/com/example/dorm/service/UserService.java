@@ -8,9 +8,12 @@ import com.example.dorm.repository.RoleRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -55,6 +58,20 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    public List<User> findAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public List<Role> findAllRoles() {
+        return roleRepository.findAll().stream()
+                .sorted(Comparator.comparing(role -> role.getName().name()))
+                .collect(Collectors.toList());
+    }
+
     public boolean hasRole(User user, RoleName roleName) {
         return user.getRoles().stream()
                 .anyMatch(role -> role.getName() == roleName);
@@ -94,5 +111,22 @@ public class UserService {
 
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+
+    public void updateUserRoles(Long id, Set<RoleName> roleNames) {
+        if (roleNames == null || roleNames.isEmpty()) {
+            throw new IllegalArgumentException("Người dùng phải có ít nhất một vai trò");
+        }
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User không tìm thấy"));
+
+        Set<Role> roles = roleNames.stream()
+                .map(roleName -> roleRepository.findByName(roleName)
+                        .orElseThrow(() -> new IllegalArgumentException("Role không tìm thấy: " + roleName)))
+                .collect(Collectors.toSet());
+
+        user.setRoles(roles);
+        userRepository.save(user);
     }
 }

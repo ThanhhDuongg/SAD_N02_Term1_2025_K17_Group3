@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tạo tài khoản nhân sự</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div class="content-with-sidebar">
+    <div class="form-container">
+        <h2>Tạo tài khoản nhân sự</h2>
+        <p class="form-subtitle">Sử dụng biểu mẫu này để thêm tài khoản cho quản trị viên hoặc nhân viên hỗ trợ.</p>
+
+        <div th:if="${message}" class="alert" th:classappend="${alertClass != null} ? ' ' + alertClass : ' alert-info'">
+            <p th:text="${message}"></p>
+        </div>
+
+        <form th:action="@{/users}" th:object="${userForm}" method="post">
+            <div class="form-group" th:classappend="${#fields.hasErrors('username')} ? ' has-error'">
+                <label for="username">Tên đăng nhập</label>
+                <input type="text" id="username" th:field="*{username}" placeholder="Ví dụ: admin01">
+                <small class="error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></small>
+            </div>
+
+            <div class="form-group" th:classappend="${#fields.hasErrors('email')} ? ' has-error'">
+                <label for="email">Email</label>
+                <input type="email" id="email" th:field="*{email}" placeholder="name@phenikaa-uni.edu.vn">
+                <small class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></small>
+            </div>
+
+            <div class="form-group-grid">
+                <div class="form-group" th:classappend="${#fields.hasErrors('password')} ? ' has-error'">
+                    <label for="password">Mật khẩu</label>
+                    <input type="password" id="password" th:field="*{password}" placeholder="Tối thiểu 6 ký tự">
+                    <small class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></small>
+                </div>
+                <div class="form-group" th:classappend="${#fields.hasErrors('confirmPassword')} ? ' has-error'">
+                    <label for="confirmPassword">Xác nhận mật khẩu</label>
+                    <input type="password" id="confirmPassword" th:field="*{confirmPassword}" placeholder="Nhập lại mật khẩu">
+                    <small class="error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></small>
+                </div>
+            </div>
+
+            <div class="form-group" th:classappend="${#fields.hasErrors('role')} ? ' has-error'">
+                <label for="role">Vai trò</label>
+                <select id="role" th:field="*{role}">
+                    <option th:each="role : ${roles}"
+                            th:value="${role}"
+                            th:text="${role.displayName}"></option>
+                </select>
+                <small class="error" th:if="${#fields.hasErrors('role')}" th:errors="*{role}"></small>
+            </div>
+
+            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                <p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="button btn-add">
+                    <i class="fas fa-save"></i>
+                    <span>Lưu tài khoản</span>
+                </button>
+                <a th:href="@{/users}" class="button btn-cancel">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
