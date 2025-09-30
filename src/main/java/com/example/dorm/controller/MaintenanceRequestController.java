@@ -1,6 +1,8 @@
 package com.example.dorm.controller;
 
 import com.example.dorm.model.MaintenanceRequest;
+import com.example.dorm.model.RoleName;
+import com.example.dorm.model.User;
 import com.example.dorm.service.MaintenanceRequestService;
 import com.example.dorm.service.UserService;
 import org.springframework.security.core.Authentication;
@@ -37,6 +39,11 @@ public class MaintenanceRequestController {
     @ModelAttribute("requestTypes")
     public List<String> requestTypes() {
         return REQUEST_TYPES;
+    }
+
+    @ModelAttribute("staffMembers")
+    public List<User> staffMembers() {
+        return userService.findUsersByRole(RoleName.ROLE_STAFF);
     }
 
     @GetMapping
@@ -84,18 +91,85 @@ public class MaintenanceRequestController {
     public String updateStatus(@PathVariable Long id,
                                @RequestParam("status") String status,
                                @RequestParam(value = "resolutionNotes", required = false) String resolutionNotes,
-                               Authentication authentication,
                                RedirectAttributes redirectAttributes) {
         try {
-            com.example.dorm.model.User handledBy = null;
-            if (authentication != null) {
-                handledBy = userService.findByUsername(authentication.getName()).orElse(null);
-            }
-            maintenanceRequestService.updateStatus(id, status, resolutionNotes, handledBy);
+            maintenanceRequestService.updateStatus(id, status, resolutionNotes, null);
             redirectAttributes.addFlashAttribute("message", "Cập nhật trạng thái thành công");
             redirectAttributes.addFlashAttribute("alertClass", "alert-success");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("message", "Cập nhật trạng thái thất bại: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+        }
+        return "redirect:/maintenance/" + id;
+    }
+
+    @PostMapping("/{id}/assign")
+    public String assignRequest(@PathVariable Long id,
+                                @RequestParam("assigneeId") Long assigneeId,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            User assignee = userService.findById(assigneeId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy nhân viên"));
+            if (!userService.hasRole(assignee, RoleName.ROLE_STAFF)) {
+                throw new IllegalArgumentException("Người được chọn không phải là nhân viên hỗ trợ");
+            }
+            maintenanceRequestService.assignHandler(id, assignee);
+            redirectAttributes.addFlashAttribute("message", "Đã phân công yêu cầu cho " + assignee.getUsername());
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Phân công thất bại: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+        }
+        return "redirect:/maintenance/" + id;
+    }
+
+    @PostMapping("/{id}/accept")
+    public String acceptRequest(@PathVariable Long id,
+                                Authentication authentication,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            if (authentication == null) {
+                throw new IllegalStateException("Bạn cần đăng nhập để tiếp nhận yêu cầu");
+            }
+            User current = userService.findByUsername(authentication.getName())
+                    .orElseThrow(() -> new IllegalStateException("Không tìm thấy tài khoản"));
+            if (!userService.hasRole(current, RoleName.ROLE_STAFF)) {
+                throw new IllegalStateException("Chỉ nhân viên hỗ trợ mới có thể tiếp nhận yêu cầu");
+            }
+            MaintenanceRequest request = maintenanceRequestService.getRequiredRequest(id);
+            User existing = request.getHandledBy();
+            if (existing != null && !existing.getId().equals(current.getId())) {
+                throw new IllegalStateException("Yêu cầu đã được phân công cho " + existing.getUsername());
+            }
+            maintenanceRequestService.assignHandler(id, current);
+            redirectAttributes.addFlashAttribute("message", "Bạn đã tiếp nhận yêu cầu này");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Không thể tiếp nhận yêu cầu: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+        }
+        return "redirect:/maintenance/" + id;
+    }
+
+    @PostMapping("/{id}/unassign")
+    public String unassignRequest(@PathVariable Long id,
+                                  Authentication authentication,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            MaintenanceRequest request = maintenanceRequestService.getRequiredRequest(id);
+            boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                    .anyMatch(auth -> "ROLE_ADMIN".equals(auth.getAuthority()));
+            boolean isCurrentHandler = authentication != null
+                    && request.getHandledBy() != null
+                    && request.getHandledBy().getUsername().equals(authentication.getName());
+            if (!isAdmin && !isCurrentHandler) {
+                throw new IllegalStateException("Bạn không có quyền hủy phân công yêu cầu này");
+            }
+            maintenanceRequestService.unassignHandler(id);
+            redirectAttributes.addFlashAttribute("message", "Đã hủy phân công yêu cầu");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Không thể hủy phân công: " + e.getMessage());
             redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
         }
         return "redirect:/maintenance/" + id;

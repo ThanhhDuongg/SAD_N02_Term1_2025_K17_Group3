@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/dashboard", "/dashboard/**").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers("/account/**").hasAnyRole("ADMIN", "STAFF", "STUDENT")
                         .requestMatchers("/maintenance/**", "/violations/**", "/registrations/**").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers("/students/**", "/rooms/**", "/contracts/**", "/fees/**", "/users/**").hasRole("ADMIN")
+                        .requestMatchers("/students/**", "/rooms/**", "/contracts/**", "/fees/**", "/users/**", "/buildings/**", "/reports/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

@@ -116,6 +116,31 @@ public class MaintenanceRequestService {
         return maintenanceRequestRepository.save(request);
     }
 
+    public MaintenanceRequest assignHandler(Long id, User handler) {
+        if (handler == null) {
+            throw new IllegalArgumentException("Không tìm thấy nhân viên xử lý");
+        }
+        MaintenanceRequest request = getRequiredRequest(id);
+        request.setHandledBy(handler);
+        String status = request.getStatus();
+        if (status == null || status.isBlank() || "PENDING".equalsIgnoreCase(status)) {
+            request.setStatus("IN_PROGRESS");
+        }
+        request.setUpdatedAt(LocalDateTime.now());
+        return maintenanceRequestRepository.save(request);
+    }
+
+    public MaintenanceRequest unassignHandler(Long id) {
+        MaintenanceRequest request = getRequiredRequest(id);
+        request.setHandledBy(null);
+        String status = request.getStatus();
+        if (!"COMPLETED".equalsIgnoreCase(status) && !"REJECTED".equalsIgnoreCase(status)) {
+            request.setStatus("PENDING");
+        }
+        request.setUpdatedAt(LocalDateTime.now());
+        return maintenanceRequestRepository.save(request);
+    }
+
     public long countAllRequests() {
         return maintenanceRequestRepository.count();
     }

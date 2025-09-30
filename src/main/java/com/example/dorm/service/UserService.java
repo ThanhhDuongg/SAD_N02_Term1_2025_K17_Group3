@@ -72,6 +72,18 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    public List<User> findUsersByRole(RoleName roleName) {
+        return userRepository.findAllByRoles_Name(roleName).stream()
+                .sorted(Comparator.comparing(user -> {
+                    String display = user.getFullName();
+                    if (display == null || display.isBlank()) {
+                        display = user.getUsername();
+                    }
+                    return display.toLowerCase();
+                }))
+                .collect(Collectors.toList());
+    }
+
     public boolean hasRole(User user, RoleName roleName) {
         return user.getRoles().stream()
                 .anyMatch(role -> role.getName() == roleName);

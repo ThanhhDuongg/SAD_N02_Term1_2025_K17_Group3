@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Báo cáo &amp; thống kê</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div class="content-with-sidebar">
+    <div class="container">
+        <h2>Báo cáo &amp; thống kê</h2>
+        <p class="text-muted">Tổng hợp số liệu vận hành ký túc xá giúp quản trị viên theo dõi tình trạng sử dụng và dịch vụ hỗ trợ.</p>
+        <div class="stat-grid">
+            <div class="stat-card">
+                <span class="stat-title">Tổng sinh viên</span>
+                <span class="stat-value" th:text="${studentCount}"></span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">Số tòa đang quản lý</span>
+                <span class="stat-value" th:text="${buildingCount}"></span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">Tổng sức chứa</span>
+                <span class="stat-value" th:text="${totalCapacity}"></span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">Giường đang sử dụng</span>
+                <span class="stat-value" th:text="${occupiedBeds}"></span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">Giường còn trống</span>
+                <span class="stat-value" th:text="${availableBeds}"></span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">Tỷ lệ lấp đầy</span>
+                <span class="stat-value" th:text="${#numbers.formatDecimal(occupancyRate, 0, 2)} + '%'">0%</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">Yêu cầu hỗ trợ</span>
+                <span class="stat-value" th:text="${totalRequests}"></span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">Doanh thu đã ghi nhận</span>
+                <span class="stat-value" th:text="${#numbers.formatDecimal(totalRevenue, 0, 0)} + ' ₫'"></span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">Cần thu thêm</span>
+                <span class="stat-value" th:text="${#numbers.formatDecimal(outstandingRevenue, 0, 0)} + ' ₫'"></span>
+            </div>
+        </div>
+
+        <h3>Hiệu suất theo tòa</h3>
+        <div class="responsive-table">
+            <table>
+                <thead>
+                <tr>
+                    <th>Tòa</th>
+                    <th>Tên tòa</th>
+                    <th>Số phòng</th>
+                    <th>Tổng sức chứa</th>
+                    <th>Đang ở</th>
+                    <th>Tỷ lệ lấp đầy</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="summary : ${buildingSummaries}">
+                    <td th:text="${summary.code()}"></td>
+                    <td th:text="${summary.name()}"></td>
+                    <td th:text="${summary.roomCount()}"></td>
+                    <td th:text="${summary.capacity()}"></td>
+                    <td th:text="${summary.occupiedBeds()}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${summary.occupancyRate() >= 90} ? ' badge-danger' : (${summary.occupancyRate() >= 70} ? ' badge-warning' : ' badge-success')"
+                              th:text="${#numbers.formatDecimal(summary.occupancyRate(), 0, 2)} + '%'">
+                        </span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(buildingSummaries)}">
+                    <td colspan="6">Chưa có dữ liệu tòa nhà.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="detail-grid">
+            <div class="detail-card">
+                <h3>Trạng thái yêu cầu hỗ trợ</h3>
+                <ul class="status-list">
+                    <li th:each="entry : ${maintenanceSummary.entrySet()}"
+                        th:text="${entry.key} + ': ' + entry.value + ' yêu cầu'"></li>
+                    <li th:if="${#maps.isEmpty(maintenanceSummary)}">Chưa có yêu cầu nào.</li>
+                </ul>
+            </div>
+            <div class="detail-card">
+                <h3>Gợi ý</h3>
+                <p th:if="${occupancyRate >= 90}">
+                    Hầu hết các giường đã kín, hãy cân nhắc mở thêm phòng hoặc thông báo cho sinh viên về danh sách chờ.
+                </p>
+                <p th:if="${occupancyRate < 90 and occupancyRate >= 60}">
+                    Công suất sử dụng ổn định. Có thể triển khai thêm chương trình chăm sóc sinh viên để giữ mức lấp đầy.
+                </p>
+                <p th:if="${occupancyRate < 60}">
+                    Công suất đang thấp. Khuyến nghị rà soát lại chiến dịch tuyển sinh nội trú hoặc xem xét giảm giá ưu đãi.
+                </p>
+                <p th:if="${outstandingRevenue.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+                    Còn khoản phí chưa thu. Hãy gửi nhắc nhở thanh toán tới sinh viên để đảm bảo dòng tiền.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

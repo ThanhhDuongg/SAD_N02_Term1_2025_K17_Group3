@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${isEdit} ? 'Cập nhật tòa nhà' : 'Thêm tòa nhà'">Thêm tòa nhà</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div class="content-with-sidebar">
+    <div class="form-container">
+        <h2 th:text="${isEdit} ? 'Cập nhật tòa nhà' : 'Thêm tòa nhà'"></h2>
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+        <form th:action="${isEdit} ? @{/buildings/{id}(id=${building.id})} : @{/buildings}"
+              th:object="${building}" method="post">
+            <div class="form-group">
+                <label for="code">Mã tòa</label>
+                <input type="text" id="code" th:field="*{code}" maxlength="50" required>
+            </div>
+            <div class="form-group">
+                <label for="name">Tên tòa</label>
+                <input type="text" id="name" th:field="*{name}" required>
+            </div>
+            <div class="form-group">
+                <label for="address">Địa chỉ</label>
+                <input type="text" id="address" th:field="*{address}">
+            </div>
+            <div class="form-group">
+                <label for="totalFloors">Số tầng</label>
+                <input type="number" id="totalFloors" th:field="*{totalFloors}" min="0">
+            </div>
+            <div class="form-group">
+                <label for="description">Mô tả</label>
+                <textarea id="description" th:field="*{description}" rows="4"
+                          placeholder="Ghi chú về vị trí, tiện ích, khu vực..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="button btn-save">Lưu</button>
+                <a th:href="@{/buildings}" class="button btn-cancel">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
