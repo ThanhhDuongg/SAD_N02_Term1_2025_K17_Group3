@@ -77,6 +77,24 @@
             </table>
         </div>
 
+        <div class="chart-grid">
+            <div class="chart-card">
+                <h4>Phân bổ phí theo phạm vi</h4>
+                <canvas id="feeScopeChart"></canvas>
+                <p class="empty-state" id="feeScopeChartEmpty">Chưa có dữ liệu để hiển thị.</p>
+            </div>
+            <div class="chart-card">
+                <h4>Phân bổ phí theo loại</h4>
+                <canvas id="feeTypeChart"></canvas>
+                <p class="empty-state" id="feeTypeChartEmpty">Chưa có dữ liệu để hiển thị.</p>
+            </div>
+            <div class="chart-card">
+                <h4>Tỷ lệ lấp đầy theo tòa</h4>
+                <canvas id="buildingOccupancyChart"></canvas>
+                <p class="empty-state" id="buildingOccupancyChartEmpty">Chưa có dữ liệu để hiển thị.</p>
+            </div>
+        </div>
+
         <div class="responsive-table">
             <table>
                 <thead>
@@ -164,5 +182,174 @@
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const feeScopeChartData = /*[[${feeScopeChartData}]]*/ [];
+    const feeTypeChartData = /*[[${feeTypeChartData}]]*/ [];
+    const buildingOccupancyChartData = /*[[${buildingOccupancyChartData}]]*/ [];
+
+    const formatter = new Intl.NumberFormat('vi-VN');
+
+    function toNumber(value) {
+        if (value === null || value === undefined) {
+            return 0;
+        }
+        if (typeof value === 'number') {
+            return value;
+        }
+        if (typeof value === 'string') {
+            const normalized = value.replace(/[,\s]/g, '');
+            const parsed = Number(normalized);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+        if (typeof value === 'object' && 'value' in value) {
+            return toNumber(value.value);
+        }
+        const parsed = Number(value);
+        return isNaN(parsed) ? 0 : parsed;
+    }
+
+    function toggleEmptyState(canvasId, emptyId, hasData) {
+        const canvas = document.getElementById(canvasId);
+        const empty = document.getElementById(emptyId);
+        if (canvas) {
+            canvas.style.display = hasData ? 'block' : 'none';
+        }
+        if (empty) {
+            empty.style.display = hasData ? 'none' : 'block';
+        }
+    }
+
+    if (typeof Chart !== 'undefined') {
+        toggleEmptyState('feeScopeChart', 'feeScopeChartEmpty', feeScopeChartData.length > 0);
+        if (feeScopeChartData.length > 0) {
+            const scopeCtx = document.getElementById('feeScopeChart');
+            const scopeLabels = feeScopeChartData.map(item => item.label);
+            const scopeTotals = feeScopeChartData.map(item => toNumber(item.totalAmount));
+            new Chart(scopeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: scopeLabels,
+                    datasets: [{
+                        label: 'Tổng cần thu',
+                        data: scopeTotals,
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#6366f1'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: context => {
+                                    const unpaid = toNumber(feeScopeChartData[context.dataIndex].unpaidAmount);
+                                    const total = context.parsed;
+                                    const unpaidText = unpaid > 0 ? ` (Chưa thu: ${formatter.format(unpaid)} ₫)` : '';
+                                    return `${context.label}: ${formatter.format(total)} ₫${unpaidText}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        toggleEmptyState('feeTypeChart', 'feeTypeChartEmpty', feeTypeChartData.length > 0);
+        if (feeTypeChartData.length > 0) {
+            const typeCtx = document.getElementById('feeTypeChart');
+            const typeLabels = feeTypeChartData.map(item => item.label);
+            const typeTotals = feeTypeChartData.map(item => toNumber(item.totalAmount));
+            const typeUnpaid = feeTypeChartData.map(item => toNumber(item.unpaidAmount));
+            new Chart(typeCtx, {
+                type: 'bar',
+                data: {
+                    labels: typeLabels,
+                    datasets: [
+                        {
+                            label: 'Tổng cần thu',
+                            data: typeTotals,
+                            backgroundColor: '#3b82f6'
+                        },
+                        {
+                            label: 'Chưa thu',
+                            data: typeUnpaid,
+                            backgroundColor: '#ef4444'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: value => `${formatter.format(value)} ₫`
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: context => `${context.dataset.label}: ${formatter.format(context.parsed.y)} ₫`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        toggleEmptyState('buildingOccupancyChart', 'buildingOccupancyChartEmpty', buildingOccupancyChartData.length > 0);
+        if (buildingOccupancyChartData.length > 0) {
+            const occupancyCtx = document.getElementById('buildingOccupancyChart');
+            const occupancyLabels = buildingOccupancyChartData.map(item => item.label || item.name);
+            const occupancyRates = buildingOccupancyChartData.map(item => toNumber(item.rate));
+            const occupancyMeta = buildingOccupancyChartData.map(item => ({
+                name: item.name,
+                occupied: toNumber(item.occupied),
+                capacity: toNumber(item.capacity)
+            }));
+            new Chart(occupancyCtx, {
+                type: 'bar',
+                data: {
+                    labels: occupancyLabels,
+                    datasets: [{
+                        label: 'Tỷ lệ lấp đầy (%)',
+                        data: occupancyRates,
+                        backgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            max: 100,
+                            ticks: {
+                                callback: value => `${value}%`
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: context => {
+                                    const meta = occupancyMeta[context.dataIndex];
+                                    return `${meta.name}: ${context.parsed.x}% (${meta.occupied}/${meta.capacity} giường)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    } else {
+        toggleEmptyState('feeScopeChart', 'feeScopeChartEmpty', false);
+        toggleEmptyState('feeTypeChart', 'feeTypeChartEmpty', false);
+        toggleEmptyState('buildingOccupancyChart', 'buildingOccupancyChartEmpty', false);
+    }
+    /*]]>*/
+</script>
 </body>
 </html>

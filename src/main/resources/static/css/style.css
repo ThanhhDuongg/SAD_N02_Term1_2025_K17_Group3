@@ -1432,6 +1432,35 @@ h2 {
     margin-bottom: 1.5rem;
 }
 
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.chart-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.chart-card h4 {
+    margin-bottom: 1rem;
+    font-size: 1.05rem;
+}
+
+.chart-card canvas {
+    width: 100% !important;
+    max-height: 320px;
+}
+
+.chart-card .empty-state {
+    margin: 0;
+}
+
 .detail-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
