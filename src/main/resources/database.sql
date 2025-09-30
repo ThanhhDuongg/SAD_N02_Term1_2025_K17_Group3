@@ -117,6 +117,23 @@ CREATE TABLE maintenance_request (
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- ============================================
+-- TABLE: DORM_REGISTRATION_REQUEST
+-- ============================================
+CREATE TABLE dorm_registration_request (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    student_id BIGINT,
+    desired_room_type VARCHAR(100),
+    preferred_room_number VARCHAR(50),
+    expected_move_in_date DATE,
+    additional_notes TEXT,
+    status VARCHAR(50),
+    admin_notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL,
+    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ============================================
 -- TABLE: VIOLATION
 -- ============================================
 CREATE TABLE violation (
@@ -202,6 +219,16 @@ VALUES
      'Đèn phòng bị hỏng, cần thay mới', 'MAINTENANCE', NULL, 'PENDING'),
     ((SELECT id FROM student WHERE code = 'SV02'), (SELECT id FROM room WHERE number = '102'),
      'Xin chuyển sang phòng 201 để học nhóm', 'ROOM_TRANSFER', '201', 'IN_PROGRESS');
+
+-- ============================================
+-- SAMPLE DATA: DORM REGISTRATION REQUEST
+-- ============================================
+INSERT INTO dorm_registration_request (student_id, desired_room_type, preferred_room_number, expected_move_in_date, additional_notes, status, admin_notes)
+VALUES
+    ((SELECT id FROM student WHERE code = 'SV01'), 'Phòng 4 người', NULL, DATE_ADD(CURDATE(), INTERVAL 14 DAY),
+     'Muốn chuyển sang phòng ít người để thuận tiện học nhóm', 'PENDING', NULL),
+    ((SELECT id FROM student WHERE code = 'SV03'), 'Phòng 2 người', '301', DATE_ADD(CURDATE(), INTERVAL 1 MONTH),
+     'Cần không gian yên tĩnh để chuẩn bị đồ án', 'NEEDS_UPDATE', 'Vui lòng bổ sung giấy xác nhận của khoa');
 
 -- ============================================
 -- SAMPLE DATA: VIOLATION

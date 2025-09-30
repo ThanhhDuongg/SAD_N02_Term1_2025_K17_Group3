@@ -1,11 +1,14 @@
 package com.example.dorm.controller;
 
 import com.example.dorm.model.Contract;
+import com.example.dorm.model.DormRegistrationRequest;
+import com.example.dorm.model.DormRegistrationStatus;
 import com.example.dorm.model.Fee;
 import com.example.dorm.model.MaintenanceRequest;
 import com.example.dorm.model.Student;
 import com.example.dorm.model.Violation;
 import com.example.dorm.service.ContractService;
+import com.example.dorm.service.DormRegistrationRequestService;
 import com.example.dorm.service.FeeService;
 import com.example.dorm.service.MaintenanceRequestService;
 import com.example.dorm.service.StudentService;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -31,28 +35,47 @@ import java.util.Optional;
 public class StudentPortalController {
 
     private static final List<String> REQUEST_TYPES = List.of("MAINTENANCE", "INCIDENT", "ROOM_TRANSFER");
+    private static final List<String> ROOM_TYPE_OPTIONS = List.of(
+            "Phòng 2 người",
+            "Phòng 4 người",
+            "Phòng 6 người",
+            "Phòng 8 người"
+    );
 
     private final StudentService studentService;
     private final ContractService contractService;
     private final FeeService feeService;
     private final MaintenanceRequestService maintenanceRequestService;
     private final ViolationService violationService;
+    private final DormRegistrationRequestService dormRegistrationRequestService;
 
     public StudentPortalController(StudentService studentService,
                                    ContractService contractService,
                                    FeeService feeService,
                                    MaintenanceRequestService maintenanceRequestService,
-                                   ViolationService violationService) {
+                                   ViolationService violationService,
+                                   DormRegistrationRequestService dormRegistrationRequestService) {
         this.studentService = studentService;
         this.contractService = contractService;
         this.feeService = feeService;
         this.maintenanceRequestService = maintenanceRequestService;
         this.violationService = violationService;
+        this.dormRegistrationRequestService = dormRegistrationRequestService;
     }
 
     @ModelAttribute("requestTypes")
     public List<String> requestTypes() {
         return REQUEST_TYPES;
+    }
+
+    @ModelAttribute("roomTypeOptions")
+    public List<String> roomTypeOptions() {
+        return ROOM_TYPE_OPTIONS;
+    }
+
+    @ModelAttribute("registrationStatuses")
+    public DormRegistrationStatus[] registrationStatuses() {
+        return DormRegistrationStatus.values();
     }
 
     @GetMapping("/dashboard")
@@ -70,6 +93,9 @@ public class StudentPortalController {
         List<MaintenanceRequest> maintenanceRequests = maintenanceRequestService.getRequestsByStudent(student.getId());
         model.addAttribute("maintenanceRequests", maintenanceRequests);
 
+        List<DormRegistrationRequest> registrationRequests = dormRegistrationRequestService.findByStudent(student.getId());
+        model.addAttribute("registrationRequests", registrationRequests);
+
         List<Violation> violations = violationService.getViolationsByStudent(student.getId());
         model.addAttribute("violations", violations);
         model.addAttribute("violationCount", violations.size());
@@ -82,7 +108,7 @@ public class StudentPortalController {
         model.addAttribute("hasHighSeverityViolation", latestHighSeverity.isPresent());
         model.addAttribute("latestHighSeverityViolation", latestHighSeverity.orElse(null));
 
-        List<String> notifications = buildNotifications(unpaidFees, maintenanceRequests, violations);
+        List<String> notifications = buildNotifications(unpaidFees, maintenanceRequests, registrationRequests, violations);
         model.addAttribute("notifications", notifications);
         model.addAttribute("hasNotifications", !notifications.isEmpty());
 
@@ -126,6 +152,43 @@ public class StudentPortalController {
         model.addAttribute("student", student);
         model.addAttribute("requests", maintenanceRequestService.getRequestsByStudent(student.getId()));
         return "student/requests";
+    }
+
+    @GetMapping("/registrations")
+    public String viewRegistrationRequests(Model model, Authentication authentication) {
+        Student student = requireAuthenticatedStudent(authentication);
+        model.addAttribute("student", student);
+        model.addAttribute("registrationRequests", dormRegistrationRequestService.findByStudent(student.getId()));
+        return "student/registration-list";
+    }
+
+    @GetMapping("/registrations/new")
+    public String newRegistrationRequest(Model model, Authentication authentication) {
+        Student student = requireAuthenticatedStudent(authentication);
+        model.addAttribute("student", student);
+        DormRegistrationRequest request = new DormRegistrationRequest();
+        request.setDesiredRoomType(student.getRoom() != null ? student.getRoom().getType() : null);
+        model.addAttribute("registrationRequest", request);
+        return "student/registration-form";
+    }
+
+    @PostMapping("/registrations")
+    public String createRegistrationRequest(@ModelAttribute("registrationRequest") DormRegistrationRequest request,
+                                            Authentication authentication,
+                                            RedirectAttributes redirectAttributes) {
+        try {
+            Student student = requireAuthenticatedStudent(authentication);
+            request.setStudent(student);
+            request.setStatus(DormRegistrationStatus.PENDING);
+            dormRegistrationRequestService.submitRequest(request);
+            redirectAttributes.addFlashAttribute("message", "Đã gửi yêu cầu đăng ký ký túc xá thành công.");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
+            return "redirect:/student/registrations";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Không thể gửi yêu cầu: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/student/dashboard";
+        }
     }
 
     @PostMapping("/maintenance")
@@ -172,6 +235,7 @@ public class StudentPortalController {
 
     private List<String> buildNotifications(List<Fee> unpaidFees,
                                             List<MaintenanceRequest> requests,
+                                            List<DormRegistrationRequest> registrationRequests,
                                             List<Violation> violations) {
         List<String> notifications = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -192,6 +256,22 @@ public class StudentPortalController {
         if (hasPending) {
             notifications.add("Bạn có yêu cầu đang chờ xử lý. Vui lòng theo dõi phản hồi từ ban quản lý.");
         }
+
+        registrationRequests.stream()
+                .filter(req -> req.getStatus() == DormRegistrationStatus.PENDING || req.getStatus() == DormRegistrationStatus.NEEDS_UPDATE)
+                .findFirst()
+                .ifPresent(req -> notifications.add("Yêu cầu đăng ký ký túc xá của bạn đang chờ duyệt."));
+
+        registrationRequests.stream()
+                .filter(req -> req.getStatus() == DormRegistrationStatus.APPROVED)
+                .max(Comparator.comparing(this::lastUpdated))
+                .ifPresent(req -> notifications.add("Yêu cầu đăng ký ký túc xá đã được chấp nhận."));
+
+        registrationRequests.stream()
+                .filter(req -> req.getStatus() == DormRegistrationStatus.REJECTED)
+                .max(Comparator.comparing(this::lastUpdated))
+                .ifPresent(req -> notifications.add("Yêu cầu đăng ký ký túc xá của bạn đã bị từ chối." +
+                        (req.getAdminNotes() != null && !req.getAdminNotes().isBlank() ? " Lý do: " + req.getAdminNotes() : "")));
 
         requests.stream()
                 .filter(request -> request.getUpdatedAt() != null && "COMPLETED".equalsIgnoreCase(request.getStatus()))
@@ -234,5 +314,9 @@ public class StudentPortalController {
             builder.append(" – ").append(request.getResolutionNotes());
         }
         return builder.toString();
+    }
+
+    private LocalDateTime lastUpdated(DormRegistrationRequest request) {
+        return request.getUpdatedAt() != null ? request.getUpdatedAt() : request.getCreatedAt();
     }
 }

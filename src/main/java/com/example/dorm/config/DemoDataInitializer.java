@@ -26,6 +26,7 @@ public class DemoDataInitializer implements ApplicationRunner {
     private final FeeRepository feeRepository;
     private final MaintenanceRequestRepository maintenanceRequestRepository;
     private final ViolationRepository violationRepository;
+    private final DormRegistrationRequestRepository dormRegistrationRequestRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DemoDataInitializer(RoleRepository roleRepository,
@@ -36,6 +37,7 @@ public class DemoDataInitializer implements ApplicationRunner {
                                FeeRepository feeRepository,
                                MaintenanceRequestRepository maintenanceRequestRepository,
                                ViolationRepository violationRepository,
+                               DormRegistrationRequestRepository dormRegistrationRequestRepository,
                                PasswordEncoder passwordEncoder) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
@@ -45,6 +47,7 @@ public class DemoDataInitializer implements ApplicationRunner {
         this.feeRepository = feeRepository;
         this.maintenanceRequestRepository = maintenanceRequestRepository;
         this.violationRepository = violationRepository;
+        this.dormRegistrationRequestRepository = dormRegistrationRequestRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -93,6 +96,12 @@ public class DemoDataInitializer implements ApplicationRunner {
 
         ensureViolation(sv01, room101, "Tụ tập quá giờ quy định", "MEDIUM", LocalDate.of(2025, 2, 15));
         ensureViolation(sv03, room201, "Không tuân thủ quy định dọn vệ sinh", "LOW", LocalDate.of(2025, 3, 1));
+
+        ensureDormRegistrationRequest(sv01, "Phòng 4 người", null, LocalDate.now().plusWeeks(2),
+                "Muốn chuyển sang phòng ít người để thuận tiện học nhóm", DormRegistrationStatus.PENDING, null);
+        ensureDormRegistrationRequest(sv03, "Phòng 2 người", "301", LocalDate.now().plusMonths(1),
+                "Cần không gian yên tĩnh để chuẩn bị đồ án", DormRegistrationStatus.NEEDS_UPDATE,
+                "Vui lòng bổ sung giấy xác nhận của khoa");
     }
 
     private Role ensureRole(RoleName name, String description) {
@@ -297,6 +306,53 @@ public class DemoDataInitializer implements ApplicationRunner {
                     request.setStatus(status);
                     request.setCreatedAt(LocalDateTime.now());
                     return maintenanceRequestRepository.save(request);
+                });
+    }
+
+    private DormRegistrationRequest ensureDormRegistrationRequest(Student student,
+                                                                  String desiredRoomType,
+                                                                  String preferredRoomNumber,
+                                                                  LocalDate expectedMoveInDate,
+                                                                  String additionalNotes,
+                                                                  DormRegistrationStatus status,
+                                                                  String adminNotes) {
+        if (student == null) {
+            return null;
+        }
+        return dormRegistrationRequestRepository.findByStudentIdOrderByCreatedAtDesc(student.getId()).stream()
+                .filter(existing -> desiredRoomType != null && desiredRoomType.equals(existing.getDesiredRoomType())
+                        && expectedMoveInDate != null && expectedMoveInDate.equals(existing.getExpectedMoveInDate()))
+                .findFirst()
+                .map(existing -> {
+                    boolean changed = false;
+                    if (preferredRoomNumber != null && (existing.getPreferredRoomNumber() == null || !preferredRoomNumber.equals(existing.getPreferredRoomNumber()))) {
+                        existing.setPreferredRoomNumber(preferredRoomNumber);
+                        changed = true;
+                    }
+                    if (additionalNotes != null && (existing.getAdditionalNotes() == null || !additionalNotes.equals(existing.getAdditionalNotes()))) {
+                        existing.setAdditionalNotes(additionalNotes);
+                        changed = true;
+                    }
+                    if (status != null && existing.getStatus() != status) {
+                        existing.setStatus(status);
+                        changed = true;
+                    }
+                    if (adminNotes != null && (existing.getAdminNotes() == null || !adminNotes.equals(existing.getAdminNotes()))) {
+                        existing.setAdminNotes(adminNotes);
+                        changed = true;
+                    }
+                    return changed ? dormRegistrationRequestRepository.save(existing) : existing;
+                })
+                .orElseGet(() -> {
+                    DormRegistrationRequest request = new DormRegistrationRequest();
+                    request.setStudent(student);
+                    request.setDesiredRoomType(desiredRoomType);
+                    request.setPreferredRoomNumber(preferredRoomNumber);
+                    request.setExpectedMoveInDate(expectedMoveInDate);
+                    request.setAdditionalNotes(additionalNotes);
+                    request.setStatus(status);
+                    request.setAdminNotes(adminNotes);
+                    return dormRegistrationRequestRepository.save(request);
                 });
     }
 
