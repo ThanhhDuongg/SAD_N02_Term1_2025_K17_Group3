@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết yêu cầu đăng ký</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+
+<div class="content-with-sidebar">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h2>Chi tiết yêu cầu #<span th:text="${request.id}"></span></h2>
+                <p class="text-muted">Quản lý thông tin đăng ký và phản hồi cho sinh viên</p>
+            </div>
+            <a class="button btn-view" th:href="@{/registrations}">Trở lại danh sách</a>
+        </div>
+
+        <div th:if="${message != null}" th:class="'alert ' + ${alertClass != null ? alertClass : 'alert-info'}" th:text="${message}"></div>
+
+        <div class="card">
+            <h3>Thông tin sinh viên</h3>
+            <div class="card-grid">
+                <div>
+                    <strong>Họ và tên:</strong>
+                    <p th:text="${request.student != null ? request.student.name : 'Không rõ'}"></p>
+                </div>
+                <div>
+                    <strong>Mã số:</strong>
+                    <p th:text="${request.student != null ? request.student.code : '-'}"></p>
+                </div>
+                <div>
+                    <strong>Email:</strong>
+                    <p th:text="${request.student != null ? request.student.email : '-'}"></p>
+                </div>
+                <div>
+                    <strong>Phòng hiện tại:</strong>
+                    <p th:text="${request.student != null && request.student.room != null ? request.student.room.number : 'Chưa ở'}"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Chi tiết yêu cầu</h3>
+            <form class="form-grid" th:action="@{'/registrations/' + ${request.id} + '/update'}" method="post" th:object="${request}">
+                <div class="form-group">
+                    <label for="desiredRoomType">Loại phòng mong muốn</label>
+                    <input id="desiredRoomType" th:field="*{desiredRoomType}" placeholder="VD: Phòng 4 người">
+                </div>
+                <div class="form-group">
+                    <label for="preferredRoomNumber">Phòng ưu tiên</label>
+                    <input id="preferredRoomNumber" th:field="*{preferredRoomNumber}" placeholder="Số phòng mong muốn">
+                </div>
+                <div class="form-group">
+                    <label for="expectedMoveInDate">Ngày dự kiến vào</label>
+                    <input id="expectedMoveInDate" type="date" th:field="*{expectedMoveInDate}">
+                </div>
+                <div class="form-group form-group-full">
+                    <label for="additionalNotes">Ghi chú của sinh viên</label>
+                    <textarea id="additionalNotes" th:field="*{additionalNotes}" rows="4"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button class="button btn-add" type="submit">Lưu chỉnh sửa</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Phản hồi &amp; trạng thái</h3>
+            <form class="form-grid" th:action="@{'/registrations/' + ${request.id} + '/status'}" method="post">
+                <div class="form-group">
+                    <label for="status">Trạng thái xử lý</label>
+                    <select id="status" name="status">
+                        <option th:each="status : ${statusOptions}"
+                                th:value="${status.name()}"
+                                th:selected="${status == request.status}"
+                                th:text="${status.displayName}"></option>
+                    </select>
+                </div>
+                <div class="form-group form-group-full">
+                    <label for="adminNotes">Phản hồi tới sinh viên</label>
+                    <textarea id="adminNotes" name="adminNotes" rows="4" placeholder="Ghi chú, yêu cầu bổ sung hoặc thông báo kết quả" th:text="${request.adminNotes}"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Ngày gửi</label>
+                    <input type="text" th:value="${request.createdAt != null ? #temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm') : '-'}" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Ngày cập nhật</label>
+                    <input type="text" th:value="${request.updatedAt != null ? #temporals.format(request.updatedAt, 'dd/MM/yyyy HH:mm') : '-'}" readonly>
+                </div>
+                <div class="form-actions">
+                    <button class="button btn-add" type="submit">Cập nhật trạng thái</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
