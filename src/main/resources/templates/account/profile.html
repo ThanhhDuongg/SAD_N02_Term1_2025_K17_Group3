@@ -19,81 +19,20 @@
                 <p class="text-muted">Điều chỉnh thông tin liên hệ để ban quản lý dễ dàng hỗ trợ bạn</p>
             </div>
         </div>
-        <div th:replace="~{::profileForm}"></div>
-
+        <div th:replace="~{fragments/profile-form :: profileForm}"></div>
     </div>
 </div>
 
-<div th:if="${!isStudent}">
+<div th:unless="${isStudent}">
     <div th:replace="fragments/sidebar :: sidebar"></div>
     <div class="content-with-sidebar">
-        <div th:replace="~{::profileForm}"></div>
+        <div th:replace="~{fragments/profile-form :: profileForm}"></div>
     </div>
 </div>
 
-<th:block th:fragment="profileForm">
-    <div class="profile-page" th:with="displayName=${studentProfile != null && studentProfile.name != null && !#strings.isEmpty(studentProfile.name) ? studentProfile.name : (!#strings.isEmpty(profileForm.fullName) ? profileForm.fullName : profileForm.username)}">
-        <section class="profile-card profile-summary">
-            <div class="profile-card-main">
-                <div class="profile-avatar-large" th:text="${displayName != null && displayName.length() > 0 ? displayName.substring(0,1).toUpperCase() : 'U'}">U</div>
-                <div class="profile-card-text">
-                    <h2 class="profile-name" th:text="${displayName}">Người dùng</h2>
-                    <p class="profile-subtitle" th:text="${isStudent} ? 'Sinh viên ký túc xá Phenikaa' : 'Thành viên hệ thống quản lý'}">Sinh viên ký túc xá Phenikaa</p>
-                </div>
-            </div>
-            <div class="profile-card-meta">
-                <span class="profile-meta-label">Tên đăng nhập</span>
-                <span class="profile-meta-value" th:text="${profileForm.username}">username</span>
-            </div>
-        </section>
 
-        <form th:action="@{/account/profile}" th:object="${profileForm}" method="post" class="profile-form">
-            <div class="form-alert form-alert-error" th:if="${#fields.hasGlobalErrors()}">
-                <span th:each="err : ${#fields.globalErrors()}" th:text="${err}"></span>
-            </div>
 
-            <div class="profile-grid profile-form-grid">
-                <div class="input-field" th:classappend="${#fields.hasErrors('fullName')} ? ' has-error'" th:if="${canEditFullName}">
-                    <label for="fullName">Họ tên hiển thị</label>
-                    <input id="fullName" type="text" th:field="*{fullName}" placeholder="Nhập họ tên để hiển thị">
-                    <span class="error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
-                </div>
 
-                <div class="input-field" th:if="${!canEditFullName}">
-                    <label>Họ tên</label>
-                    <input type="text" th:value="${studentProfile != null ? studentProfile.name : profileForm.fullName}" readonly>
-                    <input type="hidden" th:field="*{fullName}">
-                </div>
-
-                <div class="input-field" th:classappend="${#fields.hasErrors('email')} ? ' has-error'">
-                    <label for="email">Email liên hệ</label>
-                    <input id="email" type="email" th:field="*{email}" placeholder="example@domain.com">
-                    <span class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
-                </div>
-
-                <div class="input-field" th:classappend="${#fields.hasErrors('phone')} ? ' has-error'">
-                    <label for="phone">Số điện thoại</label>
-                    <input id="phone" type="text" th:field="*{phone}" placeholder="09xxxxxxxx">
-                    <span class="error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></span>
-                </div>
-
-                <div class="input-field" th:if="${isStudent}" th:classappend="${#fields.hasErrors('address')} ? ' has-error'">
-                    <label for="address">Địa chỉ liên hệ</label>
-                    <input id="address" type="text" th:field="*{address}" placeholder="Địa chỉ cư trú hiện tại">
-                    <span class="error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
-                </div>
-            </div>
-            <input type="hidden" th:if="${!isStudent}" th:field="*{address}">
-
-            <div class="form-actions profile-actions">
-                <a th:href="${isStudent} ? @{/student/profile} : @{/dashboard}" class="button btn-cancel">
-                    <i class="fas fa-arrow-left"></i> Quay lại
-                </a>
-                <button type="submit" class="button btn-save"><i class="fas fa-save"></i> Lưu thay đổi</button>
-            </div>
-        </form>
-    </div>
-</th:block>
 
 </body>
 </html>

@@ -14,17 +14,18 @@
 
         <div class="header-right">
             <div class="user-profile" sec:authorize="isAuthenticated()" th:with="auth=${#authentication}">
-                <button type="button" class="user-trigger" aria-haspopup="true" aria-expanded="false">
-                    <span class="user-avatar"
-                          th:text="${auth != null && auth.name != null && auth.name.length() > 0 ? auth.name.substring(0,1).toUpperCase() : 'U'}">U</span>
+                <button type="button" class="user-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu">
+    <span class="user-avatar"
+          th:text="${auth != null && auth.name != null && auth.name.length() > 0 ? auth.name.substring(0,1).toUpperCase() : 'U'}">U</span>
                     <span class="user-meta">
-                        <span class="user-name"
-                              th:text="${auth != null && auth.name != null ? auth.name : 'Người dùng'}">Người dùng</span>
-                        <span class="user-role" th:text="${#strings.arrayJoin(auth.authorities.![authority], ', ')}"></span>
-                    </span>
+      <span class="user-name" th:text="${auth != null && auth.name != null ? auth.name : 'Người dùng'}">Người dùng</span>
+      <span class="user-role" th:text="${#strings.arrayJoin(auth.authorities.![authority], ', ')}"></span>
+    </span>
                     <span class="user-caret" aria-hidden="true">▾</span>
                 </button>
-                <div class="user-dropdown" role="menu">
+
+                <!-- Ẩn sẵn bằng hidden để không bị “nháy” trước khi JS chạy -->
+                <div class="user-dropdown" id="user-menu" role="menu" hidden>
                     <a class="user-dropdown-link" th:href="@{/account/profile}" role="menuitem" sec:authorize="isAuthenticated()">
                         <span>Cập nhật thông tin</span>
                     </a>

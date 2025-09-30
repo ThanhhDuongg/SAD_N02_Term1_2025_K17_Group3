@@ -166,10 +166,16 @@ body {
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);
     padding: 0.5rem 0;
-    display: flex;
+    display: none;
     flex-direction: column;
     z-index: 1100;
 }
+/* Ẩn cứng khi có thuộc tính hidden (tránh nháy trước khi JS chạy) */
+.user-profile .user-dropdown[hidden] { display: none !important; }
+
+/* Chỉ hiện khi đã toggle bằng click (JS sẽ thêm class .open vào .user-profile) */
+.user-profile.open .user-dropdown { display: block; }
+
 
 .user-dropdown-link {
     width: 100%;
