@@ -5,6 +5,7 @@ import com.example.dorm.dto.ProfileForm;
 import com.example.dorm.model.RoleName;
 import com.example.dorm.model.Student;
 import com.example.dorm.model.User;
+import com.example.dorm.service.FileStorageService;
 import com.example.dorm.service.StudentService;
 import com.example.dorm.service.UserService;
 import jakarta.validation.Valid;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Locale;
 
@@ -27,10 +29,16 @@ public class AccountController {
 
     private final UserService userService;
     private final StudentService studentService;
+    private final FileStorageService fileStorageService;
 
-    public AccountController(UserService userService, StudentService studentService) {
+    private static final long MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+
+    public AccountController(UserService userService,
+                             StudentService studentService,
+                             FileStorageService fileStorageService) {
         this.userService = userService;
         this.studentService = studentService;
+        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping("/password")
@@ -105,18 +113,54 @@ public class AccountController {
         User user = getAuthenticatedUser(authentication);
         boolean isStudent = userService.hasRole(user, RoleName.ROLE_STUDENT);
 
+        String avatarFilename = form.getAvatarFilename();
+        if (avatarFilename == null || avatarFilename.isBlank()) {
+            avatarFilename = user.getAvatarFilename();
+        }
+        form.setAvatarFilename(avatarFilename);
+
         if (bindingResult.hasErrors()) {
             prepareProfileModel(model, user, isStudent);
             return "account/profile";
         }
 
         try {
+            MultipartFile avatarFile = form.getAvatar();
+
+            if (avatarFile != null && !avatarFile.isEmpty()) {
+                String contentType = avatarFile.getContentType();
+                if (contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith("image/")) {
+                    bindingResult.rejectValue("avatar", "profile.avatar.invalid", "Vui lòng chọn tập tin hình ảnh hợp lệ (jpg, png, gif)");
+                    form.setAvatarFilename(avatarFilename);
+                    prepareProfileModel(model, user, isStudent);
+                    return "account/profile";
+                }
+
+                if (avatarFile.getSize() > MAX_AVATAR_SIZE_BYTES) {
+                    bindingResult.rejectValue("avatar", "profile.avatar.size", "Ảnh đại diện không được vượt quá 5MB");
+                    form.setAvatarFilename(avatarFilename);
+                    prepareProfileModel(model, user, isStudent);
+                    return "account/profile";
+                }
+
+                try {
+                    avatarFilename = fileStorageService.storeAvatar(avatarFile, avatarFilename);
+                } catch (IllegalStateException ex) {
+                    bindingResult.rejectValue("avatar", "profile.avatar.error", ex.getMessage());
+                    form.setAvatarFilename(avatarFilename);
+                    prepareProfileModel(model, user, isStudent);
+                    return "account/profile";
+                }
+
+                form.setAvatarFilename(avatarFilename);
+            }
+
             if (isStudent) {
                 Student student = studentService.findByUsername(user.getUsername())
                         .orElseThrow(() -> new IllegalStateException("Không tìm thấy thông tin sinh viên"));
                 studentService.updateContactInfo(student.getId(), form.getPhone(), form.getEmail(), form.getAddress());
             }
-            userService.updateProfile(user, form.getEmail(), form.getFullName(), form.getPhone());
+            userService.updateProfile(user, form.getEmail(), form.getFullName(), form.getPhone(), avatarFilename);
 
             redirectAttributes.addFlashAttribute("message", "Cập nhật thông tin cá nhân thành công");
             redirectAttributes.addFlashAttribute("alertClass", "alert-success");
@@ -128,6 +172,7 @@ public class AccountController {
             } else {
                 bindingResult.reject("profile.update.error", message);
             }
+            form.setAvatarFilename(avatarFilename);
             prepareProfileModel(model, user, isStudent);
             return "account/profile";
         }
@@ -148,21 +193,39 @@ public class AccountController {
                     .orElseThrow(() -> new IllegalStateException("Không tìm thấy thông tin sinh viên"));
         }
 
-        if (!model.containsAttribute("profileForm")) {
-            ProfileForm form = new ProfileForm();
-            form.setUsername(user.getUsername());
-            form.setFullName(user.getFullName());
-            String preferredEmail = user.getEmail();
-            if (student != null && student.getEmail() != null && !student.getEmail().isBlank()) {
-                preferredEmail = student.getEmail();
-            }
-            form.setEmail(preferredEmail);
-            form.setPhone(student != null && student.getPhone() != null ? student.getPhone() : user.getPhone());
-            if (student != null) {
-                form.setAddress(student.getAddress());
-            }
-            model.addAttribute("profileForm", form);
+        ProfileForm form = (ProfileForm) model.asMap().get("profileForm");
+        if (form == null) {
+            form = new ProfileForm();
         }
+
+        form.setUsername(user.getUsername());
+
+        if (form.getFullName() == null) {
+            form.setFullName(user.getFullName());
+        }
+
+        String preferredEmail = user.getEmail();
+        if (student != null && student.getEmail() != null && !student.getEmail().isBlank()) {
+            preferredEmail = student.getEmail();
+        }
+        if (form.getEmail() == null) {
+            form.setEmail(preferredEmail);
+        }
+
+        if (form.getPhone() == null) {
+            form.setPhone(student != null && student.getPhone() != null ? student.getPhone() : user.getPhone());
+        }
+
+        if (student != null && form.getAddress() == null) {
+            form.setAddress(student.getAddress());
+        }
+
+        if (form.getAvatarFilename() == null || form.getAvatarFilename().isBlank()) {
+            form.setAvatarFilename(user.getAvatarFilename());
+        }
+        form.setAvatar(null);
+
+        model.addAttribute("profileForm", form);
 
         model.addAttribute("isStudent", isStudent);
         model.addAttribute("canEditFullName", !isStudent);

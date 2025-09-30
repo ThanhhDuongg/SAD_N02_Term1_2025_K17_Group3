@@ -112,6 +112,10 @@ public class UserService {
     }
 
     public User updateProfile(User user, String email, String fullName, String phone) {
+        return updateProfile(user, email, fullName, phone, user != null ? user.getAvatarFilename() : null);
+    }
+
+    public User updateProfile(User user, String email, String fullName, String phone, String avatarFilename) {
         if (user == null) {
             throw new IllegalArgumentException("Không tìm thấy người dùng");
         }
@@ -129,6 +133,7 @@ public class UserService {
         user.setEmail(email.trim());
         user.setFullName(fullName != null && !fullName.isBlank() ? fullName.trim() : null);
         user.setPhone(phone != null && !phone.isBlank() ? phone.trim() : null);
+        user.setAvatarFilename(avatarFilename != null && !avatarFilename.isBlank() ? avatarFilename : null);
 
         return userRepository.save(user);
     }

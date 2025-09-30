@@ -1182,6 +1182,22 @@ h2 {
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+}
+
+.profile-avatar-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.profile-avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
 }
 
 .profile-card-text {
@@ -1295,6 +1311,51 @@ h2 {
 .input-field .error {
     font-size: 0.85rem;
     color: var(--danger-color);
+}
+
+.avatar-upload {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.avatar-upload-preview {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(59, 130, 246, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+}
+
+.avatar-upload-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-upload-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.avatar-upload-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.avatar-upload-actions input[type="file"] {
+    max-width: 16rem;
 }
 
 .profile-actions {
