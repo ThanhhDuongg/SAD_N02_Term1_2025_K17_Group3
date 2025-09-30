@@ -59,6 +59,10 @@ public class FeeService {
         return feeRepository.findByContract_Student_IdAndPaymentStatus(studentId, PaymentStatus.UNPAID);
     }
 
+    public List<Fee> getAllFees() {
+        return feeRepository.findAll();
+    }
+
     public Page<Fee> searchFees(String search, Pageable pageable) {
         if (search == null || search.trim().isEmpty()) {
             return feeRepository.findAll(pageable);

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý tòa nhà</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div class="content-with-sidebar">
+    <div class="container">
+        <h2>Danh sách tòa nhà</h2>
+        <div th:replace="~{fragments/header :: popup}"></div>
+        <div class="toolbar">
+            <a th:href="@{/buildings/new}" class="button btn-add"><i class="fas fa-plus"></i> Thêm tòa nhà</a>
+        </div>
+        <div class="responsive-table">
+            <table>
+                <thead>
+                <tr>
+                    <th>Mã tòa</th>
+                    <th>Tên tòa</th>
+                    <th>Địa chỉ</th>
+                    <th>Số tầng</th>
+                    <th>Số phòng</th>
+                    <th>Tổng sức chứa</th>
+                    <th>Đang ở</th>
+                    <th>Tỉ lệ lấp đầy</th>
+                    <th>Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="summary : ${buildingSummaries}">
+                    <td th:text="${summary.code()}"></td>
+                    <td th:text="${summary.name()}"></td>
+                    <td th:text="${summary.address() != null ? summary.address() : 'Chưa cập nhật'}"></td>
+                    <td th:text="${summary.totalFloors() != null ? summary.totalFloors() : '-'}"></td>
+                    <td th:text="${summary.roomCount()}"></td>
+                    <td th:text="${summary.capacity()}"></td>
+                    <td th:text="${summary.occupiedBeds()}"></td>
+                    <td>
+                        <span th:text="${#numbers.formatDecimal(summary.occupancyRate(), 0, 2) + '%'}"
+                              th:class="${summary.occupancyRate() >= 90 ? 'badge badge-danger' : (summary.occupancyRate() >= 70 ? 'badge badge-warning' : 'badge badge-success')}">
+                        </span>
+                    </td>
+                    <td class="action-icons">
+                        <a th:href="@{/buildings/{id}/edit(id=${summary.id()})}" class="edit" title="Chỉnh sửa"><i class="fas fa-edit"></i></a>
+                        <a th:href="@{/buildings/{id}/delete(id=${summary.id()})}" class="delete" title="Xóa" onclick="return confirm('Bạn có chắc muốn xóa tòa này?')"><i class="fas fa-trash"></i></a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(buildingSummaries)}">
+                    <td colspan="9">Chưa có tòa nhà nào được khai báo.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

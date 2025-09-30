@@ -13,10 +13,17 @@
         <div class="container">
         <h2>Danh Sách Phòng</h2>
         <div th:replace="~{fragments/header :: popup}"></div>
-        <div class="search-container">
+        <div class="search-container room-filter">
             <form th:action="@{/rooms}" method="get">
-                <input type="text" name="search" placeholder="Tìm kiếm phòng..." th:value="${search}">
-                <button type="submit">Tìm kiếm</button>
+                <input type="text" name="search" placeholder="Tìm kiếm phòng hoặc loại..." th:value="${search}">
+                <select name="buildingId">
+                    <option value="" th:selected="${selectedBuildingId == null}">Tất cả tòa</option>
+                    <option th:each="building : ${buildings}"
+                            th:value="${building.id}"
+                            th:text="${building.code + ' - ' + building.name}"
+                            th:selected="${selectedBuildingId != null and selectedBuildingId.equals(building.id)}"></option>
+                </select>
+                <button type="submit">Lọc</button>
             </form>
             <a th:href="@{/rooms/new}" class="button btn-add">Thêm Phòng</a>
         </div>
@@ -25,6 +32,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Số Phòng</th>
+                    <th>Tòa</th>
                     <th>Loại Phòng</th>
                     <th>Sức Chứa</th>
                     <th>Đang Ở</th>
@@ -36,6 +44,7 @@
                 <tr th:each="room : ${roomsPage.content}" class="table-row">
                     <td th:text="${room.id}"></td>
                     <td th:text="${room.number}"></td>
+                    <td th:text="${room.building != null ? room.building.code : 'N/A'}"></td>
                     <td th:text="${room.type}"></td>
                     <td th:text="${room.capacity}"></td>
                     <td th:text="${occupancies[room.id]}"></td>
@@ -49,14 +58,14 @@
             </tbody>
         </table>
         <div class="pagination">
-            <a th:if="${roomsPage.number > 0}" th:href="@{/rooms(page=${roomsPage.number-1},size=${roomsPage.size},search=${search})}">Trước</a>
+            <a th:if="${roomsPage.number > 0}" th:href="@{/rooms(page=${roomsPage.number-1},size=${roomsPage.size},search=${search},buildingId=${selectedBuildingId})}">Trước</a>
             <span th:each="i : ${pageNumbers}">
-                <a th:href="@{/rooms(page=${i-1},size=${roomsPage.size},search=${search})}"
+                <a th:href="@{/rooms(page=${i-1},size=${roomsPage.size},search=${search},buildingId=${selectedBuildingId})}"
                    th:text="${i}"
                    th:classappend="${i-1 == roomsPage.number} ? 'current' : ''">
                 </a>
             </span>
-            <a th:if="${roomsPage.number + 1 < roomsPage.totalPages}" th:href="@{/rooms(page=${roomsPage.number+1},size=${roomsPage.size},search=${search})}">Sau</a>
+            <a th:if="${roomsPage.number + 1 < roomsPage.totalPages}" th:href="@{/rooms(page=${roomsPage.number+1},size=${roomsPage.size},search=${search},buildingId=${selectedBuildingId})}">Sau</a>
         </div>
         </div>
     </div>

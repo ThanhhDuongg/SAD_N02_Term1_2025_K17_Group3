@@ -1,10 +1,10 @@
 package com.example.dorm.repository;
 
 import com.example.dorm.model.Student;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +13,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     List<Student> findByNameIgnoreCase(String name);
     List<Student> findByRoom_Id(Long roomId);
     long countByRoom_Id(Long roomId);
+    long countByRoomIsNotNull();
+    long countByRoom_Building_Id(Long buildingId);
 
     Optional<Student> findByCode(String code);
 
