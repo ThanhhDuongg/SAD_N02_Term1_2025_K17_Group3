@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.LinkedHashMap;
@@ -63,6 +64,18 @@ public class RoomController {
         model.addAttribute("search", search);
         model.addAttribute("selectedBuildingId", buildingId);
         return "rooms/list";
+    }
+
+    @GetMapping(value = "/by-building/{buildingId}", produces = "application/json")
+    @ResponseBody
+    public List<Map<String, Object>> roomsByBuilding(@PathVariable("buildingId") Long buildingId) {
+        return roomService.getRoomsByBuilding(buildingId).stream()
+                .map(room -> Map.<String, Object>of(
+                        "id", room.getId(),
+                        "number", room.getNumber(),
+                        "buildingId", room.getBuilding() != null ? room.getBuilding().getId() : null
+                ))
+                .toList();
     }
 
     @GetMapping("/new")

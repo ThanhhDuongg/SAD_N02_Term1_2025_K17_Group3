@@ -115,6 +115,13 @@ public class ContractService {
         return contractRepository.findByStudent_Id(studentId);
     }
 
+    public List<Contract> getContractsByRoom(Long roomId) {
+        if (roomId == null) {
+            return List.of();
+        }
+        return contractRepository.findByRoom_Id(roomId);
+    }
+
     public Page<Contract> searchContracts(String search, Pageable pageable) {
         if (search == null || search.trim().isEmpty()) {
             return contractRepository.findAll(pageable);

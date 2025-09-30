@@ -118,6 +118,35 @@ public class ReportController {
                 .sorted(Comparator.comparing(summary -> summary.scope().name()))
                 .toList();
 
+        List<Map<String, Object>> feeScopeChartData = feeScopeSummaries.stream()
+                .map(summary -> Map.<String, Object>of(
+                        "label", summary.displayName(),
+                        "count", summary.feeCount(),
+                        "totalAmount", summary.totalAmount(),
+                        "unpaidAmount", summary.unpaidAmount()
+                ))
+                .toList();
+
+        List<Map<String, Object>> feeTypeChartData = feeTypeSummaries.stream()
+                .map(summary -> Map.<String, Object>of(
+                        "label", summary.displayName(),
+                        "count", summary.feeCount(),
+                        "unpaidCount", summary.unpaidCount(),
+                        "totalAmount", summary.totalAmount(),
+                        "unpaidAmount", summary.unpaidAmount()
+                ))
+                .toList();
+
+        List<Map<String, Object>> buildingOccupancyChartData = buildingSummaries.stream()
+                .map(summary -> Map.<String, Object>of(
+                        "label", summary.code() != null ? summary.code() : summary.name(),
+                        "name", summary.name(),
+                        "rate", summary.occupancyRate(),
+                        "capacity", summary.capacity(),
+                        "occupied", summary.occupiedBeds()
+                ))
+                .toList();
+
         model.addAttribute("buildingSummaries", buildingSummaries);
         model.addAttribute("buildingCount", buildingSummaries.size());
         model.addAttribute("studentCount", studentService.countStudents());
@@ -131,6 +160,9 @@ public class ReportController {
         model.addAttribute("outstandingRevenue", outstandingRevenue);
         model.addAttribute("feeTypeSummaries", feeTypeSummaries);
         model.addAttribute("feeScopeSummaries", feeScopeSummaries);
+        model.addAttribute("feeScopeChartData", feeScopeChartData);
+        model.addAttribute("feeTypeChartData", feeTypeChartData);
+        model.addAttribute("buildingOccupancyChartData", buildingOccupancyChartData);
 
         return "reports/overview";
     }

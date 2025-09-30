@@ -13,12 +13,38 @@
         <div class="form-container">
         <h2 th:text="${fee.id} ? 'Sửa Phí' : 'Thêm Phí'"></h2>
         <form th:action="${fee.id} ? @{/fees/{id}(id=${fee.id})} : @{/fees}" th:object="${fee}" method="post">
-            <div class="form-group">
+            <div class="form-group" id="contractGroup">
                 <label for="contractInput">Hợp Đồng</label>
                 <input type="text" id="contractInput" list="contractOptions" autocomplete="off"
                        th:value="${fee.contract != null && fee.contract.student != null ? fee.contract.id + ' - ' + fee.contract.student.code + ' - ' + fee.contract.student.name : ''}">
                 <datalist id="contractOptions"></datalist>
                 <input type="hidden" id="contractId" th:field="*{contract.id}">
+            </div>
+            <div id="roomScopeFields" class="form-group-grid" hidden
+                 th:attr="data-selected-building=${fee.contract != null && fee.contract.room != null && fee.contract.room.building != null ? fee.contract.room.building.id : ''},
+                          data-selected-room=${fee.contract != null && fee.contract.room != null ? fee.contract.room.id : ''},
+                          data-selected-contract=${fee.contract != null ? fee.contract.id : ''}">
+                <div class="form-group">
+                    <label for="buildingSelect">Tòa nhà</label>
+                    <select id="buildingSelect">
+                        <option value="">-- Chọn tòa --</option>
+                    </select>
+                    <small class="form-hint">Chọn tòa nhà để hiển thị các phòng tương ứng.</small>
+                </div>
+                <div class="form-group">
+                    <label for="roomSelect">Phòng</label>
+                    <select id="roomSelect" disabled>
+                        <option value="">-- Chọn phòng --</option>
+                    </select>
+                    <small class="form-hint">Chọn phòng áp dụng để hệ thống phân bổ cho các hợp đồng trong phòng.</small>
+                </div>
+                <div class="form-group">
+                    <label for="roomContractSelect">Hợp đồng đại diện</label>
+                    <select id="roomContractSelect" disabled>
+                        <option value="">-- Chọn sinh viên --</option>
+                    </select>
+                    <small class="form-hint">Chọn một hợp đồng trong phòng làm cơ sở phân bổ phí.</small>
+                </div>
             </div>
             <div class="form-group">
                 <label for="type">Loại Phí</label>
@@ -68,6 +94,16 @@
         const cInput = document.getElementById('contractInput');
         const cList = document.getElementById('contractOptions');
         const cHidden = document.getElementById('contractId');
+        const scopeSelect = document.getElementById('scope');
+        const contractGroup = document.getElementById('contractGroup');
+        const roomScopeFields = document.getElementById('roomScopeFields');
+        const buildingSelect = document.getElementById('buildingSelect');
+        const roomSelect = document.getElementById('roomSelect');
+        const roomContractSelect = document.getElementById('roomContractSelect');
+
+        const selectedBuildingId = roomScopeFields.dataset.selectedBuilding;
+        const selectedRoomId = roomScopeFields.dataset.selectedRoom;
+        const selectedContractId = roomScopeFields.dataset.selectedContract;
 
         function fetchContracts(q) {
             if (!q) { cList.innerHTML = ''; return; }
@@ -84,6 +120,96 @@
                 });
         }
 
+        function toggleScopeFields() {
+            const isRoomScope = scopeSelect.value === 'ROOM';
+            contractGroup.hidden = isRoomScope;
+            roomScopeFields.hidden = !isRoomScope;
+            buildingSelect.required = isRoomScope;
+            roomSelect.required = isRoomScope;
+            roomContractSelect.required = isRoomScope;
+            if (!isRoomScope) {
+                buildingSelect.value = '';
+                roomSelect.innerHTML = '<option value="">-- Chọn phòng --</option>';
+                roomSelect.disabled = true;
+                roomContractSelect.innerHTML = '<option value="">-- Chọn sinh viên --</option>';
+                roomContractSelect.disabled = true;
+            } else {
+                cHidden.value = '';
+            }
+        }
+
+        function loadBuildings() {
+            fetch('/buildings/options')
+                .then(r => r.json())
+                .then(data => {
+                    buildingSelect.innerHTML = '<option value="">-- Chọn tòa --</option>';
+                    data.forEach(building => {
+                        const option = document.createElement('option');
+                        option.value = building.id;
+                        option.textContent = building.code ? `${building.code} - ${building.name}` : building.name;
+                        buildingSelect.appendChild(option);
+                    });
+                    if (selectedBuildingId) {
+                        buildingSelect.value = selectedBuildingId;
+                        loadRooms(selectedBuildingId, selectedRoomId, selectedContractId);
+                    }
+                });
+        }
+
+        function loadRooms(buildingId, roomIdToSelect, contractIdToSelect) {
+            if (!buildingId) {
+                roomSelect.innerHTML = '<option value="">-- Chọn phòng --</option>';
+                roomSelect.disabled = true;
+                roomContractSelect.innerHTML = '<option value="">-- Chọn sinh viên --</option>';
+                roomContractSelect.disabled = true;
+                return;
+            }
+            fetch(`/rooms/by-building/${buildingId}`)
+                .then(r => r.json())
+                .then(data => {
+                    roomSelect.innerHTML = '<option value="">-- Chọn phòng --</option>';
+                    data.forEach(room => {
+                        const option = document.createElement('option');
+                        option.value = room.id;
+                        option.textContent = `Phòng ${room.number}`;
+                        roomSelect.appendChild(option);
+                    });
+                    roomSelect.disabled = false;
+                    if (roomIdToSelect) {
+                        roomSelect.value = roomIdToSelect;
+                        loadRoomContracts(roomIdToSelect, contractIdToSelect);
+                    }
+                });
+        }
+
+        function loadRoomContracts(roomId, contractIdToSelect) {
+            if (!roomId) {
+                roomContractSelect.innerHTML = '<option value="">-- Chọn sinh viên --</option>';
+                roomContractSelect.disabled = true;
+                cHidden.value = '';
+                return;
+            }
+            fetch(`/contracts/by-room/${roomId}`)
+                .then(r => r.json())
+                .then(data => {
+                    roomContractSelect.innerHTML = '<option value="">-- Chọn sinh viên --</option>';
+                    data.forEach(contract => {
+                        const option = document.createElement('option');
+                        option.value = contract.id;
+                        option.textContent = contract.label;
+                        roomContractSelect.appendChild(option);
+                    });
+                    roomContractSelect.disabled = data.length === 0;
+                    if (data.length === 0) {
+                        roomContractSelect.insertAdjacentHTML('beforeend', '<option value="" disabled>Phòng chưa có hợp đồng</option>');
+                    }
+                    if (contractIdToSelect) {
+                        roomContractSelect.value = contractIdToSelect;
+                        cHidden.value = contractIdToSelect;
+                    }
+                });
+        }
+
         cInput.addEventListener('input', () => {
             fetchContracts(cInput.value);
             const opt = Array.from(cList.options).find(o => o.value === cInput.value);
@@ -94,6 +220,34 @@
             cHidden.value = opt ? opt.dataset.id : '';
         });
         if (cInput.value) { fetchContracts(cInput.value); }
+
+        scopeSelect.addEventListener('change', () => {
+            toggleScopeFields();
+            if (scopeSelect.value === 'ROOM' && buildingSelect.options.length <= 1) {
+                loadBuildings();
+            }
+        });
+
+        buildingSelect.addEventListener('change', () => {
+            cHidden.value = '';
+            roomContractSelect.value = '';
+            loadRooms(buildingSelect.value, null, null);
+        });
+
+        roomSelect.addEventListener('change', () => {
+            cHidden.value = '';
+            roomContractSelect.value = '';
+            loadRoomContracts(roomSelect.value, null);
+        });
+
+        roomContractSelect.addEventListener('change', () => {
+            cHidden.value = roomContractSelect.value;
+        });
+
+        toggleScopeFields();
+        if (scopeSelect.value === 'ROOM') {
+            loadBuildings();
+        }
         /*]]>*/
     </script>
 </body>

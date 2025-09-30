@@ -151,5 +151,22 @@ public class ContractController {
                 .toList();
     }
 
+    @GetMapping(value = "/by-room/{roomId}", produces = "application/json")
+    @ResponseBody
+    public List<Map<String, Object>> contractsByRoom(@PathVariable("roomId") Long roomId) {
+        return contractService.getContractsByRoom(roomId).stream()
+                .map(contract -> {
+                    String label = contract.getStudent() != null
+                            ? contract.getStudent().getCode() + " - " + contract.getStudent().getName()
+                            : "Hợp đồng #" + contract.getId();
+                    return Map.<String, Object>of(
+                            "id", contract.getId(),
+                            "label", label,
+                            "roomId", contract.getRoom() != null ? contract.getRoom().getId() : null
+                    );
+                })
+                .toList();
+    }
+
     // search handled by listContracts
 }
