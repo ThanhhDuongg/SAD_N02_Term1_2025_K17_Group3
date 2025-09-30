@@ -10,4 +10,8 @@ public interface DormRegistrationRequestRepository extends JpaRepository<DormReg
     List<DormRegistrationRequest> findByStudentIdOrderByCreatedAtDesc(Long studentId);
     List<DormRegistrationRequest> findAllByOrderByCreatedAtDesc();
     List<DormRegistrationRequest> findByStatusOrderByCreatedAtDesc(DormRegistrationStatus status);
+    List<DormRegistrationRequest> findByPeriodIdOrderByCreatedAtDesc(Long periodId);
+    List<DormRegistrationRequest> findByPeriodIdAndStatusOrderByCreatedAtDesc(Long periodId, DormRegistrationStatus status);
+    boolean existsByStudentIdAndPeriodId(Long studentId, Long periodId);
+    long countByPeriodId(Long periodId);
 }

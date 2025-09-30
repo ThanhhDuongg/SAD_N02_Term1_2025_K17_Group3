@@ -1,7 +1,9 @@
 package com.example.dorm.controller;
 
+import com.example.dorm.model.DormRegistrationPeriod;
 import com.example.dorm.model.DormRegistrationRequest;
 import com.example.dorm.model.DormRegistrationStatus;
+import com.example.dorm.service.DormRegistrationPeriodService;
 import com.example.dorm.service.DormRegistrationRequestService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,9 +22,12 @@ import java.util.List;
 public class DormRegistrationRequestController {
 
     private final DormRegistrationRequestService dormRegistrationRequestService;
+    private final DormRegistrationPeriodService dormRegistrationPeriodService;
 
-    public DormRegistrationRequestController(DormRegistrationRequestService dormRegistrationRequestService) {
+    public DormRegistrationRequestController(DormRegistrationRequestService dormRegistrationRequestService,
+                                            DormRegistrationPeriodService dormRegistrationPeriodService) {
         this.dormRegistrationRequestService = dormRegistrationRequestService;
+        this.dormRegistrationPeriodService = dormRegistrationPeriodService;
     }
 
     @ModelAttribute("statusOptions")
@@ -32,12 +37,17 @@ public class DormRegistrationRequestController {
 
     @GetMapping
     public String list(@RequestParam(value = "status", required = false) String status,
+                       @RequestParam(value = "periodId", required = false) Long periodId,
                        @RequestParam(value = "query", required = false) String keyword,
                        Model model) {
-        List<DormRegistrationRequest> requests = dormRegistrationRequestService.findAll(status, keyword);
+        List<DormRegistrationRequest> requests = dormRegistrationRequestService.findAll(periodId, status, keyword);
+        List<DormRegistrationPeriod> periods = dormRegistrationPeriodService.findAll();
         model.addAttribute("requests", requests);
         model.addAttribute("selectedStatus", status != null ? status.toUpperCase() : "");
         model.addAttribute("searchQuery", keyword != null ? keyword : "");
+        model.addAttribute("periods", periods);
+        model.addAttribute("selectedPeriodId", periodId);
+        model.addAttribute("activePeriod", dormRegistrationPeriodService.getOpenPeriod().orElse(null));
         return "registrations/list";
     }
 

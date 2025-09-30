@@ -16,6 +16,11 @@
             <div>
                 <h1>Gửi yêu cầu đăng ký KTX</h1>
                 <p class="text-muted">Chia sẻ nhu cầu ở ký túc xá để ban quản lý xem xét sắp xếp</p>
+                <div class="status-banner" th:if="${activeRegistrationPeriod != null}">
+                    <strong th:text="${activeRegistrationPeriod.name}"></strong>
+                    <span th:text="${activeRegistrationPeriod.endTime != null ? ' • Kết thúc: ' + #temporals.format(activeRegistrationPeriod.endTime, 'dd/MM/yyyy HH:mm') : ' • Chưa có thời gian kết thúc'}"></span>
+                    <span th:if="${activeRegistrationPeriod.capacity != null}" th:text="${' • Chỉ tiêu: ' + activeRegistrationPeriod.capacity}"></span>
+                </div>
             </div>
         </div>
 

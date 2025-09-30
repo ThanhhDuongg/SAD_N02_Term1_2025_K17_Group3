@@ -27,6 +27,7 @@ public class DemoDataInitializer implements ApplicationRunner {
     private final MaintenanceRequestRepository maintenanceRequestRepository;
     private final ViolationRepository violationRepository;
     private final DormRegistrationRequestRepository dormRegistrationRequestRepository;
+    private final DormRegistrationPeriodRepository dormRegistrationPeriodRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DemoDataInitializer(RoleRepository roleRepository,
@@ -38,6 +39,7 @@ public class DemoDataInitializer implements ApplicationRunner {
                                MaintenanceRequestRepository maintenanceRequestRepository,
                                ViolationRepository violationRepository,
                                DormRegistrationRequestRepository dormRegistrationRequestRepository,
+                               DormRegistrationPeriodRepository dormRegistrationPeriodRepository,
                                PasswordEncoder passwordEncoder) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
@@ -48,6 +50,7 @@ public class DemoDataInitializer implements ApplicationRunner {
         this.maintenanceRequestRepository = maintenanceRequestRepository;
         this.violationRepository = violationRepository;
         this.dormRegistrationRequestRepository = dormRegistrationRequestRepository;
+        this.dormRegistrationPeriodRepository = dormRegistrationPeriodRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -97,9 +100,25 @@ public class DemoDataInitializer implements ApplicationRunner {
         ensureViolation(sv01, room101, "Tụ tập quá giờ quy định", "MEDIUM", LocalDate.of(2025, 2, 15));
         ensureViolation(sv03, room201, "Không tuân thủ quy định dọn vệ sinh", "LOW", LocalDate.of(2025, 3, 1));
 
-        ensureDormRegistrationRequest(sv01, "Phòng 4 người", null, LocalDate.now().plusWeeks(2),
+        DormRegistrationPeriod currentPeriod = ensureDormRegistrationPeriod(
+                "Đợt đăng ký HK1 2025",
+                LocalDateTime.now().minusDays(3),
+                LocalDateTime.now().plusDays(10),
+                200,
+                "Đợt demo đang mở",
+                DormRegistrationPeriodStatus.OPEN);
+
+        DormRegistrationPeriod closedPeriod = ensureDormRegistrationPeriod(
+                "Đợt đăng ký HK2 2024",
+                LocalDateTime.now().minusMonths(6),
+                LocalDateTime.now().minusMonths(5),
+                150,
+                "Đợt đã kết thúc",
+                DormRegistrationPeriodStatus.CLOSED);
+
+        ensureDormRegistrationRequest(sv01, currentPeriod, "Phòng 4 người", null, LocalDate.now().plusWeeks(2),
                 "Muốn chuyển sang phòng ít người để thuận tiện học nhóm", DormRegistrationStatus.PENDING, null);
-        ensureDormRegistrationRequest(sv03, "Phòng 2 người", "301", LocalDate.now().plusMonths(1),
+        ensureDormRegistrationRequest(sv03, closedPeriod, "Phòng 2 người", "301", LocalDate.now().plusMonths(1),
                 "Cần không gian yên tĩnh để chuẩn bị đồ án", DormRegistrationStatus.NEEDS_UPDATE,
                 "Vui lòng bổ sung giấy xác nhận của khoa");
     }
@@ -309,7 +328,53 @@ public class DemoDataInitializer implements ApplicationRunner {
                 });
     }
 
+    private DormRegistrationPeriod ensureDormRegistrationPeriod(String name,
+                                                                LocalDateTime startTime,
+                                                                LocalDateTime endTime,
+                                                                Integer capacity,
+                                                                String notes,
+                                                                DormRegistrationPeriodStatus status) {
+        return dormRegistrationPeriodRepository.findAll().stream()
+                .filter(period -> period.getName() != null && period.getName().equalsIgnoreCase(name))
+                .findFirst()
+                .map(existing -> {
+                    boolean changed = false;
+                    if (startTime != null && (existing.getStartTime() == null || !existing.getStartTime().equals(startTime))) {
+                        existing.setStartTime(startTime);
+                        changed = true;
+                    }
+                    if (endTime != null && (existing.getEndTime() == null || !existing.getEndTime().equals(endTime))) {
+                        existing.setEndTime(endTime);
+                        changed = true;
+                    }
+                    if (capacity != null && (existing.getCapacity() == null || !existing.getCapacity().equals(capacity))) {
+                        existing.setCapacity(capacity);
+                        changed = true;
+                    }
+                    if (notes != null && (existing.getNotes() == null || !existing.getNotes().equals(notes))) {
+                        existing.setNotes(notes);
+                        changed = true;
+                    }
+                    if (status != null && existing.getStatus() != status) {
+                        existing.setStatus(status);
+                        changed = true;
+                    }
+                    return changed ? dormRegistrationPeriodRepository.save(existing) : existing;
+                })
+                .orElseGet(() -> {
+                    DormRegistrationPeriod period = new DormRegistrationPeriod();
+                    period.setName(name);
+                    period.setStartTime(startTime);
+                    period.setEndTime(endTime);
+                    period.setCapacity(capacity);
+                    period.setNotes(notes);
+                    period.setStatus(status != null ? status : DormRegistrationPeriodStatus.OPEN);
+                    return dormRegistrationPeriodRepository.save(period);
+                });
+    }
+
     private DormRegistrationRequest ensureDormRegistrationRequest(Student student,
+                                                                  DormRegistrationPeriod period,
                                                                   String desiredRoomType,
                                                                   String preferredRoomNumber,
                                                                   LocalDate expectedMoveInDate,
@@ -321,7 +386,9 @@ public class DemoDataInitializer implements ApplicationRunner {
         }
         return dormRegistrationRequestRepository.findByStudentIdOrderByCreatedAtDesc(student.getId()).stream()
                 .filter(existing -> desiredRoomType != null && desiredRoomType.equals(existing.getDesiredRoomType())
-                        && expectedMoveInDate != null && expectedMoveInDate.equals(existing.getExpectedMoveInDate()))
+                        && expectedMoveInDate != null && expectedMoveInDate.equals(existing.getExpectedMoveInDate())
+                        && ((existing.getPeriod() == null && period == null)
+                        || (existing.getPeriod() != null && period != null && existing.getPeriod().getId().equals(period.getId()))))
                 .findFirst()
                 .map(existing -> {
                     boolean changed = false;
@@ -341,11 +408,16 @@ public class DemoDataInitializer implements ApplicationRunner {
                         existing.setAdminNotes(adminNotes);
                         changed = true;
                     }
+                    if (period != null && (existing.getPeriod() == null || !period.getId().equals(existing.getPeriod().getId()))) {
+                        existing.setPeriod(period);
+                        changed = true;
+                    }
                     return changed ? dormRegistrationRequestRepository.save(existing) : existing;
                 })
                 .orElseGet(() -> {
                     DormRegistrationRequest request = new DormRegistrationRequest();
                     request.setStudent(student);
+                    request.setPeriod(period);
                     request.setDesiredRoomType(desiredRoomType);
                     request.setPreferredRoomNumber(preferredRoomNumber);
                     request.setExpectedMoveInDate(expectedMoveInDate);
