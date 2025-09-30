@@ -1,7 +1,10 @@
 package com.example.dorm.controller;
 
 import com.example.dorm.dto.BuildingSummary;
+import com.example.dorm.dto.FeeScopeSummary;
+import com.example.dorm.dto.FeeTypeSummary;
 import com.example.dorm.model.Fee;
+import com.example.dorm.model.FeeScope;
 import com.example.dorm.model.MaintenanceRequest;
 import com.example.dorm.model.PaymentStatus;
 import com.example.dorm.service.BuildingService;
@@ -70,6 +73,51 @@ public class ReportController {
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        List<FeeTypeSummary> feeTypeSummaries = fees.stream()
+                .filter(fee -> fee.getType() != null)
+                .collect(Collectors.groupingBy(Fee::getType))
+                .entrySet()
+                .stream()
+                .map(entry -> new FeeTypeSummary(
+                        entry.getKey(),
+                        entry.getValue().size(),
+                        entry.getValue().stream()
+                                .map(Fee::getAmount)
+                                .filter(Objects::nonNull)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add),
+                        entry.getValue().stream()
+                                .filter(fee -> fee.getPaymentStatus() == PaymentStatus.UNPAID)
+                                .count(),
+                        entry.getValue().stream()
+                                .filter(fee -> fee.getPaymentStatus() == PaymentStatus.UNPAID)
+                                .map(Fee::getAmount)
+                                .filter(Objects::nonNull)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add)))
+                .sorted(Comparator.comparing(summary -> summary.type().name()))
+                .toList();
+
+        List<FeeScopeSummary> feeScopeSummaries = fees.stream()
+                .collect(Collectors.groupingBy(fee -> {
+                    FeeScope scope = fee.getScope();
+                    return scope != null ? scope : FeeScope.INDIVIDUAL;
+                }))
+                .entrySet()
+                .stream()
+                .map(entry -> new FeeScopeSummary(
+                        entry.getKey(),
+                        entry.getValue().size(),
+                        entry.getValue().stream()
+                                .map(Fee::getAmount)
+                                .filter(Objects::nonNull)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add),
+                        entry.getValue().stream()
+                                .filter(fee -> fee.getPaymentStatus() == PaymentStatus.UNPAID)
+                                .map(Fee::getAmount)
+                                .filter(Objects::nonNull)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add)))
+                .sorted(Comparator.comparing(summary -> summary.scope().name()))
+                .toList();
+
         model.addAttribute("buildingSummaries", buildingSummaries);
         model.addAttribute("buildingCount", buildingSummaries.size());
         model.addAttribute("studentCount", studentService.countStudents());
@@ -81,6 +129,8 @@ public class ReportController {
         model.addAttribute("totalRequests", allRequests.size());
         model.addAttribute("totalRevenue", totalRevenue);
         model.addAttribute("outstandingRevenue", outstandingRevenue);
+        model.addAttribute("feeTypeSummaries", feeTypeSummaries);
+        model.addAttribute("feeScopeSummaries", feeScopeSummaries);
 
         return "reports/overview";
     }

@@ -1,6 +1,7 @@
 package com.example.dorm.controller;
 
 import com.example.dorm.model.Fee;
+import com.example.dorm.model.FeeScope;
 import com.example.dorm.service.ContractService;
 import com.example.dorm.service.FeeService;
 import com.example.dorm.util.PageUtils;
@@ -47,8 +48,11 @@ public class FeeController {
 
     @GetMapping("/new")
     public String showCreateForm(Model model) {
-        model.addAttribute("fee", new Fee());
+        Fee fee = new Fee();
+        fee.setScope(FeeScope.INDIVIDUAL);
+        model.addAttribute("fee", fee);
         model.addAttribute("contracts", contractService.getAllContracts());
+        model.addAttribute("amountInputValue", "");
         return "fees/form";
     }
 
@@ -58,11 +62,15 @@ public class FeeController {
                             BindingResult result, RedirectAttributes redirectAttributes, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("contracts", contractService.getAllContracts());
+            model.addAttribute("amountInputValue", amountInput);
             return "fees/form";
         }
         try {
-            fee.setAmount(parseAmount(amountInput));
-            feeService.createFee(fee);
+            BigDecimal totalAmount = parseAmount(amountInput);
+            if (fee.getScope() == null) {
+                fee.setScope(FeeScope.INDIVIDUAL);
+            }
+            feeService.createFee(fee, totalAmount);
             redirectAttributes.addFlashAttribute("message", "Thêm phí thành công!");
             redirectAttributes.addFlashAttribute("alertClass", "alert-success");
         } catch (Exception e) {
@@ -84,8 +92,13 @@ public class FeeController {
     public String showUpdateForm(@PathVariable("id") Long id, Model model) {
         Fee fee = feeService.getFee(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phí với ID: " + id));
+        if (fee.getScope() == null) {
+            fee.setScope(FeeScope.INDIVIDUAL);
+        }
         model.addAttribute("fee", fee);
         model.addAttribute("contracts", contractService.getAllContracts());
+        BigDecimal displayAmount = fee.getScope() == FeeScope.ROOM ? fee.getTotalAmount() : fee.getAmount();
+        model.addAttribute("amountInputValue", formatAmount(displayAmount));
         return "fees/form";
     }
 
@@ -96,11 +109,15 @@ public class FeeController {
                             BindingResult result, RedirectAttributes redirectAttributes, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("contracts", contractService.getAllContracts());
+            model.addAttribute("amountInputValue", amountInput);
             return "fees/form";
         }
         try {
-            fee.setAmount(parseAmount(amountInput));
-            feeService.updateFee(id, fee);
+            BigDecimal totalAmount = parseAmount(amountInput);
+            if (fee.getScope() == null) {
+                fee.setScope(FeeScope.INDIVIDUAL);
+            }
+            feeService.updateFee(id, fee, totalAmount);
             redirectAttributes.addFlashAttribute("message", "Cập nhật phí thành công!");
             redirectAttributes.addFlashAttribute("alertClass", "alert-success");
         } catch (Exception e) {
@@ -116,6 +133,13 @@ public class FeeController {
         }
         String normalized = input.replace(".", "");
         return new BigDecimal(normalized);
+    }
+
+    private String formatAmount(BigDecimal amount) {
+        if (amount == null) {
+            return "";
+        }
+        return String.format("%,d", amount.longValue()).replace(',', '.');
     }
 
     @GetMapping("/{id}/delete")

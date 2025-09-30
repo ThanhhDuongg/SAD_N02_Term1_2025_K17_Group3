@@ -52,6 +52,57 @@
             </div>
         </div>
 
+        <h3>Thống kê phí</h3>
+        <div class="responsive-table">
+            <table>
+                <thead>
+                <tr>
+                    <th>Phạm vi</th>
+                    <th>Số khoản</th>
+                    <th>Tổng cần thu</th>
+                    <th>Còn chưa thu</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="summary : ${feeScopeSummaries}">
+                    <td th:text="${summary.displayName()}"></td>
+                    <td th:text="${summary.feeCount()}"></td>
+                    <td th:text="${#numbers.formatDecimal(summary.totalAmount(), 0, 0)} + ' ₫'"></td>
+                    <td th:text="${#numbers.formatDecimal(summary.unpaidAmount(), 0, 0)} + ' ₫'"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(feeScopeSummaries)}">
+                    <td colspan="4">Chưa có dữ liệu phí theo phạm vi.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="responsive-table">
+            <table>
+                <thead>
+                <tr>
+                    <th>Loại phí</th>
+                    <th>Số khoản</th>
+                    <th>Tổng cần thu</th>
+                    <th>Số khoản chưa thu</th>
+                    <th>Còn chưa thu</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="summary : ${feeTypeSummaries}">
+                    <td th:text="${summary.displayName()}"></td>
+                    <td th:text="${summary.feeCount()}"></td>
+                    <td th:text="${#numbers.formatDecimal(summary.totalAmount(), 0, 0)} + ' ₫'"></td>
+                    <td th:text="${summary.unpaidCount()}"></td>
+                    <td th:text="${#numbers.formatDecimal(summary.unpaidAmount(), 0, 0)} + ' ₫'"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(feeTypeSummaries)}">
+                    <td colspan="5">Chưa có dữ liệu phí theo loại.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
         <h3>Hiệu suất theo tòa</h3>
         <div class="responsive-table">
             <table>

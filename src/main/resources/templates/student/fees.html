@@ -24,6 +24,7 @@
                 <thead>
                 <tr>
                     <th>Loại phí</th>
+                    <th>Phạm vi</th>
                     <th>Số tiền</th>
                     <th>Hạn thanh toán</th>
                     <th>Trạng thái</th>
@@ -32,7 +33,13 @@
                 <tbody>
                 <tr th:each="fee : ${fees}" class="table-row">
                     <td th:text="${fee.type}"></td>
-                    <td th:text="${#numbers.formatCurrency(fee.amount)}"></td>
+                    <td th:text="${fee.scope == null ? 'Cá nhân' : (fee.scope.name() == 'ROOM' ? 'Cả phòng' : 'Cá nhân')}"></td>
+                    <td>
+                        <span th:text="${#numbers.formatCurrency(fee.amount)}"></span>
+                        <div th:if="${fee.scope != null && fee.scope.name() == 'ROOM'}" class="text-muted">
+                            <small>Chia từ tổng <span th:text="${#numbers.formatCurrency(fee.totalAmount)}"></span></small>
+                        </div>
+                    </td>
                     <td th:text="${#temporals.format(fee.dueDate, 'dd/MM/yyyy')}"></td>
                     <td>
                         <span class="badge"
