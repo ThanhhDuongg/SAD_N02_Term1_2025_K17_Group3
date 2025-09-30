@@ -1,6 +1,7 @@
 package com.example.dorm.controller;
 
 import com.example.dorm.model.Contract;
+import com.example.dorm.model.DormRegistrationPeriod;
 import com.example.dorm.model.DormRegistrationRequest;
 import com.example.dorm.model.DormRegistrationStatus;
 import com.example.dorm.model.Fee;
@@ -8,6 +9,7 @@ import com.example.dorm.model.MaintenanceRequest;
 import com.example.dorm.model.Student;
 import com.example.dorm.model.Violation;
 import com.example.dorm.service.ContractService;
+import com.example.dorm.service.DormRegistrationPeriodService;
 import com.example.dorm.service.DormRegistrationRequestService;
 import com.example.dorm.service.FeeService;
 import com.example.dorm.service.MaintenanceRequestService;
@@ -24,6 +26,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -48,19 +51,22 @@ public class StudentPortalController {
     private final MaintenanceRequestService maintenanceRequestService;
     private final ViolationService violationService;
     private final DormRegistrationRequestService dormRegistrationRequestService;
+    private final DormRegistrationPeriodService dormRegistrationPeriodService;
 
     public StudentPortalController(StudentService studentService,
                                    ContractService contractService,
                                    FeeService feeService,
                                    MaintenanceRequestService maintenanceRequestService,
                                    ViolationService violationService,
-                                   DormRegistrationRequestService dormRegistrationRequestService) {
+                                   DormRegistrationRequestService dormRegistrationRequestService,
+                                   DormRegistrationPeriodService dormRegistrationPeriodService) {
         this.studentService = studentService;
         this.contractService = contractService;
         this.feeService = feeService;
         this.maintenanceRequestService = maintenanceRequestService;
         this.violationService = violationService;
         this.dormRegistrationRequestService = dormRegistrationRequestService;
+        this.dormRegistrationPeriodService = dormRegistrationPeriodService;
     }
 
     @ModelAttribute("requestTypes")
@@ -76,6 +82,11 @@ public class StudentPortalController {
     @ModelAttribute("registrationStatuses")
     public DormRegistrationStatus[] registrationStatuses() {
         return DormRegistrationStatus.values();
+    }
+
+    @ModelAttribute("activeRegistrationPeriod")
+    public DormRegistrationPeriod activeRegistrationPeriod() {
+        return dormRegistrationPeriodService.getOpenPeriod().orElse(null);
     }
 
     @GetMapping("/dashboard")
@@ -96,6 +107,9 @@ public class StudentPortalController {
         List<DormRegistrationRequest> registrationRequests = dormRegistrationRequestService.findByStudent(student.getId());
         model.addAttribute("registrationRequests", registrationRequests);
 
+        DormRegistrationPeriod activePeriod = dormRegistrationPeriodService.getOpenPeriod().orElse(null);
+        model.addAttribute("activeRegistrationPeriod", activePeriod);
+
         List<Violation> violations = violationService.getViolationsByStudent(student.getId());
         model.addAttribute("violations", violations);
         model.addAttribute("violationCount", violations.size());
@@ -108,7 +122,7 @@ public class StudentPortalController {
         model.addAttribute("hasHighSeverityViolation", latestHighSeverity.isPresent());
         model.addAttribute("latestHighSeverityViolation", latestHighSeverity.orElse(null));
 
-        List<String> notifications = buildNotifications(unpaidFees, maintenanceRequests, registrationRequests, violations);
+        List<String> notifications = buildNotifications(unpaidFees, maintenanceRequests, registrationRequests, violations, activePeriod);
         model.addAttribute("notifications", notifications);
         model.addAttribute("hasNotifications", !notifications.isEmpty());
 
@@ -158,14 +172,35 @@ public class StudentPortalController {
     public String viewRegistrationRequests(Model model, Authentication authentication) {
         Student student = requireAuthenticatedStudent(authentication);
         model.addAttribute("student", student);
+        DormRegistrationPeriod activePeriod = dormRegistrationPeriodService.getOpenPeriod().orElse(null);
+        model.addAttribute("activeRegistrationPeriod", activePeriod);
+        boolean alreadySubmitted = activePeriod != null &&
+                dormRegistrationRequestService.hasSubmissionInPeriod(student.getId(), activePeriod.getId());
+        model.addAttribute("alreadySubmittedInActivePeriod", alreadySubmitted);
         model.addAttribute("registrationRequests", dormRegistrationRequestService.findByStudent(student.getId()));
         return "student/registration-list";
     }
 
     @GetMapping("/registrations/new")
-    public String newRegistrationRequest(Model model, Authentication authentication) {
+    public String newRegistrationRequest(Model model,
+                                         Authentication authentication,
+                                         RedirectAttributes redirectAttributes) {
         Student student = requireAuthenticatedStudent(authentication);
+        DormRegistrationPeriod activePeriod = dormRegistrationPeriodService.getOpenPeriod().orElse(null);
+        if (activePeriod == null) {
+            redirectAttributes.addFlashAttribute("message", "Hiện chưa có đợt đăng ký KTX nào đang mở.");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-warning");
+            return "redirect:/student/registrations";
+        }
+
+        if (dormRegistrationRequestService.hasSubmissionInPeriod(student.getId(), activePeriod.getId())) {
+            redirectAttributes.addFlashAttribute("message", "Bạn đã gửi đăng ký trong đợt hiện tại. Vui lòng chờ kết quả.");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-info");
+            return "redirect:/student/registrations";
+        }
+
         model.addAttribute("student", student);
+        model.addAttribute("activeRegistrationPeriod", activePeriod);
         DormRegistrationRequest request = new DormRegistrationRequest();
         request.setDesiredRoomType(student.getRoom() != null ? student.getRoom().getType() : null);
         model.addAttribute("registrationRequest", request);
@@ -178,16 +213,14 @@ public class StudentPortalController {
                                             RedirectAttributes redirectAttributes) {
         try {
             Student student = requireAuthenticatedStudent(authentication);
-            request.setStudent(student);
-            request.setStatus(DormRegistrationStatus.PENDING);
-            dormRegistrationRequestService.submitRequest(request);
+            dormRegistrationRequestService.submitRequest(student, request);
             redirectAttributes.addFlashAttribute("message", "Đã gửi yêu cầu đăng ký ký túc xá thành công.");
             redirectAttributes.addFlashAttribute("alertClass", "alert-success");
             return "redirect:/student/registrations";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("message", "Không thể gửi yêu cầu: " + e.getMessage());
             redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
-            return "redirect:/student/dashboard";
+            return "redirect:/student/registrations";
         }
     }
 
@@ -236,7 +269,8 @@ public class StudentPortalController {
     private List<String> buildNotifications(List<Fee> unpaidFees,
                                             List<MaintenanceRequest> requests,
                                             List<DormRegistrationRequest> registrationRequests,
-                                            List<Violation> violations) {
+                                            List<Violation> violations,
+                                            DormRegistrationPeriod activePeriod) {
         List<String> notifications = new ArrayList<>();
         LocalDate today = LocalDate.now();
 
@@ -272,6 +306,19 @@ public class StudentPortalController {
                 .max(Comparator.comparing(this::lastUpdated))
                 .ifPresent(req -> notifications.add("Yêu cầu đăng ký ký túc xá của bạn đã bị từ chối." +
                         (req.getAdminNotes() != null && !req.getAdminNotes().isBlank() ? " Lý do: " + req.getAdminNotes() : "")));
+
+        if (activePeriod != null) {
+            boolean alreadySubmitted = registrationRequests.stream()
+                    .anyMatch(req -> req.getPeriod() != null && req.getPeriod().getId().equals(activePeriod.getId()));
+            if (!alreadySubmitted) {
+                String endTimeText = activePeriod.getEndTime() != null
+                        ? DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(activePeriod.getEndTime())
+                        : "(chưa xác định thời gian kết thúc)";
+                notifications.add("Đợt đăng ký '" + activePeriod.getName() + "' đang mở tới " + endTimeText + ".");
+            } else {
+                notifications.add("Bạn đã gửi đăng ký trong đợt '" + activePeriod.getName() + "'. Theo dõi trạng thái tại mục Đăng ký KTX.");
+            }
+        }
 
         requests.stream()
                 .filter(request -> request.getUpdatedAt() != null && "COMPLETED".equalsIgnoreCase(request.getStatus()))

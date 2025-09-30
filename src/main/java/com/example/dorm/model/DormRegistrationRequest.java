@@ -17,6 +17,10 @@ public class DormRegistrationRequest {
     @JoinColumn(name = "student_id")
     private Student student;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "period_id")
+    private DormRegistrationPeriod period;
+
     @Column(length = 100)
     private String desiredRoomType;
 
@@ -42,6 +46,7 @@ public class DormRegistrationRequest {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = this.createdAt;
         if (this.status == null) {
             this.status = DormRegistrationStatus.PENDING;
         }
@@ -66,6 +71,14 @@ public class DormRegistrationRequest {
 
     public void setStudent(Student student) {
         this.student = student;
+    }
+
+    public DormRegistrationPeriod getPeriod() {
+        return period;
+    }
+
+    public void setPeriod(DormRegistrationPeriod period) {
+        this.period = period;
     }
 
     public String getDesiredRoomType() {

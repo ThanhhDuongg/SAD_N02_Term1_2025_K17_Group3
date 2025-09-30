@@ -1,7 +1,9 @@
 package com.example.dorm.service;
 
+import com.example.dorm.model.DormRegistrationPeriod;
 import com.example.dorm.model.DormRegistrationRequest;
 import com.example.dorm.model.DormRegistrationStatus;
+import com.example.dorm.model.Student;
 import com.example.dorm.repository.DormRegistrationRequestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,15 +17,34 @@ import java.util.stream.Collectors;
 public class DormRegistrationRequestService {
 
     private final DormRegistrationRequestRepository repository;
+    private final DormRegistrationPeriodService periodService;
 
-    public DormRegistrationRequestService(DormRegistrationRequestRepository repository) {
+    public DormRegistrationRequestService(DormRegistrationRequestRepository repository,
+                                          DormRegistrationPeriodService periodService) {
         this.repository = repository;
+        this.periodService = periodService;
     }
 
-    public DormRegistrationRequest submitRequest(DormRegistrationRequest request) {
-        if (request.getStatus() == null) {
-            request.setStatus(DormRegistrationStatus.PENDING);
+    @Transactional
+    public DormRegistrationRequest submitRequest(Student student, DormRegistrationRequest request) {
+        DormRegistrationPeriod period = periodService.getOpenPeriod()
+                .orElseThrow(() -> new IllegalStateException("Hiện chưa có đợt đăng ký nào đang mở."));
+
+        if (repository.existsByStudentIdAndPeriodId(student.getId(), period.getId())) {
+            throw new IllegalStateException("Bạn đã gửi đăng ký trong đợt này. Vui lòng chờ kết quả.");
         }
+
+        if (request.getExpectedMoveInDate() == null) {
+            throw new IllegalArgumentException("Vui lòng chọn ngày dự kiến vào ở.");
+        }
+
+        if (period.getCapacity() != null && periodService.countSubmittedRequests(period.getId()) >= period.getCapacity()) {
+            throw new IllegalStateException("Đợt đăng ký đã đủ số lượng hồ sơ.");
+        }
+
+        request.setStudent(student);
+        request.setPeriod(period);
+        request.setStatus(DormRegistrationStatus.PENDING);
         return repository.save(request);
     }
 
@@ -31,10 +52,16 @@ public class DormRegistrationRequestService {
         return repository.findByStudentIdOrderByCreatedAtDesc(studentId);
     }
 
-    public List<DormRegistrationRequest> findAll(String statusKeyword, String searchKeyword) {
+    public List<DormRegistrationRequest> findAll(Long periodId, String statusKeyword, String searchKeyword) {
         List<DormRegistrationRequest> source;
         DormRegistrationStatus statusFilter = parseStatus(statusKeyword);
-        if (statusFilter != null) {
+        if (periodId != null) {
+            if (statusFilter != null) {
+                source = repository.findByPeriodIdAndStatusOrderByCreatedAtDesc(periodId, statusFilter);
+            } else {
+                source = repository.findByPeriodIdOrderByCreatedAtDesc(periodId);
+            }
+        } else if (statusFilter != null) {
             source = repository.findByStatusOrderByCreatedAtDesc(statusFilter);
         } else {
             source = repository.findAllByOrderByCreatedAtDesc();
@@ -52,6 +79,13 @@ public class DormRegistrationRequestService {
 
     public Optional<DormRegistrationRequest> findById(Long id) {
         return repository.findById(id);
+    }
+
+    public boolean hasSubmissionInPeriod(Long studentId, Long periodId) {
+        if (periodId == null) {
+            return false;
+        }
+        return repository.existsByStudentIdAndPeriodId(studentId, periodId);
     }
 
     @Transactional
@@ -98,6 +132,9 @@ public class DormRegistrationRequestService {
                 contains(request.getStudent().getEmail(), keyword)) {
                 return true;
             }
+        }
+        if (request.getPeriod() != null && contains(request.getPeriod().getName(), keyword)) {
+            return true;
         }
         return contains(request.getDesiredRoomType(), keyword)
                 || contains(request.getPreferredRoomNumber(), keyword)

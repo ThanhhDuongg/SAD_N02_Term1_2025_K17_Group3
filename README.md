@@ -29,6 +29,8 @@ src/main/java/com/example/dorm
 
 Các controller chỉ nhận request và chuyển tiếp tới service. Service thực hiện kiểm tra nghiệp vụ (ví dụ: giới hạn số giường phòng, ràng buộc duy nhất của mã sinh viên, chuẩn hóa mật khẩu dataset) trước khi gọi repository. Lỗi nghiệp vụ sẽ được bắt bởi `GlobalExceptionHandler` và trả về trang lỗi thân thiện.
 
+👉 Tham khảo thêm tài liệu **[Thiết kế luồng đăng ký KTX](docs/ktx-registration-flow.md)** để xem chi tiết quy trình mở đợt, sinh viên nộp đơn và đóng đợt đăng ký trong hệ thống.
+
 ## 🚀 Hướng dẫn chạy ứng dụng
 1. Cài đặt **JDK 21** và **Maven 3.9+**.
 2. (Tuỳ chọn) Đặt biến môi trường `SPRING_PROFILES_ACTIVE=mysql` nếu muốn kết nối MySQL. Cấu hình kết nối nằm trong `application-mysql.properties`.
