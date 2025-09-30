@@ -3,6 +3,7 @@ package com.example.dorm.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.web.multipart.MultipartFile;
 
 public class ProfileForm {
 
@@ -20,6 +21,10 @@ public class ProfileForm {
 
     @Size(max = 255, message = "Địa chỉ không được vượt quá 255 ký tự")
     private String address;
+
+    private transient MultipartFile avatar;
+
+    private String avatarFilename;
 
     public String getUsername() {
         return username;
@@ -59,5 +64,21 @@ public class ProfileForm {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public MultipartFile getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(MultipartFile avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getAvatarFilename() {
+        return avatarFilename;
+    }
+
+    public void setAvatarFilename(String avatarFilename) {
+        this.avatarFilename = avatarFilename;
     }
 }
