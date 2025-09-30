@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng ký ký túc xá</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" referrerpolicy="no-referrer" />
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+<div class="student-layout">
+    <div th:replace="fragments/student-sidebar :: studentSidebar"></div>
+    <div class="student-content">
+        <div class="student-page-header">
+            <div>
+                <h1>Gửi yêu cầu đăng ký KTX</h1>
+                <p class="text-muted">Chia sẻ nhu cầu ở ký túc xá để ban quản lý xem xét sắp xếp</p>
+                <div class="status-banner" th:if="${activeRegistrationPeriod != null}">
+                    <strong th:text="${activeRegistrationPeriod.name}"></strong>
+                    <span th:text="${activeRegistrationPeriod.endTime != null ? ' • Kết thúc: ' + #temporals.format(activeRegistrationPeriod.endTime, 'dd/MM/yyyy HH:mm') : ' • Chưa có thời gian kết thúc'}"></span>
+                    <span th:if="${activeRegistrationPeriod.capacity != null}" th:text="${' • Chỉ tiêu: ' + activeRegistrationPeriod.capacity}"></span>
+                </div>
+            </div>
+        </div>
+
+        <form class="form-grid" th:object="${registrationRequest}" th:action="@{/student/registrations}" method="post">
+            <div class="form-group form-group-full" th:if="${#fields.hasErrors('*')}">
+                <div class="alert alert-danger" th:each="err : ${#fields.errors('*')}" th:text="${err}"></div>
+            </div>
+            <div class="form-group" th:if="${student.room != null}">
+                <label>Phòng hiện tại</label>
+                <input type="text" th:value="${student.room.number}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="desiredRoomType">Loại phòng mong muốn</label>
+                <select id="desiredRoomType" th:field="*{desiredRoomType}" required>
+                    <option value="" disabled selected>Chọn loại phòng</option>
+                    <option th:each="type : ${roomTypeOptions}" th:value="${type}" th:text="${type}"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="preferredRoomNumber">Phòng ưu tiên (nếu có)</label>
+                <input id="preferredRoomNumber" th:field="*{preferredRoomNumber}" placeholder="VD: 201, 3xx...">
+            </div>
+            <div class="form-group">
+                <label for="expectedMoveInDate">Ngày dự kiến vào ở</label>
+                <input id="expectedMoveInDate" type="date" th:field="*{expectedMoveInDate}" required>
+            </div>
+            <div class="form-group form-group-full">
+                <label for="additionalNotes">Ghi chú thêm</label>
+                <textarea id="additionalNotes" th:field="*{additionalNotes}" rows="4" placeholder="Lý do đăng ký hoặc nhu cầu đặc biệt"></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="button btn-add" type="submit">Gửi yêu cầu</button>
+                <a class="button btn-view" th:href="@{/student/registrations}">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

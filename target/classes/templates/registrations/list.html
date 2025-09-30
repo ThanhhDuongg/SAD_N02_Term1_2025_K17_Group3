@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý đăng ký ký túc xá</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+
+<div class="content-with-sidebar">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h2>Yêu cầu đăng ký ký túc xá</h2>
+                <p class="text-muted">Theo dõi và xử lý các yêu cầu đăng ký chỗ ở từ sinh viên</p>
+                <div class="status-banner" th:if="${activePeriod != null}">
+                    <strong th:text="${'Đợt đang mở: ' + activePeriod.name}"></strong>
+                    <span th:text="${activePeriod.endTime != null ? ' • Đóng: ' + #temporals.format(activePeriod.endTime, 'dd/MM/yyyy HH:mm') : ' • Chưa có thời gian đóng'}"></span>
+                    <span th:if="${activePeriod.capacity != null}" th:text="${' • Chỉ tiêu: ' + activePeriod.capacity}"></span>
+                </div>
+                <div class="status-banner warning" th:if="${activePeriod == null}">
+                    Hiện không có đợt đăng ký KTX nào mở. Hãy tạo đợt mới khi sẵn sàng.
+                </div>
+            </div>
+        </div>
+
+        <form class="filter-bar" method="get">
+            <div class="filter-group">
+                <label for="periodId">Đợt đăng ký</label>
+                <select id="periodId" name="periodId">
+                    <option value="">Tất cả</option>
+                    <option th:each="period : ${periods}"
+                            th:value="${period.id}"
+                            th:selected="${selectedPeriodId != null and period.id == selectedPeriodId}"
+                            th:text="${period.name}"></option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="status">Trạng thái</label>
+                <select id="status" name="status">
+                    <option value="">Tất cả</option>
+                    <option th:each="status : ${statusOptions}"
+                            th:value="${status.name()}"
+                            th:selected="${status.name() == selectedStatus}"
+                            th:text="${status.displayName}"></option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="query">Từ khóa</label>
+                <input id="query" name="query" type="text" placeholder="Tên sinh viên, mã số hoặc ghi chú"
+                       th:value="${searchQuery}">
+            </div>
+            <button class="button btn-add" type="submit">Lọc</button>
+        </form>
+
+        <div th:if="${message != null}" th:class="'alert ' + ${alertClass != null ? alertClass : 'alert-info'}" th:text="${message}"></div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Mã yêu cầu</th>
+                    <th>Đợt đăng ký</th>
+                    <th>Sinh viên</th>
+                    <th>Loại phòng</th>
+                    <th>Ngày dự kiến</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày gửi</th>
+                    <th>Cập nhật</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="request : ${requests}" class="table-row">
+                    <td th:text="${request.id}"></td>
+                    <td th:text="${request.period != null ? request.period.name : '-'}"></td>
+                    <td>
+                        <div class="table-meta">
+                            <strong th:text="${request.student != null ? request.student.name : 'Không rõ'}"></strong>
+                            <span class="meta-sub" th:text="${request.student != null ? request.student.code : ''}"></span>
+                        </div>
+                    </td>
+                    <td th:text="${request.desiredRoomType != null ? request.desiredRoomType : '-'}"></td>
+                    <td th:text="${request.expectedMoveInDate != null ? #temporals.format(request.expectedMoveInDate, 'dd/MM/yyyy') : '-'}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${request.status.name() == 'APPROVED' ? ' badge-success' :
+                                              (request.status.name() == 'REJECTED' ? ' badge-danger' :
+                                              (request.status.name() == 'NEEDS_UPDATE' ? ' badge-warning' : ' badge-info'))}"
+                              th:text="${request.status.displayName}">PENDING</span>
+                    </td>
+                    <td th:text="${request.createdAt != null ? #temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                    <td th:text="${request.updatedAt != null ? #temporals.format(request.updatedAt, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                    <td>
+                        <a class="button btn-view" th:href="@{'/registrations/' + ${request.id}}">Xem</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(requests)}">
+                    <td colspan="9" class="text-center">Chưa có yêu cầu nào.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

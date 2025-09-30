@@ -5,7 +5,14 @@
     <div class="profile-page" th:with="displayName=${studentProfile != null && studentProfile.name != null && !#strings.isEmpty(studentProfile.name) ? studentProfile.name : (!#strings.isEmpty(profileForm.fullName) ? profileForm.fullName : profileForm.username)}">
         <section class="profile-card profile-summary">
             <div class="profile-card-main">
-                <div class="profile-avatar-large" th:text="${displayName != null && displayName.length() > 0 ? displayName.substring(0,1).toUpperCase() : 'U'}">U</div>
+                <div class="profile-avatar-large">
+                    <img th:if="${profileForm.avatarFilename != null && !#strings.isEmpty(profileForm.avatarFilename)}"
+                         th:src="@{/uploads/avatars/{file}(file=${profileForm.avatarFilename})}"
+                         alt="Ảnh đại diện"/>
+                    <span class="profile-avatar-placeholder"
+                          th:unless="${profileForm.avatarFilename != null && !#strings.isEmpty(profileForm.avatarFilename)}"
+                          th:text="${displayName != null && displayName.length() > 0 ? displayName.substring(0,1).toUpperCase() : 'U'}">U</span>
+                </div>
                 <div class="profile-card-text">
                     <h2 class="profile-name" th:text="${displayName}">Người dùng</h2>
                     <p class="profile-subtitle" th:text="${isStudent} ? 'Sinh viên ký túc xá Phenikaa' : 'Thành viên hệ thống quản lý'">Sinh viên ký túc xá Phenikaa</p>
@@ -18,7 +25,7 @@
         </section>
 
 
-        <form th:action="@{/account/profile}" th:object="${profileForm}" method="post" class="profile-form">
+        <form th:action="@{/account/profile}" th:object="${profileForm}" method="post" class="profile-form" enctype="multipart/form-data">
             <div class="form-alert form-alert-error" th:if="${#fields.hasGlobalErrors()}">
                 <span th:each="err : ${#fields.globalErrors()}" th:text="${err}"></span>
             </div>
@@ -53,8 +60,29 @@
                     <input id="address" type="text" th:field="*{address}" placeholder="Địa chỉ cư trú hiện tại">
                     <span class="error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
                 </div>
+
+                <div class="input-field" th:classappend="${#fields.hasErrors('avatar')} ? ' has-error'">
+                    <label for="avatar">Ảnh đại diện</label>
+                    <div class="avatar-upload">
+                        <div class="avatar-upload-preview">
+                            <img th:if="${profileForm.avatarFilename != null && !#strings.isEmpty(profileForm.avatarFilename)}"
+                                 th:src="@{/uploads/avatars/{file}(file=${profileForm.avatarFilename})}"
+                                 alt="Ảnh đại diện"/>
+                            <div class="avatar-upload-empty"
+                                 th:unless="${profileForm.avatarFilename != null && !#strings.isEmpty(profileForm.avatarFilename)}">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <div class="avatar-upload-actions">
+                            <input id="avatar" type="file" th:field="*{avatar}" accept="image/*">
+                            <small class="text-muted">Hỗ trợ định dạng JPG, PNG, GIF. Kích thước tối đa 5MB.</small>
+                        </div>
+                    </div>
+                    <span class="error" th:if="${#fields.hasErrors('avatar')}" th:errors="*{avatar}"></span>
+                </div>
             </div>
             <input type="hidden" th:if="${!isStudent}" th:field="*{address}">
+            <input type="hidden" th:field="*{avatarFilename}">
 
             <div class="form-actions profile-actions">
                 <a th:href="${isStudent} ? '/student/profile' : '/dashboard'"

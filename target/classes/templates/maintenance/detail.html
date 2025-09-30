@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Chi tiết yêu cầu</title>
@@ -54,7 +54,7 @@
                           th:text="${request.status}"></span>
                 </p>
                 <p><strong>Người phụ trách:</strong>
-                    <span th:if="${request.handledBy != null}" th:text="${request.handledBy.username}"></span>
+                    <span th:if="${request.handledBy != null}" th:text="${request.handledBy.fullName != null ? request.handledBy.fullName : request.handledBy.username}"></span>
                     <span th:if="${request.handledBy == null}">Chưa phân công</span>
                 </p>
                 <p><strong>Liên hệ:</strong>
@@ -92,6 +92,45 @@
                 </div>
                 <button class="button btn-add" type="submit">Lưu thay đổi</button>
             </form>
+        </div>
+        <div class="detail-grid">
+            <div class="detail-card" sec:authorize="hasRole('ADMIN')">
+                <h3>Phân công nhân viên</h3>
+                <form th:action="@{'/maintenance/' + ${request.id} + '/assign'}" method="post" class="status-form">
+                    <div class="form-group-full">
+                        <label for="assigneeId">Chọn nhân viên hỗ trợ</label>
+                        <select id="assigneeId" name="assigneeId" required>
+                            <option value="">--Chọn nhân viên--</option>
+                            <option th:each="staff : ${staffMembers}"
+                                    th:value="${staff.id}"
+                                    th:text="${staff.fullName != null ? staff.fullName + ' (' + staff.username + ')' : staff.username}"
+                                    th:selected="${request.handledBy != null and staff.id.equals(request.handledBy.id)}"></option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button class="button btn-save" type="submit">Phân công</button>
+                        <button class="button btn-cancel" type="submit" th:formaction="@{'/maintenance/' + ${request.id} + '/unassign'}"
+                                th:disabled="${request.handledBy == null}"
+                                onclick="return confirm('Xác nhận hủy phân công yêu cầu này?')">Hủy phân công</button>
+                    </div>
+                </form>
+            </div>
+            <div class="detail-card" sec:authorize="hasRole('STAFF')">
+                <h3>Tiếp nhận yêu cầu</h3>
+                <p th:if="${request.handledBy == null}">Yêu cầu chưa có người xử lý, bạn có thể nhấn nút bên dưới để tiếp nhận.</p>
+                <p th:if="${request.handledBy != null}" th:text="${'Đang được xử lý bởi: ' + (request.handledBy.fullName != null ? request.handledBy.fullName : request.handledBy.username)}"></p>
+                <div class="form-actions">
+                    <form th:if="${request.handledBy == null or request.handledBy.username == #authentication?.name}" th:action="@{'/maintenance/' + ${request.id} + '/accept'}" method="post">
+                        <button class="button btn-save" type="submit"
+                                th:disabled="${request.handledBy != null and request.handledBy.username == #authentication?.name}">
+                            Tôi sẽ xử lý
+                        </button>
+                    </form>
+                    <form th:if="${request.handledBy != null and request.handledBy.username == #authentication?.name}" th:action="@{'/maintenance/' + ${request.id} + '/unassign'}" method="post">
+                        <button class="button btn-cancel" type="submit" onclick="return confirm('Bạn chắc chắn muốn hủy tiếp nhận yêu cầu này?')">Hủy tiếp nhận</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>

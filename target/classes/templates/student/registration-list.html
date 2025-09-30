@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Yêu cầu đăng ký KTX</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" referrerpolicy="no-referrer" />
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+<div class="student-layout">
+    <div th:replace="fragments/student-sidebar :: studentSidebar"></div>
+    <div class="student-content">
+        <div class="student-page-header">
+            <div>
+                <h1>Yêu cầu đăng ký ký túc xá</h1>
+                <p class="text-muted">Theo dõi trạng thái các yêu cầu đăng ký hoặc chuyển đổi chỗ ở</p>
+                <div class="status-banner" th:if="${activeRegistrationPeriod != null}">
+                    <strong th:text="${activeRegistrationPeriod.name}"></strong>
+                    <span th:text="${activeRegistrationPeriod.endTime != null ? ' • Kết thúc: ' + #temporals.format(activeRegistrationPeriod.endTime, 'dd/MM/yyyy HH:mm') : ' • Chưa có thời gian kết thúc'}"></span>
+                    <span th:if="${activeRegistrationPeriod.capacity != null}" th:text="${' • Chỉ tiêu: ' + activeRegistrationPeriod.capacity}"></span>
+                </div>
+                <div class="status-banner warning" th:if="${activeRegistrationPeriod == null}">
+                    Hiện chưa có đợt đăng ký KTX nào đang mở.
+                </div>
+                <div class="status-banner info" th:if="${alreadySubmittedInActivePeriod}">
+                    Bạn đã gửi đăng ký trong đợt hiện tại. Theo dõi phản hồi ở bảng dưới.
+                </div>
+            </div>
+            <a class="button btn-add" th:href="@{/student/registrations/new}"
+               th:if="${activeRegistrationPeriod != null && !alreadySubmittedInActivePeriod}">
+                <i class="fas fa-plus"></i> Gửi yêu cầu mới
+            </a>
+            <button class="button btn-add" type="button" disabled
+                    th:if="${activeRegistrationPeriod == null || alreadySubmittedInActivePeriod}">
+                <i class="fas fa-plus"></i> Gửi yêu cầu mới
+            </button>
+        </div>
+
+        <div th:if="${message != null}" th:class="'alert ' + ${alertClass != null ? alertClass : 'alert-info'}" th:text="${message}"></div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Đợt đăng ký</th>
+                    <th>Loại phòng</th>
+                    <th>Ngày dự kiến</th>
+                    <th>Ghi chú</th>
+                    <th>Trạng thái</th>
+                    <th>Phản hồi</th>
+                    <th>Ngày gửi</th>
+                    <th>Cập nhật</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="request : ${registrationRequests}">
+                    <td th:text="${request.id}"></td>
+                    <td th:text="${request.period != null ? request.period.name : 'Không xác định'}"></td>
+                    <td th:text="${request.desiredRoomType != null ? request.desiredRoomType : 'Chưa xác định'}"></td>
+                    <td th:text="${request.expectedMoveInDate != null ? #temporals.format(request.expectedMoveInDate, 'dd/MM/yyyy') : '-'}"></td>
+                    <td class="truncate" th:text="${request.additionalNotes != null ? request.additionalNotes : '-'}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${request.status.name() == 'APPROVED' ? ' badge-success' :
+                                              (request.status.name() == 'REJECTED' ? ' badge-danger' :
+                                              (request.status.name() == 'NEEDS_UPDATE' ? ' badge-warning' : ' badge-info'))}"
+                              th:text="${request.status.displayName}">PENDING</span>
+                    </td>
+                    <td class="truncate" th:text="${request.adminNotes != null ? request.adminNotes : '-'}"></td>
+                    <td th:text="${request.createdAt != null ? #temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                    <td th:text="${request.updatedAt != null ? #temporals.format(request.updatedAt, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(registrationRequests)}">
+                    <td colspan="9" class="text-center">Bạn chưa gửi yêu cầu nào.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

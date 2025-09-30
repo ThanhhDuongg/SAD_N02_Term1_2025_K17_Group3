@@ -26,6 +26,18 @@ CREATE TABLE student (
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- ============================================
+-- TABLE: BUILDING
+-- ============================================
+CREATE TABLE building (
+                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                          code VARCHAR(50) UNIQUE NOT NULL,
+                          name VARCHAR(255) NOT NULL,
+                          address VARCHAR(255),
+                          description TEXT,
+                          total_floors INT
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ============================================
 -- TABLE: ROOM
 -- ============================================
 CREATE TABLE room (
@@ -33,7 +45,9 @@ CREATE TABLE room (
                       number    VARCHAR(50) UNIQUE NOT NULL,
                       type      VARCHAR(50),
                       capacity  INT NOT NULL,
-                      price     DECIMAL(10,2) DEFAULT 0.00 -- Suggest: Add CHECK (capacity > 0) if supported
+                      price     DECIMAL(10,2) DEFAULT 0.00,
+                      building_id BIGINT,
+                      CONSTRAINT fk_room_building FOREIGN KEY (building_id) REFERENCES building(id) ON DELETE SET NULL
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- ============================================
@@ -111,9 +125,30 @@ CREATE TABLE maintenance_request (
                                      request_type VARCHAR(50),
                                      desired_room_number VARCHAR(50),
                                      status VARCHAR(50),
+                                     resolution_notes TEXT,
+                                     handled_by_id BIGINT,
                                      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                                     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                                      FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
-                                     FOREIGN KEY (room_id) REFERENCES room(id) ON DELETE SET NULL
+                                     FOREIGN KEY (room_id) REFERENCES room(id) ON DELETE SET NULL,
+                                     FOREIGN KEY (handled_by_id) REFERENCES users(id) ON DELETE SET NULL
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLE: DORM_REGISTRATION_REQUEST
+-- ============================================
+CREATE TABLE dorm_registration_request (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    student_id BIGINT,
+    desired_room_type VARCHAR(100),
+    preferred_room_number VARCHAR(50),
+    expected_move_in_date DATE,
+    additional_notes TEXT,
+    status VARCHAR(50),
+    admin_notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL,
+    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- ============================================
@@ -176,12 +211,17 @@ INSERT INTO student (code, name, dob, gender, phone, address, email, department,
 -- ============================================
 -- SAMPLE DATA: ROOM
 -- ============================================
-INSERT INTO room (number, type, capacity, price) VALUES
-                                                     ('101', 'Phòng tám', 8, 1200000.00),
-                                                     ('102', 'Phòng tám', 8, 1200000.00),
-                                                     ('201', 'Phòng bốn', 4, 2000000.00),
-                                                     ('202', 'Phòng bốn', 4, 2000000.00),
-                                                     ('301', 'Phòng đôi', 2, 2500000.00);
+-- Danh sách tòa nhà mẫu
+INSERT INTO building (code, name, address, description, total_floors) VALUES
+                                                                         ('A', 'Tòa A', 'Khuôn viên chính', 'Khu dành cho sinh viên năm nhất', 6),
+                                                                         ('B', 'Tòa B', 'Khuôn viên chính', 'Khu tiêu chuẩn dành cho sinh viên năm hai', 5);
+
+INSERT INTO room (number, type, capacity, price, building_id) VALUES
+                                                                  ('101', 'Phòng tám', 8, 1200000.00, (SELECT id FROM building WHERE code = 'A')),
+                                                                  ('102', 'Phòng tám', 8, 1200000.00, (SELECT id FROM building WHERE code = 'A')),
+                                                                  ('201', 'Phòng bốn', 4, 2000000.00, (SELECT id FROM building WHERE code = 'B')),
+                                                                  ('202', 'Phòng bốn', 4, 2000000.00, (SELECT id FROM building WHERE code = 'B')),
+                                                                  ('301', 'Phòng đôi', 2, 2500000.00, (SELECT id FROM building WHERE code = 'B'));
 
 -- ============================================
 -- SAMPLE DATA: CONTRACT
@@ -196,12 +236,22 @@ INSERT INTO contract (student_id, room_id, start_date, end_date, status) VALUES
 -- ============================================
 -- SAMPLE DATA: MAINTENANCE REQUEST
 -- ============================================
-INSERT INTO maintenance_request (student_id, room_id, description, request_type, desired_room_number, status)
+INSERT INTO maintenance_request (student_id, room_id, description, request_type, desired_room_number, status, handled_by_id, resolution_notes)
 VALUES
     ((SELECT id FROM student WHERE code = 'SV01'), (SELECT id FROM room WHERE number = '101'),
-     'Đèn phòng bị hỏng, cần thay mới', 'MAINTENANCE', NULL, 'PENDING'),
+     'Đèn phòng bị hỏng, cần thay mới', 'MAINTENANCE', NULL, 'PENDING', NULL, NULL),
     ((SELECT id FROM student WHERE code = 'SV02'), (SELECT id FROM room WHERE number = '102'),
-     'Xin chuyển sang phòng 201 để học nhóm', 'ROOM_TRANSFER', '201', 'IN_PROGRESS');
+     'Xin chuyển sang phòng 201 để học nhóm', 'ROOM_TRANSFER', '201', 'IN_PROGRESS', (SELECT id FROM users WHERE username = 'staff'), 'Đang liên hệ bố trí phòng phù hợp');
+
+-- ============================================
+-- SAMPLE DATA: DORM REGISTRATION REQUEST
+-- ============================================
+INSERT INTO dorm_registration_request (student_id, desired_room_type, preferred_room_number, expected_move_in_date, additional_notes, status, admin_notes)
+VALUES
+    ((SELECT id FROM student WHERE code = 'SV01'), 'Phòng 4 người', NULL, DATE_ADD(CURDATE(), INTERVAL 14 DAY),
+     'Muốn chuyển sang phòng ít người để thuận tiện học nhóm', 'PENDING', NULL),
+    ((SELECT id FROM student WHERE code = 'SV03'), 'Phòng 2 người', '301', DATE_ADD(CURDATE(), INTERVAL 1 MONTH),
+     'Cần không gian yên tĩnh để chuẩn bị đồ án', 'NEEDS_UPDATE', 'Vui lòng bổ sung giấy xác nhận của khoa');
 
 -- ============================================
 -- SAMPLE DATA: VIOLATION

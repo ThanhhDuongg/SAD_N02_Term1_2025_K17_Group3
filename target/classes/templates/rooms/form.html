@@ -1,28 +1,49 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title th:text="${room.id} ? 'Sửa Phòng' : 'Thêm Phòng'">Thêm Phòng</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script>
-        function updatePriceAndCapacity() {
-            var type = document.getElementById('type').value;
+        function updateDefaults() {
+            var type = document.getElementById('type');
             var priceInput = document.getElementById('price');
             var capacityInput = document.getElementById('capacity');
-            if (!type) {
-                priceInput.value = '';
-                capacityInput.value = '';
+            if (!type || !priceInput || !capacityInput) {
                 return;
             }
-            if (type === 'Phòng bốn') {
-                priceInput.value = 2000000;
+            var selectedType = type.value;
+            if (!selectedType) {
+                return;
+            }
+            if (selectedType === 'Phòng bốn') {
+                if (!priceInput.dataset.manual) {
+                    priceInput.value = 2000000;
+                }
                 capacityInput.value = 4;
-            } else if (type === 'Phòng tám') {
-                priceInput.value = 1200000;
+            } else if (selectedType === 'Phòng tám') {
+                if (!priceInput.dataset.manual) {
+                    priceInput.value = 1200000;
+                }
                 capacityInput.value = 8;
             }
         }
+
+        function markManualPrice() {
+            var priceInput = document.getElementById('price');
+            if (priceInput) {
+                priceInput.dataset.manual = 'true';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var priceInput = document.getElementById('price');
+            if (priceInput) {
+                priceInput.addEventListener('input', markManualPrice);
+            }
+            updateDefaults();
+        });
     </script>
 </head>
 <body>
@@ -31,38 +52,49 @@
 <div class="content-with-sidebar">
     <div class="form-container">
         <h2 th:text="${room.id} ? 'Sửa Phòng' : 'Thêm Phòng'"></h2>
+        <div th:if="${formError}" class="alert alert-danger" th:text="${formError}"></div>
+        <div th:if="${#lists.isEmpty(buildings)}" class="alert alert-warning">
+            Chưa có tòa nhà nào. Vui lòng <a th:href="@{/buildings/new}">thêm tòa nhà</a> trước khi tạo phòng.
+        </div>
         <form th:action="${room.id} ? @{/rooms/{id}(id=${room.id})} : @{/rooms}" th:object="${room}" method="post">
             <div class="form-group">
                 <label for="number">Số Phòng</label>
                 <input type="text" id="number" th:field="*{number}" required>
             </div>
             <div class="form-group">
+                <label for="buildingId">Thuộc tòa</label>
+                <select id="buildingId" name="buildingId" required>
+                    <option value="" th:selected="${selectedBuildingId == null}">--Chọn tòa nhà--</option>
+                    <option th:each="building : ${buildings}"
+                            th:value="${building.id}"
+                            th:text="${building.code + ' - ' + building.name}"
+                            th:selected="${selectedBuildingId != null and selectedBuildingId.equals(building.id)}"></option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label for="type">Loại Phòng</label>
-                <select id="type" th:field="*{type}" onchange="updatePriceAndCapacity()" required>
+                <select id="type" th:field="*{type}" onchange="updateDefaults()" required>
                     <option value="">--Chọn loại phòng--</option>
                     <option value="Phòng bốn">Phòng bốn</option>
                     <option value="Phòng tám">Phòng tám</option>
+                    <option value="Phòng đôi">Phòng đôi</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="capacity">Sức Chứa</label>
-                <input type="number" id="capacity" th:field="*{capacity}" readonly required>
+                <input type="number" id="capacity" th:field="*{capacity}" min="1" required>
             </div>
             <div class="form-group">
-                <label for="price">Giá Phòng</label>
-                <input type="number" id="price" th:field="*{price}" readonly required>
+                <label for="price">Giá Phòng (VNĐ)</label>
+                <input type="number" id="price" th:field="*{price}" min="0" step="1000" required>
+                <small>Giá mặc định sẽ được gợi ý theo loại phòng, quản trị có thể điều chỉnh.</small>
             </div>
             <div class="form-actions">
-                <button type="submit" class="button btn-save">Lưu</button>
+                <button type="submit" class="button btn-save" th:disabled="${#lists.isEmpty(buildings)}">Lưu</button>
                 <a th:href="@{/rooms}" class="button btn-cancel">Hủy</a>
             </div>
         </form>
     </div>
 </div>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        updatePriceAndCapacity();
-    });
-</script>
 </body>
 </html>

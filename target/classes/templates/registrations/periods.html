@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý đợt đăng ký KTX</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div th:replace="~{fragments/header :: popup}"></div>
+
+<div class="content-with-sidebar">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h2>Đợt đăng ký ký túc xá</h2>
+                <p class="text-muted">Mở/đóng đợt đăng ký để sinh viên nộp hồ sơ trong khung thời gian phù hợp</p>
+                <div class="status-banner" th:if="${activePeriod != null}">
+                    <strong th:text="${'Đang mở: ' + activePeriod.name}"></strong>
+                    <span th:text="${activePeriod.startTime != null ? ' • Mở: ' + #temporals.format(activePeriod.startTime, 'dd/MM/yyyy HH:mm') : ''}"></span>
+                    <span th:text="${activePeriod.endTime != null ? ' • Đóng: ' + #temporals.format(activePeriod.endTime, 'dd/MM/yyyy HH:mm') : ' • Chưa đặt thời gian đóng'}"></span>
+                    <span th:if="${activePeriod.capacity != null}" th:text="${' • Chỉ tiêu: ' + activePeriod.capacity}"></span>
+                </div>
+                <div class="status-banner warning" th:if="${activePeriod == null}">
+                    Hiện chưa có đợt đăng ký nào mở.
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${message != null}" th:class="'alert ' + (${alertClass} != null ? ${alertClass} : 'alert-info')" th:text="${message}"></div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Mở đợt đăng ký mới</h3>
+            </div>
+            <div class="card-body">
+                <form class="form-grid" th:object="${periodForm}" method="post">
+                    <div class="form-group">
+                        <label for="name">Tên đợt</label>
+                        <input id="name" type="text" th:field="*{name}" placeholder="Ví dụ: Đợt HK1 2025" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="startTime">Thời gian mở</label>
+                        <input id="startTime" type="datetime-local" th:field="*{startTime}">
+                        <small class="text-muted">Để trống để mở ngay bây giờ</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="endTime">Thời gian đóng</label>
+                        <input id="endTime" type="datetime-local" th:field="*{endTime}">
+                    </div>
+                    <div class="form-group">
+                        <label for="capacity">Chỉ tiêu hồ sơ</label>
+                        <input id="capacity" type="number" min="1" th:field="*{capacity}" placeholder="Ví dụ: 200">
+                    </div>
+                    <div class="form-group form-group-full">
+                        <label for="notes">Ghi chú</label>
+                        <textarea id="notes" rows="2" th:field="*{notes}" placeholder="Thông tin bổ sung cho đợt đăng ký"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button class="button btn-add" type="submit">
+                            <i class="fas fa-door-open"></i> Mở đợt đăng ký
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="table-wrapper" style="margin-top: 2rem;">
+            <table>
+                <thead>
+                <tr>
+                    <th>Tên đợt</th>
+                    <th>Thời gian mở</th>
+                    <th>Thời gian đóng</th>
+                    <th>Chỉ tiêu</th>
+                    <th>Ghi chú</th>
+                    <th>Trạng thái</th>
+                    <th>Hồ sơ đã nhận</th>
+                    <th>Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="period : ${periods}">
+                    <td th:text="${period.name}"></td>
+                    <td th:text="${period.startTime != null ? #temporals.format(period.startTime, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                    <td th:text="${period.endTime != null ? #temporals.format(period.endTime, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                    <td th:text="${period.capacity != null ? period.capacity : '-'}"></td>
+                    <td th:text="${period.notes != null ? period.notes : '-'}" class="truncate"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${period.status.name() == 'OPEN' ? ' badge-success' : (period.status.name() == 'CLOSED' ? ' badge-danger' : ' badge-info')}">
+                            <span th:text="${period.status.displayName}"></span>
+                        </span>
+                    </td>
+                    <td th:text="${period.submittedCount}"></td>
+                    <td>
+                        <form th:if="${period.status.name() == 'OPEN'}" th:action="@{'/registrations/periods/' + ${period.id} + '/close'}" method="post">
+                            <button class="button btn-view" type="submit">
+                                <i class="fas fa-lock"></i> Đóng đợt
+                            </button>
+                        </form>
+                        <span th:if="${period.status.name() != 'OPEN'}" class="text-muted">Không khả dụng</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(periods)}">
+                    <td colspan="8" class="text-center">Chưa có đợt đăng ký nào được tạo.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

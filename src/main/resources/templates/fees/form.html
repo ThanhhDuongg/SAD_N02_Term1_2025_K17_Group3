@@ -29,21 +29,21 @@
                     <select id="buildingSelect">
                         <option value="">-- Chọn tòa --</option>
                     </select>
-                    <small class="form-hint">Chọn tòa nhà để hiển thị các phòng tương ứng.</small>
+
                 </div>
                 <div class="form-group">
                     <label for="roomSelect">Phòng</label>
                     <select id="roomSelect" disabled>
                         <option value="">-- Chọn phòng --</option>
                     </select>
-                    <small class="form-hint">Chọn phòng áp dụng để hệ thống phân bổ cho các hợp đồng trong phòng.</small>
+
                 </div>
                 <div class="form-group">
                     <label for="roomContractSelect">Hợp đồng đại diện</label>
                     <select id="roomContractSelect" disabled>
                         <option value="">-- Chọn sinh viên --</option>
                     </select>
-                    <small class="form-hint">Chọn một hợp đồng trong phòng làm cơ sở phân bổ phí.</small>
+
                 </div>
             </div>
             <div class="form-group">
@@ -62,14 +62,14 @@
                     <option th:value="${T(com.example.dorm.model.FeeScope).INDIVIDUAL}">Cá nhân</option>
                     <option th:value="${T(com.example.dorm.model.FeeScope).ROOM}">Cả phòng</option>
                 </select>
-                <small class="form-hint">Chọn "Cả phòng" để hệ thống tự động chia đều số tiền cho từng thành viên trong phòng.</small>
+
             </div>
             <div class="form-group">
                 <label for="amount">Số Tiền</label>
                 <input type="text" id="amount" name="amountInput"
                        th:value="${amountInputValue}"
                        required>
-                <small class="form-hint">Nhập tổng số tiền cần thu. Nếu chọn "Cả phòng", khoản này sẽ được chia đều cho từng hợp đồng trong phòng.</small>
+
             </div>
             <div class="form-group">
                 <label for="dueDate">Ngày Đáo Hạn</label>
