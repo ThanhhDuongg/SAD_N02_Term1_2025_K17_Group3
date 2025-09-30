@@ -78,7 +78,7 @@ public class DormRegistrationRequestService {
     }
 
     public Optional<DormRegistrationRequest> findById(Long id) {
-        return repository.findById(id);
+        return repository.findWithStudentAndRoomById(id);
     }
 
     public boolean hasSubmissionInPeriod(Long studentId, Long periodId) {

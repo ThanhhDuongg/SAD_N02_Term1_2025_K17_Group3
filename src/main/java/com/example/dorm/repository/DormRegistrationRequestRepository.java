@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface DormRegistrationRequestRepository extends JpaRepository<DormRegistrationRequest, Long> {
 
@@ -26,4 +27,7 @@ public interface DormRegistrationRequestRepository extends JpaRepository<DormReg
 
     boolean existsByStudentIdAndPeriodId(Long studentId, Long periodId);
     long countByPeriodId(Long periodId);
+
+    @EntityGraph(attributePaths = {"period", "student", "student.room"})
+    Optional<DormRegistrationRequest> findWithStudentAndRoomById(Long id);
 }
