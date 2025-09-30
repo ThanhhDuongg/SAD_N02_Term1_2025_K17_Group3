@@ -46,4 +46,6 @@ public interface FeeRepository extends JpaRepository<Fee, Long> {
                                                 Pageable pageable);
 
     Optional<Fee> findByContract_IdAndTypeAndDueDate(Long contractId, FeeType type, LocalDate dueDate);
+
+    java.util.List<Fee> findByGroupCode(String groupCode);
 }

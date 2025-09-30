@@ -593,6 +593,14 @@ h2 {
     color: var(--danger-color);
 }
 
+.form-hint {
+    display: block;
+    margin-left: 120px;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
 .form-group-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

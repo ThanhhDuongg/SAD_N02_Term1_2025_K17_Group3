@@ -269,6 +269,15 @@ public class DemoDataInitializer implements ApplicationRunner {
                     boolean changed = false;
                     if (existing.getAmount() == null || existing.getAmount().compareTo(amount) != 0) {
                         existing.setAmount(amount);
+                        existing.setTotalAmount(amount);
+                        changed = true;
+                    }
+                    if (existing.getScope() == null) {
+                        existing.setScope(FeeScope.INDIVIDUAL);
+                        changed = true;
+                    }
+                    if (existing.getTotalAmount() == null) {
+                        existing.setTotalAmount(amount);
                         changed = true;
                     }
                     if (!status.equals(existing.getPaymentStatus())) {
@@ -282,6 +291,8 @@ public class DemoDataInitializer implements ApplicationRunner {
                     fee.setContract(contract);
                     fee.setType(type);
                     fee.setAmount(amount);
+                    fee.setTotalAmount(amount);
+                    fee.setScope(FeeScope.INDIVIDUAL);
                     fee.setDueDate(dueDate);
                     fee.setPaymentStatus(status);
                     return feeRepository.save(fee);
