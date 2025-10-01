@@ -1,0 +1,10 @@
+```mermaid
+classDiagram
+    class User
+    class Student
+    class ProfileForm
+    class ChangePasswordForm
+    Student "0..1" --> "1" User : đăng nhập
+    ProfileForm ..> User : cập nhật
+    ChangePasswordForm ..> User : đổi mật khẩu
+```

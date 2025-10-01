@@ -1,0 +1,10 @@
+```mermaid
+classDiagram
+    class Student
+    class Room
+    class User
+    class Contract
+    Student "0..1" --> "1" Room : phòng
+    Student "0..1" --> "1" User : tài khoản
+    Contract "*" --> "1" Student : hợp đồng
+```

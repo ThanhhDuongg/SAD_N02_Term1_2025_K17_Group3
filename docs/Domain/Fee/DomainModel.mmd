@@ -1,0 +1,12 @@
+```mermaid
+classDiagram
+    class Fee
+    class Contract
+    class PaymentStatus
+    class FeeType
+    class FeeScope
+    Fee "1" --> "1" Contract
+    Fee --> PaymentStatus
+    Fee --> FeeType
+    Fee --> FeeScope
+```

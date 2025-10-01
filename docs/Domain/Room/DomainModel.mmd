@@ -1,0 +1,11 @@
+```mermaid
+classDiagram
+    class Room
+    class Building
+    class Student
+    class Contract
+    Room "*" --> "1" Building : thuộc
+    Student "*" --> "0..1" Room : ở
+    Contract "*" --> "1" Room : gán phòng
+    Contract "*" --> "1" Student : ký bởi
+```

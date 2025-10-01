@@ -1,0 +1,16 @@
+```mermaid
+classDiagram
+    class Student
+    class Contract
+    class Fee
+    class MaintenanceRequest
+    class DormRegistrationRequest
+    class DormRegistrationPeriod
+    class Violation
+    Contract "*" --> "1" Student
+    Fee "*" --> "1" Contract
+    MaintenanceRequest "*" --> "1" Student
+    DormRegistrationRequest "*" --> "1" Student
+    DormRegistrationRequest "*" --> "1" DormRegistrationPeriod
+    Violation "*" --> "1" Student
+```

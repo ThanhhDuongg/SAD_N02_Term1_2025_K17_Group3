@@ -1,0 +1,19 @@
+```mermaid
+erDiagram
+    BUILDING ||--o{ ROOM : contains
+    ROOM ||--o{ STUDENT : houses
+    STUDENT ||--o{ CONTRACT : signs
+    ROOM ||--o{ CONTRACT : allocates
+    CONTRACT ||--o{ FEE : charges
+    STUDENT ||--o{ FEE : owes
+    STUDENT ||--o{ MAINTENANCEREQUEST : submits
+    ROOM ||--o{ MAINTENANCEREQUEST : location
+    USER ||--o{ MAINTENANCEREQUEST : handles
+    STUDENT ||--o{ VIOLATION : commits
+    ROOM ||--o{ VIOLATION : location
+    USER ||--o{ VIOLATION : createdBy
+    USER }o--o{ ROLE : has
+    STUDENT ||--|| USER : linkedAccount
+    DORMREGISTRATIONPERIOD ||--o{ DORMREGISTRATIONREQUEST : opens
+    STUDENT ||--o{ DORMREGISTRATIONREQUEST : applies
+```
