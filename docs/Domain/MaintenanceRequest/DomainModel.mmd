@@ -1,0 +1,10 @@
+```mermaid
+classDiagram
+    class MaintenanceRequest
+    class Student
+    class Room
+    class User
+    MaintenanceRequest "1" --> "1" Student
+    MaintenanceRequest "0..1" --> "1" Room
+    MaintenanceRequest "0..1" --> "1" User : handledBy
+```

@@ -1,0 +1,10 @@
+```mermaid
+classDiagram
+    class Violation
+    class Student
+    class Room
+    class User
+    Violation "1" --> "1" Student
+    Violation "0..1" --> "1" Room
+    Violation "0..1" --> "1" User : createdBy
+```
