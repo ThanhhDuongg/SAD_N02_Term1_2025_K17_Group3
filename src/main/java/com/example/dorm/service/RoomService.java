@@ -5,6 +5,7 @@ import com.example.dorm.model.Room;
 import com.example.dorm.repository.BuildingRepository;
 import com.example.dorm.repository.RoomRepository;
 import com.example.dorm.repository.StudentRepository;
+import com.example.dorm.repository.ContractRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,13 +21,16 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final StudentRepository studentRepository;
     private final BuildingRepository buildingRepository;
+    private final ContractRepository contractRepository;
 
     public RoomService(RoomRepository roomRepository,
                        StudentRepository studentRepository,
-                       BuildingRepository buildingRepository) {
+                       BuildingRepository buildingRepository,
+                       ContractRepository contractRepository) {
         this.roomRepository = roomRepository;
         this.studentRepository = studentRepository;
         this.buildingRepository = buildingRepository;
+        this.contractRepository = contractRepository;
     }
 
     public Page<Room> getAllRooms(Pageable pageable) {
@@ -77,6 +81,16 @@ public class RoomService {
     }
 
     public void deleteRoom(Long id) {
+        long occupantCount = studentRepository.countByRoom_Id(id);
+        if (occupantCount > 0) {
+            throw new IllegalStateException("Không thể xóa phòng khi vẫn còn sinh viên cư trú");
+        }
+
+        long contractCount = contractRepository.countByRoom_Id(id);
+        if (contractCount > 0) {
+            throw new IllegalStateException("Không thể xóa phòng khi vẫn còn hợp đồng liên kết");
+        }
+
         roomRepository.deleteById(id);
     }
 
