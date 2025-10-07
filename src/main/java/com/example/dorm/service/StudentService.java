@@ -1,9 +1,11 @@
 package com.example.dorm.service;
 
-import com.example.dorm.model.Student;
-import com.example.dorm.repository.StudentRepository;
-import com.example.dorm.repository.RoomRepository;
 import com.example.dorm.model.Room;
+import com.example.dorm.model.RoleName;
+import com.example.dorm.model.Student;
+import com.example.dorm.model.User;
+import com.example.dorm.repository.RoomRepository;
+import com.example.dorm.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Page;
@@ -11,15 +13,26 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Value;
+
+
 @Service
 public class StudentService {
 
     private final StudentRepository studentRepository;
     private final RoomRepository roomRepository;
+    private final UserService userService;
+    private final String defaultStudentPassword;
 
-    public StudentService(StudentRepository studentRepository, RoomRepository roomRepository) {
+    public StudentService(StudentRepository studentRepository,
+                          RoomRepository roomRepository,
+                          UserService userService,
+                          @Value("${app.students.default-password:${app.dataset.default-password:123}}")
+                          String defaultStudentPassword) {
         this.studentRepository = studentRepository;
         this.roomRepository = roomRepository;
+        this.userService = userService;
+        this.defaultStudentPassword = defaultStudentPassword;
     }
 
     public Page<Student> getAllStudents(Pageable pageable) {
@@ -40,6 +53,15 @@ public class StudentService {
     }
 
     public Student saveStudent(Student student) {
+        normalizeStudent(student);
+
+        User existingAccount = null;
+        if (student.getId() != null) {
+            Student persisted = getRequiredStudent(student.getId());
+            existingAccount = persisted.getUser();
+            student.setUser(existingAccount);
+        }
+
         validateUniqueCode(student);
         validateUniqueEmail(student);
 
@@ -48,6 +70,9 @@ public class StudentService {
         } else {
             student.setRoom(null);
         }
+
+        syncStudentAccount(student, existingAccount);
+
         return studentRepository.save(student);
     }
 
@@ -81,17 +106,60 @@ public class StudentService {
     public Student updateContactInfo(Long studentId, String phone, String email, String address) {
         Student student = getRequiredStudent(studentId);
 
-        if (email != null && !email.isBlank()) {
-            student.setEmail(email.trim());
-        } else {
-            student.setEmail(null);
-        }
-        student.setPhone(phone != null && !phone.isBlank() ? phone.trim() : null);
-        student.setAddress(address != null && !address.isBlank() ? address.trim() : null);
+        student.setEmail(email);
+        student.setPhone(phone);
+        student.setAddress(address);
 
+        normalizeStudent(student);
         validateUniqueEmail(student);
+        syncStudentAccount(student, student.getUser());
 
         return studentRepository.save(student);
+    }
+
+    private void normalizeStudent(Student student) {
+        if (student == null) {
+            return;
+        }
+        student.setCode(trimToNull(student.getCode()));
+        student.setName(trimToNull(student.getName()));
+        student.setGender(trimToNull(student.getGender()));
+        student.setPhone(trimToNull(student.getPhone()));
+        student.setAddress(trimToNull(student.getAddress()));
+        student.setDepartment(trimToNull(student.getDepartment()));
+        student.setEmail(normalizeEmail(student.getEmail()));
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String normalizeEmail(String email) {
+        String trimmed = trimToNull(email);
+        return trimmed != null ? trimmed.toLowerCase() : null;
+    }
+
+    private void syncStudentAccount(Student student, User existingAccount) {
+        if (student == null) {
+            return;
+        }
+
+        String email = student.getEmail();
+        if (email == null || email.isBlank()) {
+            throw new IllegalStateException("Sinh viên phải có email để tạo tài khoản đăng nhập");
+        }
+
+        User account = existingAccount;
+        if (account == null) {
+            account = userService.createUser(email, email, defaultStudentPassword, RoleName.ROLE_STUDENT);
+        }
+
+        User updatedAccount = userService.updateStudentAccount(account, email, student.getName(), student.getPhone());
+        student.setUser(updatedAccount);
     }
 
     private void validateUniqueCode(Student student) {

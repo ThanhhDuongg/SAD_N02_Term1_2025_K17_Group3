@@ -6,6 +6,7 @@ import com.example.dorm.repository.ContractRepository;
 import com.example.dorm.repository.StudentRepository;
 import com.example.dorm.repository.RoomRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -107,8 +108,17 @@ public class ContractService {
         return contractRepository.save(existing);
     }
 
+    @Transactional
     public void deleteContract(Long id) {
-        contractRepository.deleteById(id);
+        contractRepository.findById(id).ifPresent(contract -> {
+            if (contract.getStudent() != null) {
+                studentRepository.findById(contract.getStudent().getId()).ifPresent(student -> {
+                    student.setRoom(null);
+                    studentRepository.save(student);
+                });
+            }
+            contractRepository.delete(contract);
+        });
     }
 
     public List<Contract> getContractsByStudent(Long studentId) {

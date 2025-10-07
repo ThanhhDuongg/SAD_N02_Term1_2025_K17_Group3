@@ -31,17 +31,28 @@ public class UserService {
     }
 
     public User createUser(String username, String email, String password, RoleName roleName) {
-        if (userRepository.existsByUsername(username)) {
+        String normalizedUsername = trimToNull(username);
+        String normalizedEmail = normalizeEmail(email);
+
+        if (normalizedUsername == null) {
+            throw new IllegalStateException("Username không được để trống!");
+        }
+
+        if (normalizedEmail == null) {
+            throw new IllegalStateException("Email không được để trống!");
+        }
+
+        if (userRepository.existsByUsername(normalizedUsername)) {
             throw new IllegalStateException("Username đã tồn tại!");
         }
 
-        if (userRepository.existsByEmail(email)) {
+        if (userRepository.existsByEmail(normalizedEmail)) {
             throw new IllegalStateException("Email đã tồn tại!");
         }
 
         User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
+        user.setUsername(normalizedUsername);
+        user.setEmail(normalizedEmail);
         user.setPassword(passwordEncoder.encode(password));
 
         Role userRole = roleRepository.findByName(roleName)
@@ -111,10 +122,19 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User không tìm thấy"));
 
-        user.setEmail(userDetails.getEmail());
+        String normalizedEmail = normalizeEmail(userDetails.getEmail());
+        if (normalizedEmail == null) {
+            throw new IllegalArgumentException("Email không được để trống");
+        }
+        userRepository.findByEmail(normalizedEmail)
+                .filter(existing -> !existing.getId().equals(user.getId()))
+                .ifPresent(existing -> {
+                    throw new IllegalArgumentException("Email đã được sử dụng bởi tài khoản khác");
+                });
+        user.setEmail(normalizedEmail);
         user.setEnabled(userDetails.isEnabled());
-        user.setFullName(userDetails.getFullName());
-        user.setPhone(userDetails.getPhone());
+        user.setFullName(trimToNull(userDetails.getFullName()));
+        user.setPhone(trimToNull(userDetails.getPhone()));
 
         if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
@@ -132,19 +152,20 @@ public class UserService {
             throw new IllegalArgumentException("Không tìm thấy người dùng");
         }
 
-        if (email == null || email.isBlank()) {
+        String normalizedEmail = normalizeEmail(email);
+        if (normalizedEmail == null) {
             throw new IllegalArgumentException("Email không được để trống");
         }
 
-        userRepository.findByEmail(email)
+        userRepository.findByEmail(normalizedEmail)
                 .filter(existing -> !existing.getId().equals(user.getId()))
                 .ifPresent(existing -> {
                     throw new IllegalArgumentException("Email đã được sử dụng bởi tài khoản khác");
                 });
 
-        user.setEmail(email.trim());
-        user.setFullName(fullName != null && !fullName.isBlank() ? fullName.trim() : null);
-        user.setPhone(phone != null && !phone.isBlank() ? phone.trim() : null);
+        user.setEmail(normalizedEmail);
+        user.setFullName(trimToNull(fullName));
+        user.setPhone(trimToNull(phone));
         user.setAvatarFilename(avatarFilename != null && !avatarFilename.isBlank() ? avatarFilename : null);
 
         return userRepository.save(user);
@@ -169,5 +190,48 @@ public class UserService {
 
         user.setRoles(roles);
         userRepository.save(user);
+    }
+
+    public User updateStudentAccount(User user, String email, String fullName, String phone) {
+        if (user == null) {
+            throw new IllegalArgumentException("Không tìm thấy tài khoản sinh viên");
+        }
+
+        String normalizedEmail = normalizeEmail(email);
+        if (normalizedEmail == null) {
+            throw new IllegalArgumentException("Email không được để trống");
+        }
+
+        userRepository.findByUsername(normalizedEmail)
+                .filter(existing -> !existing.getId().equals(user.getId()))
+                .ifPresent(existing -> {
+                    throw new IllegalArgumentException("Username đã được sử dụng bởi tài khoản khác");
+                });
+
+        userRepository.findByEmail(normalizedEmail)
+                .filter(existing -> !existing.getId().equals(user.getId()))
+                .ifPresent(existing -> {
+                    throw new IllegalArgumentException("Email đã được sử dụng bởi tài khoản khác");
+                });
+
+        user.setUsername(normalizedEmail);
+        user.setEmail(normalizedEmail);
+        user.setFullName(trimToNull(fullName));
+        user.setPhone(trimToNull(phone));
+
+        return userRepository.save(user);
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String normalizeEmail(String email) {
+        String trimmed = trimToNull(email);
+        return trimmed != null ? trimmed.toLowerCase() : null;
     }
 }

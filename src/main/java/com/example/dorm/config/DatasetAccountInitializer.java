@@ -26,7 +26,7 @@ public class DatasetAccountInitializer implements ApplicationRunner {
 
     public DatasetAccountInitializer(UserRepository userRepository,
                                      PasswordEncoder passwordEncoder,
-                                     @Value("${app.dataset.default-password:12102005}") String defaultPassword) {
+                                     @Value("${app.dataset.default-password:123}") String defaultPassword) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.defaultPassword = defaultPassword;
