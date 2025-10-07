@@ -7,6 +7,7 @@ import com.example.dorm.model.User;
 import com.example.dorm.repository.RoomRepository;
 import com.example.dorm.repository.StudentRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,14 +53,17 @@ public class StudentService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sinh viên với ID: " + id));
     }
 
+    @Transactional
     public Student saveStudent(Student student) {
         normalizeStudent(student);
 
-        User existingAccount = null;
+        User existingAccount = student.getUser();
         if (student.getId() != null) {
             Student persisted = getRequiredStudent(student.getId());
-            existingAccount = persisted.getUser();
-            student.setUser(existingAccount);
+            if (existingAccount == null) {
+                existingAccount = persisted.getUser();
+                student.setUser(existingAccount);
+            }
         }
 
         validateUniqueCode(student);
@@ -103,6 +107,7 @@ public class StudentService {
         return studentRepository.count();
     }
 
+    @Transactional
     public Student updateContactInfo(Long studentId, String phone, String email, String address) {
         Student student = getRequiredStudent(studentId);
 
