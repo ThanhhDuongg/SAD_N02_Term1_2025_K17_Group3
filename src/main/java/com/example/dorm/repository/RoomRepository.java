@@ -44,15 +44,31 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     List<Room> findByBuilding_IdOrderByNumberAsc(Long buildingId);
 
-    @Query("""
+    // PHƯƠNG THỨC ĐÃ ĐƯỢC SỬA LỖI
+    @Query(value = """
             select r
             from Room r
-            where (:buildingId is null or r.building.id = :buildingId)
+            left join fetch r.building b
+            where (:buildingId is null or b.id = :buildingId)
               and (
                     :search is null
                  or lower(r.number) like lower(concat('%', :search, '%'))
                  or lower(r.type) like lower(concat('%', :search, '%'))
-                 or lower(r.building.name) like lower(concat('%', :search, '%'))
+                 or lower(b.name) like lower(concat('%', :search, '%'))
+                 or lower(b.code) like lower(concat('%', :search, '%'))
+              )
+            """,
+            countQuery = """
+            select count(r.id)
+            from Room r
+            left join r.building b
+            where (:buildingId is null or b.id = :buildingId)
+              and (
+                    :search is null
+                 or lower(r.number) like lower(concat('%', :search, '%'))
+                 or lower(r.type) like lower(concat('%', :search, '%'))
+                 or lower(b.name) like lower(concat('%', :search, '%'))
+                 or lower(b.code) like lower(concat('%', :search, '%'))
               )
             """)
     Page<Room> searchByKeywordAndBuilding(@Param("search") String search,
