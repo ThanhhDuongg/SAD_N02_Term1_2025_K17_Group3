@@ -7,14 +7,8 @@ Sơ đồ dưới đây mô tả cái nhìn tổng quan về các tác nhân ch�
 usecaseDiagram
 
 actor SV as "Sinh viên"
-actor Admin as "Quản trị viên KTX"
-actor StuMgr as "Nhân viên quản lý sinh viên"
-actor ContractStaff as "Nhân viên phụ trách hợp đồng"
-actor Finance as "Nhân viên tài chính"
-actor Tech as "Kỹ thuật viên"
-actor Discipline as "Cán bộ kỷ luật"
-actor SysAdmin as "Quản trị viên hệ thống"
-actor Internal as "Người dùng nội bộ"
+actor Admin as "Quản trị viên"
+actor Staff as "Nhân viên"
 
 rectangle "Quản lý truy cập" {
   usecase UC_Login as "Đăng nhập/Đăng xuất"
@@ -62,46 +56,24 @@ Admin --> UC_OpenReg
 Admin --> UC_ApproveReg
 Admin --> UC_Building
 Admin --> UC_Room
+Admin --> UC_Student
+Admin --> UC_CreateContract
+Admin --> UC_SearchContract
+Admin --> UC_Fee
+Admin --> UC_MaintenanceProcess
+Admin --> UC_Violation
 Admin --> UC_Dashboard
 Admin --> UC_Report
 
-StuMgr --> UC_Login
-StuMgr --> UC_Student
-StuMgr --> UC_Report
-
-ContractStaff --> UC_Login
-ContractStaff --> UC_CreateContract
-ContractStaff --> UC_SearchContract
-ContractStaff --> UC_Report
-
-Finance --> UC_Login
-Finance --> UC_Fee
-Finance --> UC_Report
-
-Tech --> UC_Login
-Tech --> UC_MaintenanceProcess
-
-Discipline --> UC_Login
-Discipline --> UC_Violation
-
-SysAdmin --> UC_Login
-SysAdmin --> UC_Report
-SysAdmin --> UC_Register
-SysAdmin --> UC_OpenReg
-SysAdmin --> UC_ApproveReg
-SysAdmin --> UC_Building
-SysAdmin --> UC_Room
-SysAdmin --> UC_Student
-SysAdmin --> UC_CreateContract
-SysAdmin --> UC_SearchContract
-SysAdmin --> UC_Fee
-SysAdmin --> UC_MaintenanceProcess
-SysAdmin --> UC_Violation
-SysAdmin --> UC_Dashboard
-
-Internal --> UC_Login
-Internal --> UC_Dashboard
-Internal --> UC_Report
+Staff --> UC_Login
+Staff --> UC_Student
+Staff --> UC_CreateContract
+Staff --> UC_SearchContract
+Staff --> UC_Fee
+Staff --> UC_MaintenanceProcess
+Staff --> UC_Violation
+Staff --> UC_Dashboard
+Staff --> UC_Report
 ```
 
-> **Ghi chú:** Các đường nối thể hiện tác nhân nào tương tác trực tiếp với từng nhóm use case. "Quản trị viên hệ thống" có quyền cao nhất nên có thể truy cập tất cả chức năng nội bộ để cấu hình và giám sát. "Người dùng nội bộ" biểu diễn các vai trò vận hành (quản trị viên, nhân viên) khi sử dụng các dashboard/báo cáo dùng chung.
+> **Ghi chú:** Các đường nối thể hiện tác nhân nào tương tác trực tiếp với từng nhóm use case. Sơ đồ được giản lược theo ba tác nhân cốt lõi mà dự án đang sử dụng: **Quản trị viên** (quyền cao nhất), **Nhân viên** (cán bộ vận hành nội bộ) và **Sinh viên**.
