@@ -1,5 +1,7 @@
 package com.example.dorm.service;
 
+import com.example.dorm.dto.BuildingDetail;
+import com.example.dorm.dto.BuildingDetailRoom;
 import com.example.dorm.dto.BuildingSummary;
 import com.example.dorm.model.Building;
 import com.example.dorm.repository.BuildingRepository;
@@ -9,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class BuildingService {
@@ -77,6 +81,34 @@ public class BuildingService {
                 })
                 .sorted(Comparator.comparing(summary -> summary.name().toLowerCase()))
                 .toList();
+    }
+
+    public BuildingDetail getBuildingDetail(Long id) {
+        Building building = getRequiredBuilding(id);
+
+        Map<Long, Long> occupancyMap = roomRepository.countOccupancyByBuilding(id).stream()
+                .collect(Collectors.toMap(
+                        row -> ((Number) row[0]).longValue(),
+                        row -> ((Number) row[1]).longValue(),
+                        (first, second) -> first
+                ));
+
+        List<BuildingDetailRoom> roomDetails = roomRepository.findByBuilding_IdOrderByNumberAsc(id).stream()
+                .map(room -> new BuildingDetailRoom(
+                        room.getId(),
+                        room.getNumber(),
+                        room.getType(),
+                        room.getCapacity(),
+                        room.getPrice(),
+                        occupancyMap.getOrDefault(room.getId(), 0L)
+                ))
+                .sorted(Comparator.comparing(BuildingDetailRoom::number, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+
+        long capacity = roomDetails.stream().mapToLong(BuildingDetailRoom::capacity).sum();
+        long occupied = roomDetails.stream().mapToLong(BuildingDetailRoom::occupiedBeds).sum();
+
+        return new BuildingDetail(building, roomDetails.size(), capacity, occupied, roomDetails);
     }
 
     private void ensureUniqueCode(String code, Long currentId) {

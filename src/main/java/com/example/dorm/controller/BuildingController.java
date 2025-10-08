@@ -31,6 +31,18 @@ public class BuildingController {
         return "buildings/list";
     }
 
+    @GetMapping("/{id}")
+    public String viewBuilding(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            model.addAttribute("detail", buildingService.getBuildingDetail(id));
+            return "buildings/detail";
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("message", ex.getMessage());
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/buildings";
+        }
+    }
+
     @GetMapping(value = "/options", produces = "application/json")
     @ResponseBody
     public List<Map<String, Object>> buildingOptions() {
