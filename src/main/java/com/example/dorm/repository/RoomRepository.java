@@ -44,6 +44,15 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     List<Room> findByBuilding_IdOrderByNumberAsc(Long buildingId);
 
+    @Query("""
+            select r.id as roomId, count(s.id) as occupantCount
+            from Room r
+            left join r.students s
+            where r.building.id = :buildingId
+            group by r.id
+            """)
+    List<Object[]> countOccupancyByBuilding(@Param("buildingId") Long buildingId);
+
     // PHƯƠNG THỨC ĐÃ ĐƯỢC SỬA LỖI
     @Query(value = """
             select r
