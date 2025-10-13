@@ -1,5 +1,6 @@
 package com.example.dorm.service;
 
+import com.example.dorm.model.AuthProvider;
 import com.example.dorm.model.User;
 import com.example.dorm.model.Role;
 import com.example.dorm.model.RoleName;
@@ -8,6 +9,7 @@ import com.example.dorm.repository.RoleRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +56,8 @@ public class UserService {
         user.setUsername(normalizedUsername);
         user.setEmail(normalizedEmail);
         user.setPassword(passwordEncoder.encode(password));
+        user.setProvider(AuthProvider.LOCAL);
+        user.setLastLoginAt(LocalDateTime.now());
 
         Role userRole = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new RuntimeException("Role không tìm thấy: " + roleName));
@@ -105,6 +109,10 @@ public class UserService {
             throw new IllegalArgumentException("Không tìm thấy người dùng");
         }
 
+        if (user.getProvider() != null && user.getProvider() != AuthProvider.LOCAL) {
+            throw new IllegalArgumentException("Tài khoản đăng nhập bằng Google không thể đổi mật khẩu tại đây");
+        }
+
         String storedPassword = user.getPassword();
         if (storedPassword == null || storedPassword.isBlank()) {
             throw new IllegalArgumentException("Tài khoản chưa có mật khẩu để xác thực");
@@ -152,6 +160,10 @@ public class UserService {
             throw new IllegalArgumentException("Không tìm thấy người dùng");
         }
 
+        if (user.getProvider() != null && user.getProvider() != AuthProvider.LOCAL && (email != null || fullName != null || phone != null)) {
+            // Allow updates but ensure email uniqueness is still enforced below
+        }
+
         String normalizedEmail = normalizeEmail(email);
         if (normalizedEmail == null) {
             throw new IllegalArgumentException("Email không được để trống");
@@ -169,6 +181,21 @@ public class UserService {
         user.setAvatarFilename(avatarFilename != null && !avatarFilename.isBlank() ? avatarFilename : null);
 
         return userRepository.save(user);
+    }
+
+    public void recordSuccessfulLogin(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            return;
+        }
+        String trimmed = identifier.trim();
+        String lowerCased = trimmed.toLowerCase();
+        userRepository.findByUsername(trimmed)
+                .or(() -> userRepository.findByUsername(lowerCased))
+                .or(() -> userRepository.findByEmail(lowerCased))
+                .ifPresent(user -> {
+                    user.setLastLoginAt(LocalDateTime.now());
+                    userRepository.save(user);
+                });
     }
 
     public void deleteUser(Long id) {

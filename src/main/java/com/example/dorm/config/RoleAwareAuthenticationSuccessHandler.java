@@ -1,5 +1,6 @@
 package com.example.dorm.config;
 
+import com.example.dorm.service.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,11 +18,17 @@ import java.util.Collection;
 public class RoleAwareAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
     private final RedirectStrategy redirectStrategy = getRedirectStrategy();
+    private final UserService userService;
+
+    public RoleAwareAuthenticationSuccessHandler(UserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
+        userService.recordSuccessfulLogin(authentication.getName());
         String targetUrl = determineTargetUrl(authentication.getAuthorities());
         if (response.isCommitted()) {
             return;

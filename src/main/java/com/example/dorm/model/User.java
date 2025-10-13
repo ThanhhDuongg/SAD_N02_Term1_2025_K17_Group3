@@ -1,6 +1,7 @@
 package com.example.dorm.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -25,6 +26,16 @@ public class User {
     private String avatarFilename;
 
     private boolean enabled = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", length = 20)
+    private AuthProvider provider = AuthProvider.LOCAL;
+
+    @Column(name = "provider_id")
+    private String providerId;
+
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -55,6 +66,12 @@ public class User {
     public void setAvatarFilename(String avatarFilename) { this.avatarFilename = avatarFilename; }
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public AuthProvider getProvider() { return provider; }
+    public void setProvider(AuthProvider provider) { this.provider = provider; }
+    public String getProviderId() { return providerId; }
+    public void setProviderId(String providerId) { this.providerId = providerId; }
+    public LocalDateTime getLastLoginAt() { return lastLoginAt; }
+    public void setLastLoginAt(LocalDateTime lastLoginAt) { this.lastLoginAt = lastLoginAt; }
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
     public Student getStudent() { return student; }

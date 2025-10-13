@@ -1,5 +1,6 @@
 package com.example.dorm.config;
 
+import com.example.dorm.service.CustomOAuth2UserService;
 import com.example.dorm.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,11 +18,14 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final RoleAwareAuthenticationSuccessHandler authenticationSuccessHandler;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     public SecurityConfig(CustomUserDetailsService userDetailsService,
-                          RoleAwareAuthenticationSuccessHandler authenticationSuccessHandler) {
+                          RoleAwareAuthenticationSuccessHandler authenticationSuccessHandler,
+                          CustomOAuth2UserService customOAuth2UserService) {
         this.userDetailsService = userDetailsService;
         this.authenticationSuccessHandler = authenticationSuccessHandler;
+        this.customOAuth2UserService = customOAuth2UserService;
     }
 
     @Bean
@@ -33,7 +37,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**", "/h2-console/**").permitAll()
+                        .requestMatchers("/login", "/register", "/forgot-password", "/reset-password/**",
+                                "/css/**", "/js/**", "/images/**", "/h2-console/**", "/oauth2/**").permitAll()
                         .requestMatchers("/student/**").hasRole("STUDENT")
                         .requestMatchers("/dashboard", "/dashboard/**").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers("/account/**").hasAnyRole("ADMIN", "STAFF", "STUDENT")
@@ -54,6 +59,11 @@ public class SecurityConfig {
                         .clearAuthentication(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(authenticationSuccessHandler)
                 )
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));

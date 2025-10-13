@@ -143,6 +143,10 @@ public class DemoDataInitializer implements ApplicationRunner {
         if (existingOpt.isPresent()) {
             User existing = existingOpt.get();
             boolean changed = false;
+            if (existing.getProvider() == null) {
+                existing.setProvider(AuthProvider.LOCAL);
+                changed = true;
+            }
             if (email != null && (existing.getEmail() == null || !existing.getEmail().equalsIgnoreCase(email))) {
                 existing.setEmail(email);
                 changed = true;
@@ -160,6 +164,10 @@ public class DemoDataInitializer implements ApplicationRunner {
                 existing.setPassword(passwordEncoder.encode(rawPassword));
                 changed = true;
             }
+            if (existing.getLastLoginAt() == null) {
+                existing.setLastLoginAt(LocalDateTime.now());
+                changed = true;
+            }
             return changed ? userRepository.save(existing) : existing;
         }
 
@@ -168,6 +176,8 @@ public class DemoDataInitializer implements ApplicationRunner {
         user.setEmail(email);
         user.setPassword(rawPassword != null ? passwordEncoder.encode(rawPassword) : null);
         user.setEnabled(true);
+        user.setProvider(AuthProvider.LOCAL);
+        user.setLastLoginAt(LocalDateTime.now());
         Set<Role> roles = new HashSet<>();
         roles.add(role);
         user.setRoles(roles);

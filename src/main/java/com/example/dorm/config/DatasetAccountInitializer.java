@@ -1,5 +1,6 @@
 package com.example.dorm.config;
 
+import com.example.dorm.model.AuthProvider;
 import com.example.dorm.model.User;
 import com.example.dorm.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,6 +65,9 @@ public class DatasetAccountInitializer implements ApplicationRunner {
     private boolean isDatasetAccount(User user) {
         String username = user.getUsername();
         String password = user.getPassword();
+        if (user.getProvider() != null && user.getProvider() != AuthProvider.LOCAL) {
+            return false;
+        }
         boolean usernameLooksLikeEmail = username != null && username.contains("@");
         boolean passwordNotEncoded = password == null || password.isBlank() || !isBcryptHash(password);
         return usernameLooksLikeEmail || passwordNotEncoded;

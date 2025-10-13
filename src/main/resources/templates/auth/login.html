@@ -56,8 +56,20 @@
                 <button class="button btn-add auth-submit" type="submit">Đăng nhập</button>
             </form>
 
+            <div class="auth-divider">
+                <span>hoặc</span>
+            </div>
+
+            <a class="button auth-google" th:href="@{/oauth2/authorization/google}">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"/>
+                Đăng nhập bằng Google
+            </a>
+
             <p class="auth-footer">Chưa có tài khoản?
                 <a th:href="@{/register}">Đăng ký ngay</a>
+            </p>
+            <p class="auth-footer">
+                <a th:href="@{/forgot-password}">Quên mật khẩu?</a>
             </p>
         </div>
     </div>
