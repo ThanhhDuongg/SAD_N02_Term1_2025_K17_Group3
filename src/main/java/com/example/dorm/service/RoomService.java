@@ -1,6 +1,6 @@
 package com.example.dorm.service;
 
-import com.example.dorm.dto.RoomImportRequest;
+import com.example.dorm.dto.RoomAutoCreateRequest;
 import com.example.dorm.model.Building;
 import com.example.dorm.model.Room;
 import com.example.dorm.model.RoomOccupancyStatus;
@@ -17,8 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -103,53 +101,59 @@ public class RoomService {
     }
 
     @Transactional
-    public ImportResult importRooms(List<RoomImportRequest> requests) {
-        if (requests == null || requests.isEmpty()) {
-            throw new IllegalArgumentException("Danh sách phòng import không được để trống");
+    public BulkCreateResult autoCreateRooms(RoomAutoCreateRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Yêu cầu tạo phòng không được để trống");
         }
+
+        Long buildingId = request.buildingId();
+        Long roomTypeId = request.roomTypeId();
+        Integer capacity = request.capacity();
+        Integer quantity = request.quantity();
+        Integer startNumber = request.startNumber();
+
+        if (quantity == null || quantity <= 0) {
+            throw new IllegalArgumentException("Số lượng phòng phải lớn hơn 0");
+        }
+        if (startNumber == null) {
+            throw new IllegalArgumentException("Vui lòng nhập số bắt đầu cho mã phòng");
+        }
+
+        Building building = getRequiredBuilding(buildingId);
+        RoomType roomType = getRequiredRoomType(roomTypeId);
+
+        int normalizedCapacity = normalizeCapacity(capacity != null ? capacity : 0);
+        Integer normalizedFloor = normalizeFloor(request.floor());
+        RoomOccupancyStatus occupancyStatus = normalizeStatus(request.occupancyStatus());
+
+        String prefix = request.prefix() != null ? request.prefix().trim() : "";
+        int padding = request.padding() != null && request.padding() >= 0 ? request.padding() : 0;
 
         List<Room> roomsToSave = new ArrayList<>();
         List<String> errors = new ArrayList<>();
-        Set<String> batchNumbers = new HashSet<>();
-        Map<Long, Building> buildingCache = new HashMap<>();
-        Map<Long, RoomType> roomTypeCache = new HashMap<>();
 
-        for (int index = 0; index < requests.size(); index++) {
-            RoomImportRequest request = requests.get(index);
+        for (int i = 0; i < quantity; i++) {
+            int sequenceNumber = startNumber + i;
+            if (sequenceNumber < 0) {
+                errors.add("Không thể tạo phòng với số âm: " + sequenceNumber);
+                continue;
+            }
+
+            String generatedNumber = buildRoomNumber(prefix, sequenceNumber, padding);
+            String normalizedNumber = normalizeNumber(generatedNumber);
+
             try {
-                String normalizedNumber = normalizeNumber(request.number());
-                if (normalizedNumber == null || normalizedNumber.isBlank()) {
-                    throw new IllegalArgumentException("Mã phòng không được để trống");
-                }
-                String batchKey = normalizedNumber.toLowerCase();
-                if (!batchNumbers.add(batchKey)) {
-                    throw new IllegalArgumentException("Trùng mã phòng trong dữ liệu import: " + normalizedNumber);
-                }
                 ensureUniqueNumber(normalizedNumber, null);
-
-                Long buildingId = request.buildingId();
-                if (buildingId == null) {
-                    throw new IllegalArgumentException("Vui lòng cung cấp tòa nhà cho phòng " + normalizedNumber);
-                }
-                Building building = buildingCache.computeIfAbsent(buildingId, this::getRequiredBuilding);
-
-                Long roomTypeId = request.roomTypeId();
-                if (roomTypeId == null) {
-                    throw new IllegalArgumentException("Vui lòng chọn loại phòng cho phòng " + normalizedNumber);
-                }
-                RoomType roomType = roomTypeCache.computeIfAbsent(roomTypeId, this::getRequiredRoomType);
-
-                int normalizedCapacity = normalizeCapacity(request.capacity() != null ? request.capacity() : 0);
                 Room room = new Room();
                 room.setNumber(normalizedNumber);
                 room.setBuilding(building);
                 room.setRoomType(roomType);
                 room.setCapacity(normalizedCapacity);
-                room.setFloor(normalizeFloor(request.floor()));
-                room.setOccupancyStatus(normalizeStatus(request.occupancyStatus()));
+                room.setFloor(normalizedFloor);
+                room.setOccupancyStatus(occupancyStatus);
                 roomsToSave.add(room);
             } catch (Exception ex) {
-                errors.add("Dòng " + (index + 1) + ": " + ex.getMessage());
+                errors.add("Không thể tạo phòng " + normalizedNumber + ": " + ex.getMessage());
             }
         }
 
@@ -157,7 +161,7 @@ public class RoomService {
             roomRepository.saveAll(roomsToSave);
         }
 
-        return new ImportResult(roomsToSave.size(), errors);
+        return new BulkCreateResult(roomsToSave.size(), errors);
     }
 
     public void deleteRoom(Long id) {
@@ -270,8 +274,15 @@ public class RoomService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tòa nhà với ID: " + buildingId));
     }
 
-    public static record ImportResult(int createdCount, List<String> errors) {
-        public ImportResult {
+    private String buildRoomNumber(String prefix, int sequenceNumber, int padding) {
+        String numberPart = padding > 0
+                ? String.format("%0" + padding + "d", sequenceNumber)
+                : Integer.toString(sequenceNumber);
+        return prefix + numberPart;
+    }
+
+    public static record BulkCreateResult(int createdCount, List<String> errors) {
+        public BulkCreateResult {
             errors = errors == null ? List.of() : List.copyOf(errors);
         }
 

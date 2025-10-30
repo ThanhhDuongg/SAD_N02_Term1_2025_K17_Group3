@@ -27,50 +27,81 @@
             </form>
             <div class="inline-actions">
                 <a th:href="@{/rooms/new}" class="button btn-add">Thêm Phòng</a>
-                <button type="button" class="button btn-import" id="toggle-import">Import Phòng</button>
+                <button type="button" class="button btn-import" id="toggle-auto-create">Thêm phòng tự động</button>
             </div>
         </div>
-        <section id="room-import-panel" class="import-panel" style="display:none;">
-            <h3>Import Phòng Hàng Loạt</h3>
-            <p>Sử dụng JSON array để import nhiều phòng cùng lúc. Mỗi phòng cần các thông tin:</p>
-            <ul>
-                <li><strong>number</strong>: Mã phòng/số phòng (bắt buộc, duy nhất).</li>
-                <li><strong>buildingId</strong>: ID tòa nhà (bắt buộc).</li>
-                <li><strong>floor</strong>: Tầng (tùy chọn).</li>
-                <li><strong>capacity</strong>: Sức chứa (bắt buộc &gt; 0).</li>
-                <li><strong>occupancyStatus</strong>: Trạng thái (AVAILABLE hoặc FULL).</li>
-                <li><strong>roomTypeId</strong>: ID loại phòng liên kết (bắt buộc).</li>
-            </ul>
-            <p>Ví dụ:</p>
-            <pre class="import-example">[
-  {
-    "number": "A101",
-    "buildingId": 1,
-    "floor": 1,
-    "capacity": 6,
-    "occupancyStatus": "AVAILABLE",
-    "roomTypeId": 2
-  },
-  {
-    "number": "A102",
-    "buildingId": 1,
-    "floor": 1,
-    "capacity": 6,
-    "occupancyStatus": "AVAILABLE",
-    "roomTypeId": 2
-  }
-]</pre>
-            <div class="import-actions">
-                <label for="import-file">Chọn file JSON</label>
-                <input type="file" id="import-file" accept="application/json,.json">
-                <button type="button" id="load-import-file">Nạp từ file</button>
-            </div>
-            <textarea id="import-json" rows="10" placeholder="Dán dữ liệu JSON tại đây..."></textarea>
-            <div class="import-submit">
-                <button type="button" id="submit-import">Thực hiện Import</button>
-                <button type="button" id="cancel-import" class="button-secondary">Đóng</button>
-            </div>
-            <div id="import-result" class="import-result" aria-live="polite"></div>
+        <section id="room-auto-panel" class="import-panel" style="display:none;">
+            <h3>Thêm phòng tự động</h3>
+            <p>Chọn thông tin chung và hệ thống sẽ tạo lần lượt các phòng với mã phòng theo mẫu.</p>
+            <form id="auto-create-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="auto-building">Tòa nhà</label>
+                        <select id="auto-building" required>
+                            <option value="">-- Chọn tòa --</option>
+                            <option th:each="building : ${buildings}"
+                                    th:value="${building.id}"
+                                    th:text="${building.code + ' - ' + building.name}"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="auto-floor">Tầng</label>
+                        <input type="number" id="auto-floor" min="0" placeholder="Ví dụ: 1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="auto-room-type">Loại phòng</label>
+                        <select id="auto-room-type" required>
+                            <option value="">-- Chọn loại phòng --</option>
+                            <option th:each="type : ${roomTypes}"
+                                    th:value="${type.id}"
+                                    th:text="${type.name}"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="auto-capacity">Sức chứa mỗi phòng</label>
+                        <input type="number" id="auto-capacity" min="1" placeholder="Ví dụ: 6" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="auto-status">Trạng thái ban đầu</label>
+                        <select id="auto-status">
+                            <option th:each="status : ${roomStatuses}"
+                                    th:value="${status.name()}"
+                                    th:text="${status.displayName}"
+                                    th:selected="${status.name() == 'AVAILABLE'}"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="auto-prefix">Tiền tố mã phòng</label>
+                        <input type="text" id="auto-prefix" placeholder="Ví dụ: A1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="auto-start">Số bắt đầu</label>
+                        <input type="number" id="auto-start" min="0" value="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="auto-quantity">Số phòng cần tạo</label>
+                        <input type="number" id="auto-quantity" min="1" value="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="auto-padding">Độ dài số (tự thêm số 0 phía trước)</label>
+                        <input type="number" id="auto-padding" min="0" placeholder="Ví dụ: 2">
+                    </div>
+                </div>
+                <p class="help-text">Ví dụ: Tiền tố <strong>A1</strong>, số bắt đầu <strong>1</strong>, độ dài số <strong>2</strong> sẽ tạo ra A101, A102,...</p>
+                <div class="import-submit">
+                    <button type="submit" id="submit-auto-create">Tạo phòng</button>
+                    <button type="button" id="cancel-auto-create" class="button-secondary">Đóng</button>
+                </div>
+            </form>
+            <div id="auto-create-result" class="import-result" aria-live="polite"></div>
         </section>
         <table>
             <thead>
@@ -120,24 +151,21 @@
     </div>
     <script>
         (function() {
-            const panel = document.getElementById('room-import-panel');
-            const toggleBtn = document.getElementById('toggle-import');
-            const cancelBtn = document.getElementById('cancel-import');
-            const submitBtn = document.getElementById('submit-import');
-            const fileInput = document.getElementById('import-file');
-            const loadFileBtn = document.getElementById('load-import-file');
-            const jsonInput = document.getElementById('import-json');
-            const resultBox = document.getElementById('import-result');
+            const panel = document.getElementById('room-auto-panel');
+            const toggleBtn = document.getElementById('toggle-auto-create');
+            const cancelBtn = document.getElementById('cancel-auto-create');
+            const form = document.getElementById('auto-create-form');
+            const resultBox = document.getElementById('auto-create-result');
+            const submitBtn = document.getElementById('submit-auto-create');
 
-            if (!panel || !toggleBtn || !cancelBtn || !submitBtn || !loadFileBtn || !fileInput || !jsonInput || !resultBox) {
+            if (!panel || !toggleBtn || !cancelBtn || !form || !resultBox || !submitBtn) {
                 return;
             }
 
             const togglePanel = (show) => {
                 panel.style.display = show ? 'block' : 'none';
                 if (!show) {
-                    jsonInput.value = '';
-                    fileInput.value = '';
+                    form.reset();
                     resultBox.innerHTML = '';
                 }
             };
@@ -145,38 +173,60 @@
             toggleBtn.addEventListener('click', () => togglePanel(panel.style.display === 'none'));
             cancelBtn.addEventListener('click', () => togglePanel(false));
 
-            loadFileBtn.addEventListener('click', () => {
-                const file = fileInput.files && fileInput.files[0];
-                if (!file) {
-                    alert('Vui lòng chọn file JSON trước.');
+            const parseInteger = (value) => {
+                if (typeof value !== 'string') {
+                    return null;
+                }
+                const trimmed = value.trim();
+                if (trimmed === '') {
+                    return null;
+                }
+                const parsed = Number.parseInt(trimmed, 10);
+                return Number.isNaN(parsed) ? null : parsed;
+            };
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                resultBox.innerHTML = '';
+
+                const payload = {
+                    buildingId: parseInteger(document.getElementById('auto-building').value),
+                    floor: parseInteger(document.getElementById('auto-floor').value),
+                    roomTypeId: parseInteger(document.getElementById('auto-room-type').value),
+                    capacity: parseInteger(document.getElementById('auto-capacity').value),
+                    occupancyStatus: document.getElementById('auto-status').value || null,
+                    prefix: document.getElementById('auto-prefix').value || '',
+                    startNumber: parseInteger(document.getElementById('auto-start').value),
+                    quantity: parseInteger(document.getElementById('auto-quantity').value),
+                    padding: parseInteger(document.getElementById('auto-padding').value)
+                };
+
+                if (!payload.buildingId) {
+                    alert('Vui lòng chọn tòa nhà.');
                     return;
                 }
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    jsonInput.value = event.target.result;
-                };
-                reader.onerror = () => alert('Không thể đọc file, vui lòng thử lại.');
-                reader.readAsText(file, 'UTF-8');
-            });
-
-            submitBtn.addEventListener('click', async () => {
-                let payload;
-                try {
-                    payload = JSON.parse(jsonInput.value);
-                    if (!Array.isArray(payload)) {
-                        throw new Error('Dữ liệu phải là một mảng JSON.');
-                    }
-                } catch (error) {
-                    alert('Dữ liệu JSON không hợp lệ: ' + error.message);
+                if (!payload.roomTypeId) {
+                    alert('Vui lòng chọn loại phòng.');
+                    return;
+                }
+                if (!payload.capacity || payload.capacity <= 0) {
+                    alert('Sức chứa phải lớn hơn 0.');
+                    return;
+                }
+                if (!payload.quantity || payload.quantity <= 0) {
+                    alert('Số phòng cần tạo phải lớn hơn 0.');
+                    return;
+                }
+                if (payload.startNumber === null) {
+                    alert('Vui lòng nhập số bắt đầu.');
                     return;
                 }
 
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'Đang import...';
-                resultBox.innerHTML = '';
+                submitBtn.textContent = 'Đang tạo...';
 
                 try {
-                    const response = await fetch('/rooms/import', {
+                    const response = await fetch('/rooms/auto-create', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -195,28 +245,29 @@
                     resultBox.appendChild(summary);
 
                     if (errors && errors.length) {
+                        const errorHeading = document.createElement('p');
+                        errorHeading.textContent = 'Có phòng không thể tạo:';
+                        resultBox.appendChild(errorHeading);
+
                         const errorList = document.createElement('ul');
                         errors.forEach((err) => {
                             const item = document.createElement('li');
                             item.textContent = err;
                             errorList.appendChild(item);
                         });
-                        const heading = document.createElement('p');
-                        heading.textContent = 'Có lỗi xảy ra:';
-                        resultBox.appendChild(heading);
                         resultBox.appendChild(errorList);
-                    } else {
+                    } else if (createdCount > 0) {
                         const successMsg = document.createElement('p');
-                        successMsg.textContent = 'Import thành công! Làm mới trang để xem dữ liệu mới.';
+                        successMsg.textContent = 'Tạo phòng thành công! Làm mới trang để xem dữ liệu mới.';
                         resultBox.appendChild(successMsg);
                     }
                 } catch (error) {
                     const failure = document.createElement('p');
-                    failure.textContent = 'Import thất bại: ' + error.message;
+                    failure.textContent = 'Không thể tạo phòng tự động: ' + error.message;
                     resultBox.appendChild(failure);
                 } finally {
                     submitBtn.disabled = false;
-                    submitBtn.textContent = 'Thực hiện Import';
+                    submitBtn.textContent = 'Tạo phòng';
                 }
             });
         })();

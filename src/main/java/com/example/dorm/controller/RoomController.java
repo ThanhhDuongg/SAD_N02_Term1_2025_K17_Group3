@@ -1,7 +1,7 @@
 package com.example.dorm.controller;
 
 import com.example.dorm.model.Room;
-import com.example.dorm.dto.RoomImportRequest;
+import com.example.dorm.dto.RoomAutoCreateRequest;
 import com.example.dorm.model.RoomOccupancyStatus;
 import com.example.dorm.model.RoomType;
 import com.example.dorm.service.BuildingService;
@@ -178,10 +178,10 @@ public class RoomController {
         return "redirect:/rooms";
     }
 
-    @PostMapping(value = "/import", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/auto-create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<RoomService.ImportResult> importRooms(@RequestBody List<RoomImportRequest> requests) {
-        RoomService.ImportResult result = roomService.importRooms(requests);
+    public ResponseEntity<RoomService.BulkCreateResult> autoCreateRooms(@RequestBody RoomAutoCreateRequest request) {
+        RoomService.BulkCreateResult result = roomService.autoCreateRooms(request);
         return ResponseEntity.ok(result);
     }
 
