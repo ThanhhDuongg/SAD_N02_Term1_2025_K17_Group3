@@ -26,19 +26,63 @@
                 <button type="submit">Lọc</button>
             </form>
             <div class="inline-actions">
-                <a th:href="@{/room-types}" class="button btn-secondary">Quản lý loại phòng</a>
                 <a th:href="@{/rooms/new}" class="button btn-add">Thêm Phòng</a>
+                <button type="button" class="button btn-import" id="toggle-import">Import Phòng</button>
             </div>
         </div>
+        <section id="room-import-panel" class="import-panel" style="display:none;">
+            <h3>Import Phòng Hàng Loạt</h3>
+            <p>Sử dụng JSON array để import nhiều phòng cùng lúc. Mỗi phòng cần các thông tin:</p>
+            <ul>
+                <li><strong>number</strong>: Mã phòng/số phòng (bắt buộc, duy nhất).</li>
+                <li><strong>buildingId</strong>: ID tòa nhà (bắt buộc).</li>
+                <li><strong>floor</strong>: Tầng (tùy chọn).</li>
+                <li><strong>capacity</strong>: Sức chứa (bắt buộc &gt; 0).</li>
+                <li><strong>occupancyStatus</strong>: Trạng thái (AVAILABLE hoặc FULL).</li>
+                <li><strong>roomTypeId</strong>: ID loại phòng liên kết (bắt buộc).</li>
+            </ul>
+            <p>Ví dụ:</p>
+            <pre class="import-example">[
+  {
+    "number": "A101",
+    "buildingId": 1,
+    "floor": 1,
+    "capacity": 6,
+    "occupancyStatus": "AVAILABLE",
+    "roomTypeId": 2
+  },
+  {
+    "number": "A102",
+    "buildingId": 1,
+    "floor": 1,
+    "capacity": 6,
+    "occupancyStatus": "AVAILABLE",
+    "roomTypeId": 2
+  }
+]</pre>
+            <div class="import-actions">
+                <label for="import-file">Chọn file JSON</label>
+                <input type="file" id="import-file" accept="application/json,.json">
+                <button type="button" id="load-import-file">Nạp từ file</button>
+            </div>
+            <textarea id="import-json" rows="10" placeholder="Dán dữ liệu JSON tại đây..."></textarea>
+            <div class="import-submit">
+                <button type="button" id="submit-import">Thực hiện Import</button>
+                <button type="button" id="cancel-import" class="button-secondary">Đóng</button>
+            </div>
+            <div id="import-result" class="import-result" aria-live="polite"></div>
+        </section>
         <table>
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Số Phòng</th>
                     <th>Tòa</th>
+                    <th>Tầng</th>
                     <th>Loại Phòng</th>
                     <th>Sức Chứa</th>
                     <th>Đang Ở</th>
+                    <th>Trạng Thái</th>
                     <th>Giá/Tháng</th>
                     <th>Thao Tác</th>
                 </tr>
@@ -48,9 +92,11 @@
                     <td th:text="${room.id}"></td>
                     <td th:text="${room.number}"></td>
                     <td th:text="${room.building != null ? room.building.code : 'N/A'}"></td>
+                    <td th:text="${room.floor != null ? room.floor : '-'}"></td>
                     <td th:text="${room.roomType != null ? room.roomType.name : room.type}"></td>
                     <td th:text="${room.capacity}"></td>
                     <td th:text="${occupancies[room.id]}"></td>
+                    <td th:text="${room.occupancyStatus != null ? room.occupancyStatus.displayName : 'Còn chỗ'}"></td>
                     <td th:text="${room.roomType != null ? T(java.lang.String).format('%,d', room.roomType.currentPrice).replace(',', '.') : T(java.lang.String).format('%,d', room.price).replace(',', '.')}"></td>
                     <td class="action-icons">
                         <a th:href="@{/rooms/{id}(id=${room.id})}" class="view"><i class="fas fa-eye"></i></a>
@@ -72,5 +118,108 @@
         </div>
         </div>
     </div>
+    <script>
+        (function() {
+            const panel = document.getElementById('room-import-panel');
+            const toggleBtn = document.getElementById('toggle-import');
+            const cancelBtn = document.getElementById('cancel-import');
+            const submitBtn = document.getElementById('submit-import');
+            const fileInput = document.getElementById('import-file');
+            const loadFileBtn = document.getElementById('load-import-file');
+            const jsonInput = document.getElementById('import-json');
+            const resultBox = document.getElementById('import-result');
+
+            if (!panel || !toggleBtn || !cancelBtn || !submitBtn || !loadFileBtn || !fileInput || !jsonInput || !resultBox) {
+                return;
+            }
+
+            const togglePanel = (show) => {
+                panel.style.display = show ? 'block' : 'none';
+                if (!show) {
+                    jsonInput.value = '';
+                    fileInput.value = '';
+                    resultBox.innerHTML = '';
+                }
+            };
+
+            toggleBtn.addEventListener('click', () => togglePanel(panel.style.display === 'none'));
+            cancelBtn.addEventListener('click', () => togglePanel(false));
+
+            loadFileBtn.addEventListener('click', () => {
+                const file = fileInput.files && fileInput.files[0];
+                if (!file) {
+                    alert('Vui lòng chọn file JSON trước.');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    jsonInput.value = event.target.result;
+                };
+                reader.onerror = () => alert('Không thể đọc file, vui lòng thử lại.');
+                reader.readAsText(file, 'UTF-8');
+            });
+
+            submitBtn.addEventListener('click', async () => {
+                let payload;
+                try {
+                    payload = JSON.parse(jsonInput.value);
+                    if (!Array.isArray(payload)) {
+                        throw new Error('Dữ liệu phải là một mảng JSON.');
+                    }
+                } catch (error) {
+                    alert('Dữ liệu JSON không hợp lệ: ' + error.message);
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Đang import...';
+                resultBox.innerHTML = '';
+
+                try {
+                    const response = await fetch('/rooms/import', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Máy chủ trả về mã lỗi ' + response.status);
+                    }
+
+                    const result = await response.json();
+                    const { createdCount, errors } = result;
+                    const summary = document.createElement('p');
+                    summary.textContent = `Đã tạo ${createdCount} phòng mới.`;
+                    resultBox.appendChild(summary);
+
+                    if (errors && errors.length) {
+                        const errorList = document.createElement('ul');
+                        errors.forEach((err) => {
+                            const item = document.createElement('li');
+                            item.textContent = err;
+                            errorList.appendChild(item);
+                        });
+                        const heading = document.createElement('p');
+                        heading.textContent = 'Có lỗi xảy ra:';
+                        resultBox.appendChild(heading);
+                        resultBox.appendChild(errorList);
+                    } else {
+                        const successMsg = document.createElement('p');
+                        successMsg.textContent = 'Import thành công! Làm mới trang để xem dữ liệu mới.';
+                        resultBox.appendChild(successMsg);
+                    }
+                } catch (error) {
+                    const failure = document.createElement('p');
+                    failure.textContent = 'Import thất bại: ' + error.message;
+                    resultBox.appendChild(failure);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Thực hiện Import';
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

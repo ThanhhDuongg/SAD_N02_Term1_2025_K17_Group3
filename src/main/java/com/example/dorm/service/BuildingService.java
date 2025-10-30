@@ -97,9 +97,11 @@ public class BuildingService {
                 .map(room -> new BuildingDetailRoom(
                         room.getId(),
                         room.getNumber(),
+                        room.getFloor(),
                         room.getType(),
                         room.getCapacity(),
                         room.getPrice(),
+                        room.getOccupancyStatus(),
                         occupancyMap.getOrDefault(room.getId(), 0L)
                 ))
                 .sorted(Comparator.comparing(BuildingDetailRoom::number, String.CASE_INSENSITIVE_ORDER))
