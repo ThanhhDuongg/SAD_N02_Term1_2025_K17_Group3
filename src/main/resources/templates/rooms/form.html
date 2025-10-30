@@ -5,38 +5,6 @@
     <title th:text="${room.id} ? 'Sửa Phòng' : 'Thêm Phòng'">Thêm Phòng</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script>
-        function updateRoomTypeDetails() {
-            const select = document.getElementById('roomTypeId');
-            const capacityInput = document.getElementById('capacity');
-            const priceInput = document.getElementById('price');
-            if (!select || !capacityInput || !priceInput) {
-                return;
-            }
-            const selectedOption = select.options[select.selectedIndex];
-            if (!selectedOption) {
-                capacityInput.value = '';
-                priceInput.value = '';
-                return;
-            }
-            const capacity = selectedOption.getAttribute('data-capacity');
-            const price = selectedOption.getAttribute('data-price');
-            if (capacity) {
-                capacityInput.value = capacity;
-            }
-            if (price) {
-                priceInput.value = price;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const select = document.getElementById('roomTypeId');
-            if (select) {
-                select.addEventListener('change', updateRoomTypeDetails);
-                updateRoomTypeDetails();
-            }
-        });
-    </script>
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -57,6 +25,11 @@
                 <input type="text" id="number" th:field="*{number}" required>
             </div>
             <div class="form-group">
+                <label for="floor">Tầng</label>
+                <input type="number" id="floor" th:field="*{floor}" min="0">
+                <small>Để trống nếu phòng nằm ở tầng trệt hoặc không xác định.</small>
+            </div>
+            <div class="form-group">
                 <label for="buildingId">Thuộc tòa</label>
                 <select id="buildingId" name="buildingId" required>
                     <option value="" th:selected="${selectedBuildingId == null}">--Chọn tòa nhà--</option>
@@ -74,7 +47,6 @@
                         <option th:each="type : ${roomTypes}"
                                 th:value="${type.id}"
                                 th:text="${type.name}"
-                                th:attr="data-capacity=${type.capacity},data-price=${type.currentPrice}"
                                 th:selected="${selectedRoomTypeId != null and selectedRoomTypeId.equals(type.id)}">
                         </option>
                     </select>
@@ -85,13 +57,20 @@
             </div>
             <div class="form-group">
                 <label for="capacity">Sức Chứa</label>
-                <input type="number" id="capacity" th:field="*{capacity}" readonly>
-                <small>Sức chứa được lấy theo cấu hình của loại phòng.</small>
+                <input type="number" id="capacity" th:field="*{capacity}" min="1" required>
             </div>
             <div class="form-group">
                 <label for="price">Giá Phòng (VNĐ)</label>
-                <input type="number" id="price" th:field="*{price}" readonly>
-                <small>Giá thuê được xác định theo loại phòng. Cập nhật tại mục quản lý loại phòng.</small>
+                <input type="number" id="price" th:field="*{price}" min="0">
+                <small>Để 0 nếu muốn áp dụng giá hiện tại của loại phòng.</small>
+            </div>
+            <div class="form-group">
+                <label for="occupancyStatus">Trạng thái</label>
+                <select id="occupancyStatus" th:field="*{occupancyStatus}">
+                    <option th:each="status : ${roomStatuses}"
+                            th:value="${status}"
+                            th:text="${status.displayName}"/>
+                </select>
             </div>
             <div class="form-actions">
                 <button type="submit" class="button btn-save" th:disabled="${#lists.isEmpty(buildings) || #lists.isEmpty(roomTypes)}">Lưu</button>
