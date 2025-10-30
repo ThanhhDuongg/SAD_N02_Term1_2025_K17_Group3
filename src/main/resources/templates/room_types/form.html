@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${roomType.id} != null ? 'Chỉnh sửa loại phòng' : 'Thêm loại phòng'">Thêm loại phòng</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div class="content-with-sidebar">
+    <div class="form-container">
+        <h2 th:text="${roomType.id} != null ? 'Chỉnh sửa loại phòng' : 'Thêm loại phòng'"></h2>
+        <div th:if="${formError}" class="alert alert-danger" th:text="${formError}"></div>
+        <form th:action="${roomType.id} != null ? @{/room-types/{id}(id=${roomType.id})} : @{/room-types}" th:object="${roomType}" method="post">
+            <div class="form-group">
+                <label for="name">Tên loại phòng</label>
+                <input type="text" id="name" th:field="*{name}" required>
+            </div>
+            <div class="form-group">
+                <label for="capacity">Sức chứa</label>
+                <input type="number" id="capacity" th:field="*{capacity}" min="1" required>
+            </div>
+            <div class="form-group">
+                <label for="currentPrice">Giá thuê mỗi tháng (VNĐ)</label>
+                <input type="number" id="currentPrice" th:field="*{currentPrice}" min="1000" step="1000" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Ghi chú</label>
+                <textarea id="description" th:field="*{description}" rows="3" placeholder="Mô tả ngắn về loại phòng"></textarea>
+            </div>
+            <div class="form-group" th:if="${roomType.id} != null">
+                <label for="priceNote">Ghi chú thay đổi giá (tuỳ chọn)</label>
+                <textarea id="priceNote" name="priceNote" rows="2" placeholder="Mô tả lý do điều chỉnh giá" th:text="${priceNote}"></textarea>
+                <small>Nếu thay đổi giá thuê, nội dung này sẽ được lưu cùng lịch sử giá.</small>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="button btn-save">Lưu</button>
+                <a th:href="@{/room-types}" class="button btn-cancel">Hủy</a>
+                <a th:if="${roomType.id} != null" th:href="@{/room-types/{id}/history(id=${roomType.id})}" class="button btn-secondary">
+                    <i class="fas fa-chart-line"></i> Xem lịch sử giá
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

@@ -26,6 +26,12 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     int countByBuilding_Id(Long buildingId);
 
+    boolean existsByRoomType_Id(Long roomTypeId);
+
+    long countByRoomType_Id(Long roomTypeId);
+
+    List<Room> findByRoomType_Id(Long roomTypeId);
+
     @Query("""
             select coalesce(sum(r.capacity), 0)
             from Room r
@@ -38,11 +44,21 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             from Room r
             left join fetch r.students
             left join fetch r.building
+            left join fetch r.roomType
             where r.id = :id
             """)
     Optional<Room> findByIdWithStudents(@Param("id") Long id);
 
     List<Room> findByBuilding_IdOrderByNumberAsc(Long buildingId);
+
+    @Query("""
+            select r
+            from Room r
+            left join fetch r.roomType
+            left join fetch r.building
+            where r.id = :id
+            """)
+    Optional<Room> findByIdWithTypeAndBuilding(@Param("id") Long id);
 
     @Query("""
             select r.id as roomId, count(s.id) as occupantCount
@@ -58,6 +74,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             select r
             from Room r
             left join fetch r.building b
+            left join fetch r.roomType
             where (:buildingId is null or b.id = :buildingId)
               and (
                     :search is null

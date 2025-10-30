@@ -6,43 +6,35 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script>
-        function updateDefaults() {
-            var type = document.getElementById('type');
-            var priceInput = document.getElementById('price');
-            var capacityInput = document.getElementById('capacity');
-            if (!type || !priceInput || !capacityInput) {
+        function updateRoomTypeDetails() {
+            const select = document.getElementById('roomTypeId');
+            const capacityInput = document.getElementById('capacity');
+            const priceInput = document.getElementById('price');
+            if (!select || !capacityInput || !priceInput) {
                 return;
             }
-            var selectedType = type.value;
-            if (!selectedType) {
+            const selectedOption = select.options[select.selectedIndex];
+            if (!selectedOption) {
+                capacityInput.value = '';
+                priceInput.value = '';
                 return;
             }
-            if (selectedType === 'Phòng bốn') {
-                if (!priceInput.dataset.manual) {
-                    priceInput.value = 2000000;
-                }
-                capacityInput.value = 4;
-            } else if (selectedType === 'Phòng tám') {
-                if (!priceInput.dataset.manual) {
-                    priceInput.value = 1200000;
-                }
-                capacityInput.value = 8;
+            const capacity = selectedOption.getAttribute('data-capacity');
+            const price = selectedOption.getAttribute('data-price');
+            if (capacity) {
+                capacityInput.value = capacity;
             }
-        }
-
-        function markManualPrice() {
-            var priceInput = document.getElementById('price');
-            if (priceInput) {
-                priceInput.dataset.manual = 'true';
+            if (price) {
+                priceInput.value = price;
             }
         }
 
         document.addEventListener('DOMContentLoaded', function () {
-            var priceInput = document.getElementById('price');
-            if (priceInput) {
-                priceInput.addEventListener('input', markManualPrice);
+            const select = document.getElementById('roomTypeId');
+            if (select) {
+                select.addEventListener('change', updateRoomTypeDetails);
+                updateRoomTypeDetails();
             }
-            updateDefaults();
         });
     </script>
 </head>
@@ -55,6 +47,9 @@
         <div th:if="${formError}" class="alert alert-danger" th:text="${formError}"></div>
         <div th:if="${#lists.isEmpty(buildings)}" class="alert alert-warning">
             Chưa có tòa nhà nào. Vui lòng <a th:href="@{/buildings/new}">thêm tòa nhà</a> trước khi tạo phòng.
+        </div>
+        <div th:if="${#lists.isEmpty(roomTypes)}" class="alert alert-warning">
+            Chưa có loại phòng nào. Vui lòng <a th:href="@{/room-types/new}">thêm loại phòng</a> trước khi tạo phòng.
         </div>
         <form th:action="${room.id} ? @{/rooms/{id}(id=${room.id})} : @{/rooms}" th:object="${room}" method="post">
             <div class="form-group">
@@ -72,25 +67,34 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="type">Loại Phòng</label>
-                <select id="type" th:field="*{type}" onchange="updateDefaults()" required>
-                    <option value="">--Chọn loại phòng--</option>
-                    <option value="Phòng bốn">Phòng bốn</option>
-                    <option value="Phòng tám">Phòng tám</option>
-                    <option value="Phòng đôi">Phòng đôi</option>
-                </select>
+                <label for="roomTypeId">Loại Phòng</label>
+                <div class="inline-actions">
+                    <select id="roomTypeId" name="roomTypeId" required>
+                        <option value="" th:selected="${selectedRoomTypeId == null}">--Chọn loại phòng--</option>
+                        <option th:each="type : ${roomTypes}"
+                                th:value="${type.id}"
+                                th:text="${type.name}"
+                                th:attr="data-capacity=${type.capacity},data-price=${type.currentPrice}"
+                                th:selected="${selectedRoomTypeId != null and selectedRoomTypeId.equals(type.id)}">
+                        </option>
+                    </select>
+                    <a th:href="@{/room-types}" class="button btn-secondary" title="Quản lý loại phòng">
+                        <i class="fas fa-cog"></i>
+                    </a>
+                </div>
             </div>
             <div class="form-group">
                 <label for="capacity">Sức Chứa</label>
-                <input type="number" id="capacity" th:field="*{capacity}" min="1" required>
+                <input type="number" id="capacity" th:field="*{capacity}" readonly>
+                <small>Sức chứa được lấy theo cấu hình của loại phòng.</small>
             </div>
             <div class="form-group">
                 <label for="price">Giá Phòng (VNĐ)</label>
-                <input type="number" id="price" th:field="*{price}" min="0" step="1000" required>
-                <small>Giá mặc định sẽ được gợi ý theo loại phòng, quản trị có thể điều chỉnh.</small>
+                <input type="number" id="price" th:field="*{price}" readonly>
+                <small>Giá thuê được xác định theo loại phòng. Cập nhật tại mục quản lý loại phòng.</small>
             </div>
             <div class="form-actions">
-                <button type="submit" class="button btn-save" th:disabled="${#lists.isEmpty(buildings)}">Lưu</button>
+                <button type="submit" class="button btn-save" th:disabled="${#lists.isEmpty(buildings) || #lists.isEmpty(roomTypes)}">Lưu</button>
                 <a th:href="@{/rooms}" class="button btn-cancel">Hủy</a>
             </div>
         </form>

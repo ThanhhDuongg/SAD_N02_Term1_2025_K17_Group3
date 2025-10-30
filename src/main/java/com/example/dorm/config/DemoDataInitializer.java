@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -21,6 +22,7 @@ public class DemoDataInitializer implements ApplicationRunner {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;
+    private final RoomTypeRepository roomTypeRepository;
     private final StudentRepository studentRepository;
     private final ContractRepository contractRepository;
     private final FeeRepository feeRepository;
@@ -33,6 +35,7 @@ public class DemoDataInitializer implements ApplicationRunner {
     public DemoDataInitializer(RoleRepository roleRepository,
                                UserRepository userRepository,
                                RoomRepository roomRepository,
+                               RoomTypeRepository roomTypeRepository,
                                StudentRepository studentRepository,
                                ContractRepository contractRepository,
                                FeeRepository feeRepository,
@@ -44,6 +47,7 @@ public class DemoDataInitializer implements ApplicationRunner {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
+        this.roomTypeRepository = roomTypeRepository;
         this.studentRepository = studentRepository;
         this.contractRepository = contractRepository;
         this.feeRepository = feeRepository;
@@ -66,10 +70,14 @@ public class DemoDataInitializer implements ApplicationRunner {
         User sv01User = ensureUser("sv01", "sv01-login@example.com", "password", studentRole);
         User sv02User = ensureUser("sv02", "sv02-login@example.com", "password", studentRole);
 
-        Room room101 = ensureRoom("101", "Phòng tám", 8, 1_200_000);
-        Room room102 = ensureRoom("102", "Phòng tám", 8, 1_200_000);
-        Room room201 = ensureRoom("201", "Phòng bốn", 4, 2_000_000);
-        Room room202 = ensureRoom("202", "Phòng bốn", 4, 2_000_000);
+        RoomType phongTam = ensureRoomType("Phòng tám", 8, 1_200_000, "Phòng ở 8 người");
+        RoomType phongBon = ensureRoomType("Phòng bốn", 4, 2_000_000, "Phòng ở 4 người");
+        RoomType phongDoi = ensureRoomType("Phòng đôi", 2, 2_500_000, "Phòng ở 2 người");
+
+        Room room101 = ensureRoom("101", phongTam);
+        Room room102 = ensureRoom("102", phongTam);
+        Room room201 = ensureRoom("201", phongBon);
+        Room room202 = ensureRoom("202", phongBon);
 
         Student sv01 = ensureStudent("SV01", "Nguyễn Văn An", LocalDate.of(2005, 3, 15), "Nam",
                 "0912345601", "Hà Nội", "sv01@example.com", "Công nghệ Thông tin", 3, sv01User, room101);
@@ -174,29 +182,58 @@ public class DemoDataInitializer implements ApplicationRunner {
         return userRepository.save(user);
     }
 
-    private Room ensureRoom(String number, String type, int capacity, int price) {
+    private Room ensureRoom(String number, RoomType roomType) {
         return roomRepository.findByNumber(number).map(existing -> {
             boolean changed = false;
-            if (!type.equals(existing.getType())) {
-                existing.setType(type);
+            if (!number.equals(existing.getNumber())) {
+                existing.setNumber(number);
                 changed = true;
             }
-            if (existing.getCapacity() != capacity) {
-                existing.setCapacity(capacity);
+            RoomType previousType = existing.getRoomType();
+            String previousName = existing.getType();
+            int previousCapacity = existing.getCapacity();
+            int previousPrice = existing.getPrice();
+            existing.setRoomType(roomType);
+            if (previousType == null || !Objects.equals(previousType.getId(), roomType.getId())) {
                 changed = true;
-            }
-            if (existing.getPrice() != price) {
-                existing.setPrice(price);
+            } else if (!Objects.equals(previousName, existing.getType())
+                    || previousCapacity != existing.getCapacity()
+                    || previousPrice != existing.getPrice()) {
                 changed = true;
             }
             return changed ? roomRepository.save(existing) : existing;
         }).orElseGet(() -> {
             Room room = new Room();
             room.setNumber(number);
-            room.setType(type);
-            room.setCapacity(capacity);
-            room.setPrice(price);
+            room.setRoomType(roomType);
             return roomRepository.save(room);
+        });
+    }
+
+    private RoomType ensureRoomType(String name, int capacity, int price, String description) {
+        String normalizedDescription = description != null ? description.trim() : null;
+        return roomTypeRepository.findByNameIgnoreCase(name).map(existing -> {
+            boolean changed = false;
+            if (existing.getCapacity() != capacity) {
+                existing.setCapacity(capacity);
+                changed = true;
+            }
+            if (existing.getCurrentPrice() != price) {
+                existing.setCurrentPrice(price);
+                changed = true;
+            }
+            if (!Objects.equals(existing.getDescription(), normalizedDescription)) {
+                existing.setDescription(normalizedDescription);
+                changed = true;
+            }
+            return changed ? roomTypeRepository.save(existing) : existing;
+        }).orElseGet(() -> {
+            RoomType roomType = new RoomType();
+            roomType.setName(name);
+            roomType.setCapacity(capacity);
+            roomType.setCurrentPrice(price);
+            roomType.setDescription(normalizedDescription);
+            return roomTypeRepository.save(roomType);
         });
     }
 
