@@ -26,6 +26,10 @@
                 <td class="value" th:text="${room.building != null ? room.building.code + ' - ' + room.building.name : 'N/A'}"></td>
             </tr>
             <tr>
+                <td class="label">Tầng:</td>
+                <td class="value" th:text="${room.floor != null ? room.floor : 'Không xác định'}"></td>
+            </tr>
+            <tr>
                 <td class="label">Loại Phòng:</td>
                 <td class="value" th:text="${room.roomType != null ? room.roomType.name : room.type}"></td>
             </tr>
@@ -36,6 +40,10 @@
             <tr>
                 <td class="label">Sức Chứa:</td>
                 <td class="value" th:text="${room.capacity}"></td>
+            </tr>
+            <tr>
+                <td class="label">Trạng thái:</td>
+                <td class="value" th:text="${room.occupancyStatus != null ? room.occupancyStatus.displayName : 'Còn chỗ'}"></td>
             </tr>
              <tr>
                 <td class="label">Đang Ở:</td>
