@@ -32,6 +32,8 @@ public class StudentService {
     private static final String PASSWORD_CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#&$%";
     private static final int PASSWORD_LENGTH = 12;
 
+    private static final String DEFAULT_STUDENT_NAME = "Chưa cập nhật";
+
     public StudentService(StudentRepository studentRepository,
                           RoomRepository roomRepository,
                           UserService userService,
@@ -131,6 +133,7 @@ public class StudentService {
                     Student freshStudent = new Student();
                     freshStudent.setCode(normalizedCode);
                     freshStudent.setStudyYear(1);
+                    freshStudent.setName(DEFAULT_STUDENT_NAME);
                     return freshStudent;
                 });
 
@@ -144,6 +147,9 @@ public class StudentService {
 
         student.setEmail(normalizedEmail);
         student.setCode(normalizedCode);
+        if (student.getName() == null) {
+            student.setName(DEFAULT_STUDENT_NAME);
+        }
         if (student.getStudyYear() == null) {
             student.setStudyYear(1);
         }
