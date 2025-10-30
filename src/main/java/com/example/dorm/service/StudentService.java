@@ -131,6 +131,7 @@ public class StudentService {
                     Student freshStudent = new Student();
                     freshStudent.setCode(normalizedCode);
                     freshStudent.setStudyYear(1);
+                    freshStudent.setName("Sinh viên " + normalizedCode);
                     return freshStudent;
                 });
 

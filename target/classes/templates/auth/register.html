@@ -32,8 +32,8 @@
         </div>
 
         <div class="auth-content">
-            <h1 class="auth-title">Tạo tài khoản mới</h1>
-            <p class="auth-subtitle">Liên kết tài khoản với hồ sơ sinh viên của bạn để sử dụng các dịch vụ ký túc xá.</p>
+            <h1 class="auth-title">Yêu cầu cấp tài khoản</h1>
+            <p class="auth-subtitle">Hệ thống sẽ tạo tài khoản đăng nhập dựa trên hồ sơ sinh viên đã xác thực.</p>
 
             <form th:action="@{/register}" method="post" th:object="${registrationForm}" class="auth-form">
                 <div class="form-field" th:classappend="${#fields.hasErrors('studentCode')} ? ' field-error'">
@@ -46,28 +46,13 @@
                     <input id="email" th:field="*{email}" type="email" required placeholder="Email đã đăng ký với KTX">
                     <small th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></small>
                 </div>
-                <div class="form-field" th:classappend="${#fields.hasErrors('username')} ? ' field-error'">
-                    <label for="username">Tên đăng nhập</label>
-                    <input id="username" th:field="*{username}" required placeholder="Tối thiểu 4 ký tự">
-                    <small th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></small>
-                </div>
-                <div class="form-field" th:classappend="${#fields.hasErrors('password')} ? ' field-error'">
-                    <label for="password">Mật khẩu</label>
-                    <input id="password" th:field="*{password}" type="password" required placeholder="Tối thiểu 6 ký tự">
-                    <small th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></small>
-                </div>
-                <div class="form-field" th:classappend="${#fields.hasErrors('confirmPassword')} ? ' field-error'">
-                    <label for="confirmPassword">Xác nhận mật khẩu</label>
-                    <input id="confirmPassword" th:field="*{confirmPassword}" type="password" required placeholder="Nhập lại mật khẩu">
-                    <small th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></small>
-                </div>
                 <div th:if="${#fields.hasGlobalErrors()}" class="auth-alert auth-alert-danger">
                     <p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
                 </div>
-                <button class="button btn-add auth-submit" type="submit">Đăng ký</button>
+                <button class="button btn-add auth-submit" type="submit">Gửi yêu cầu</button>
             </form>
 
-            <p class="auth-note">* Đảm bảo thông tin trùng khớp với hồ sơ sinh viên được lưu tại KTX để kích hoạt tài khoản.</p>
+            <p class="auth-note">* Hệ thống sẽ gửi tên đăng nhập và mật khẩu tạm thời về email hợp lệ của sinh viên.</p>
             <p class="auth-footer">Đã có tài khoản? <a th:href="@{/login}">Quay lại đăng nhập</a></p>
         </div>
     </div>

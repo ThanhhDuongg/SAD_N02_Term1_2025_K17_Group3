@@ -46,6 +46,7 @@
                         </span>
                     </td>
                     <td class="action-icons">
+                        <a th:href="@{/buildings/{id}(id=${summary.id()})}" class="view" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
                         <a th:href="@{/buildings/{id}/edit(id=${summary.id()})}" class="edit" title="Chỉnh sửa"><i class="fas fa-edit"></i></a>
                         <a th:href="@{/buildings/{id}/delete(id=${summary.id()})}" class="delete" title="Xóa" onclick="return confirm('Bạn có chắc muốn xóa tòa này?')"><i class="fas fa-trash"></i></a>
                     </td>

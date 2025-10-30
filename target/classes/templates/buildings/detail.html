@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết tòa nhà</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div class="content-with-sidebar">
+    <div class="building-detail">
+        <div class="detail-header">
+            <div>
+                <h2 th:text="${detail.name()}">Chi tiết tòa nhà</h2>
+                <p class="detail-subtitle" th:text="${detail.code()}">Mã tòa</p>
+            </div>
+            <div class="detail-actions">
+                <a th:href="@{/buildings/{id}/edit(id=${detail.id()})}" class="button btn-edit"><i class="fas fa-edit"></i> Chỉnh sửa</a>
+                <a th:href="@{/buildings}" class="button btn-back"><i class="fas fa-arrow-left"></i> Quay lại</a>
+            </div>
+        </div>
+
+        <div class="detail-info-grid">
+            <div class="detail-card">
+                <h3>Thông tin chung</h3>
+                <dl class="detail-list">
+                    <div>
+                        <dt>Mã tòa</dt>
+                        <dd th:text="${detail.code()}"></dd>
+                    </div>
+                    <div>
+                        <dt>Tên tòa</dt>
+                        <dd th:text="${detail.name()}"></dd>
+                    </div>
+                    <div>
+                        <dt>Địa chỉ</dt>
+                        <dd th:text="${detail.address() != null ? detail.address() : 'Chưa cập nhật'}"></dd>
+                    </div>
+                    <div>
+                        <dt>Số tầng</dt>
+                        <dd th:text="${detail.totalFloors() != null ? detail.totalFloors() : '-'}"></dd>
+                    </div>
+                </dl>
+            </div>
+            <div class="detail-card">
+                <h3>Thống kê</h3>
+                <dl class="detail-list">
+                    <div>
+                        <dt>Số phòng</dt>
+                        <dd th:text="${detail.roomCount()}"></dd>
+                    </div>
+                    <div>
+                        <dt>Tổng sức chứa</dt>
+                        <dd th:text="${detail.capacity()}"></dd>
+                    </div>
+                    <div>
+                        <dt>Đang ở</dt>
+                        <dd th:text="${detail.occupiedBeds()}"></dd>
+                    </div>
+                    <div>
+                        <dt>Tỉ lệ lấp đầy</dt>
+                        <dd>
+                            <span th:text="${#numbers.formatDecimal(detail.occupancyRate(), 0, 2) + '%'}"
+                                  th:class="${detail.occupancyRate() >= 90 ? 'badge badge-danger' : (detail.occupancyRate() >= 70 ? 'badge badge-warning' : 'badge badge-success')}"></span>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <div class="detail-description" th:if="${detail.hasDescription()}">
+            <h3>Mô tả</h3>
+            <p th:text="${detail.description()}"></p>
+        </div>
+
+        <h3>Danh sách phòng</h3>
+        <div class="responsive-table">
+            <table>
+                <thead>
+                <tr>
+                    <th>Số phòng</th>
+                    <th>Loại phòng</th>
+                    <th>Sức chứa</th>
+                    <th>Đang ở</th>
+                    <th>Tỉ lệ lấp đầy</th>
+                    <th>Giá/Tháng</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="room : ${detail.rooms()}">
+                    <td>
+                        <a th:href="@{/rooms/{id}(id=${room.id()})}" th:text="${room.number()}" class="link-inline"></a>
+                    </td>
+                    <td th:text="${room.type() != null ? room.type() : '-'}"></td>
+                    <td th:text="${room.capacity()}"></td>
+                    <td th:text="|${room.occupiedBeds()}/${room.capacity()}|"></td>
+                    <td>
+                        <span th:text="${#numbers.formatDecimal(room.occupancyRate(), 0, 2) + '%'}"
+                              th:class="${room.occupancyRate() >= 90 ? 'badge badge-danger' : (room.occupancyRate() >= 70 ? 'badge badge-warning' : 'badge badge-success')}"></span>
+                    </td>
+                    <td th:text="${T(java.lang.String).format('%,d', room.price()).replace(',', '.')} + ' VNĐ'"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(detail.rooms())}">
+                    <td colspan="6">Chưa có phòng nào trong tòa nhà này.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div th:replace="~{fragments/header :: popup}"></div>
+</body>
+</html>
