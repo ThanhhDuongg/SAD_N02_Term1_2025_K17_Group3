@@ -17,6 +17,12 @@ public class Room {
     private int capacity;
     private int price; // Giá phòng
 
+    private Integer floor;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "occupancy_status", nullable = false)
+    private RoomOccupancyStatus occupancyStatus = RoomOccupancyStatus.AVAILABLE;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "building_id")
     private Building building;
@@ -88,9 +94,26 @@ public class Room {
     public void syncFromRoomType() {
         if (roomType != null) {
             this.type = roomType.getName();
-            this.capacity = roomType.getCapacity();
             this.price = roomType.getCurrentPrice();
+        } else {
+            this.type = null;
         }
+    }
+
+    public Integer getFloor() {
+        return floor;
+    }
+
+    public void setFloor(Integer floor) {
+        this.floor = floor;
+    }
+
+    public RoomOccupancyStatus getOccupancyStatus() {
+        return occupancyStatus;
+    }
+
+    public void setOccupancyStatus(RoomOccupancyStatus occupancyStatus) {
+        this.occupancyStatus = occupancyStatus;
     }
 
     public List<Student> getStudents() {

@@ -26,7 +26,6 @@
                 <button type="submit">Lọc</button>
             </form>
             <div class="inline-actions">
-                <a th:href="@{/room-types}" class="button btn-secondary">Quản lý loại phòng</a>
                 <a th:href="@{/rooms/new}" class="button btn-add">Thêm Phòng</a>
             </div>
         </div>
@@ -36,9 +35,11 @@
                     <th>ID</th>
                     <th>Số Phòng</th>
                     <th>Tòa</th>
+                    <th>Tầng</th>
                     <th>Loại Phòng</th>
                     <th>Sức Chứa</th>
                     <th>Đang Ở</th>
+                    <th>Trạng Thái</th>
                     <th>Giá/Tháng</th>
                     <th>Thao Tác</th>
                 </tr>
@@ -48,9 +49,11 @@
                     <td th:text="${room.id}"></td>
                     <td th:text="${room.number}"></td>
                     <td th:text="${room.building != null ? room.building.code : 'N/A'}"></td>
+                    <td th:text="${room.floor != null ? room.floor : '-'}"></td>
                     <td th:text="${room.roomType != null ? room.roomType.name : room.type}"></td>
                     <td th:text="${room.capacity}"></td>
                     <td th:text="${occupancies[room.id]}"></td>
+                    <td th:text="${room.occupancyStatus != null ? room.occupancyStatus.displayName : 'Còn chỗ'}"></td>
                     <td th:text="${room.roomType != null ? T(java.lang.String).format('%,d', room.roomType.currentPrice).replace(',', '.') : T(java.lang.String).format('%,d', room.price).replace(',', '.')}"></td>
                     <td class="action-icons">
                         <a th:href="@{/rooms/{id}(id=${room.id})}" class="view"><i class="fas fa-eye"></i></a>

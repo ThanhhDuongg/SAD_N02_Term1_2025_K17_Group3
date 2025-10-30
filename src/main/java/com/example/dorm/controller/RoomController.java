@@ -1,11 +1,15 @@
 package com.example.dorm.controller;
 
 import com.example.dorm.model.Room;
+import com.example.dorm.dto.RoomImportRequest;
+import com.example.dorm.model.RoomOccupancyStatus;
 import com.example.dorm.model.RoomType;
 import com.example.dorm.service.BuildingService;
 import com.example.dorm.service.RoomService;
 import com.example.dorm.service.RoomTypeService;
 import com.example.dorm.util.PageUtils;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -45,6 +50,11 @@ public class RoomController {
     @ModelAttribute("roomTypes")
     public List<RoomType> roomTypes() {
         return roomTypeService.getAllRoomTypes();
+    }
+
+    @ModelAttribute("roomStatuses")
+    public RoomOccupancyStatus[] roomStatuses() {
+        return RoomOccupancyStatus.values();
     }
 
     @GetMapping("/{id}")
@@ -82,7 +92,9 @@ public class RoomController {
                 .map(room -> Map.<String, Object>of(
                         "id", room.getId(),
                         "number", room.getNumber(),
-                        "buildingId", room.getBuilding() != null ? room.getBuilding().getId() : null
+                        "buildingId", room.getBuilding() != null ? room.getBuilding().getId() : null,
+                        "floor", room.getFloor(),
+                        "occupancyStatus", room.getOccupancyStatus() != null ? room.getOccupancyStatus().name() : null
                 ))
                 .toList();
     }
@@ -166,13 +178,24 @@ public class RoomController {
         return "redirect:/rooms";
     }
 
+    @PostMapping(value = "/import", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<RoomService.ImportResult> importRooms(@RequestBody List<RoomImportRequest> requests) {
+        RoomService.ImportResult result = roomService.importRooms(requests);
+        return ResponseEntity.ok(result);
+    }
+
     private void applyRoomTypeSelection(Room room, Long roomTypeId) {
         if (roomTypeId == null) {
             return;
         }
         try {
             RoomType roomType = roomTypeService.getRoomType(roomTypeId);
+            int currentPrice = room.getPrice();
             room.setRoomType(roomType);
+            if (currentPrice > 0) {
+                room.setPrice(currentPrice);
+            }
         } catch (Exception ignored) {
             // Ignore errors while trying to rehydrate the selection for redisplay purposes
         }
