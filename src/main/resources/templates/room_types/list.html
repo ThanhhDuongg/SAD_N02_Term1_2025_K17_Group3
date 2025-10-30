@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý loại phòng</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div class="content-with-sidebar">
+    <div class="container">
+        <h2>Quản lý loại phòng</h2>
+        <div th:replace="~{fragments/header :: popup}"></div>
+        <div th:if="${secondaryMessage}" th:class="'popup-alert ' + ${secondaryAlertClass}" class="popup-alert" style="display:flex;">
+            <span th:text="${secondaryMessage}"></span>
+        </div>
+        <div class="toolbar">
+            <a th:href="@{/room-types/new}" class="button btn-add">
+                <i class="fas fa-plus"></i> Thêm loại phòng
+            </a>
+        </div>
+        <table>
+            <thead>
+            <tr>
+                <th>Tên loại</th>
+                <th>Sức chứa</th>
+                <th>Giá hiện tại (VNĐ)</th>
+                <th>Số phòng</th>
+                <th>Hợp đồng đang hiệu lực</th>
+                <th>Cập nhật lần cuối</th>
+                <th>Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="type : ${roomTypes}">
+                <td th:text="${type.name}"></td>
+                <td th:text="${type.capacity}"></td>
+                <td th:text="${T(java.lang.String).format('%,d', type.currentPrice).replace(',', '.')}"></td>
+                <td th:text="${roomCounts[type.id] != null ? roomCounts[type.id] : 0}"></td>
+                <td th:text="${activeContracts[type.id] != null ? activeContracts[type.id] : 0}"></td>
+                <td th:text="${type.updatedAt != null ? #temporals.format(type.updatedAt, 'dd/MM/yyyy HH:mm') : 'N/A'}"></td>
+                <td class="action-icons">
+                    <a th:href="@{/room-types/{id}/history(id=${type.id})}" class="view" title="Lịch sử giá">
+                        <i class="fas fa-chart-line"></i>
+                    </a>
+                    <a th:href="@{/room-types/{id}/edit(id=${type.id})}" class="edit" title="Chỉnh sửa">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a th:href="@{/room-types/{id}/delete(id=${type.id})}" class="delete" title="Xóa"
+                       onclick="return confirm('Bạn có chắc muốn xóa loại phòng này?');">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </td>
+            </tr>
+            <tr th:if="${roomTypes == null or #lists.isEmpty(roomTypes)}">
+                <td colspan="7">Chưa có loại phòng nào được cấu hình.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

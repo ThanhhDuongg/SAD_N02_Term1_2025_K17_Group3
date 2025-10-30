@@ -2,8 +2,10 @@ package com.example.dorm.service;
 
 import com.example.dorm.model.Building;
 import com.example.dorm.model.Room;
+import com.example.dorm.model.RoomType;
 import com.example.dorm.repository.BuildingRepository;
 import com.example.dorm.repository.RoomRepository;
+import com.example.dorm.repository.RoomTypeRepository;
 import com.example.dorm.repository.StudentRepository;
 import com.example.dorm.repository.ContractRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -22,15 +24,18 @@ public class RoomService {
     private final StudentRepository studentRepository;
     private final BuildingRepository buildingRepository;
     private final ContractRepository contractRepository;
+    private final RoomTypeRepository roomTypeRepository;
 
     public RoomService(RoomRepository roomRepository,
                        StudentRepository studentRepository,
                        BuildingRepository buildingRepository,
-                       ContractRepository contractRepository) {
+                       ContractRepository contractRepository,
+                       RoomTypeRepository roomTypeRepository) {
         this.roomRepository = roomRepository;
         this.studentRepository = studentRepository;
         this.buildingRepository = buildingRepository;
         this.contractRepository = contractRepository;
+        this.roomTypeRepository = roomTypeRepository;
     }
 
     public Page<Room> getAllRooms(Pageable pageable) {
@@ -42,22 +47,21 @@ public class RoomService {
     }
 
     public Optional<Room> getRoom(Long id) {
-        return roomRepository.findById(id);
+        return roomRepository.findByIdWithTypeAndBuilding(id);
     }
 
     public Room getRequiredRoom(Long id) {
         return getRoom(id).orElseThrow(() -> new IllegalArgumentException("Room not found"));
     }
 
-    public Room createRoom(Room room, Long buildingId) {
+    public Room createRoom(Room room, Long buildingId, Long roomTypeId) {
         String normalizedNumber = normalizeNumber(room.getNumber());
         ensureUniqueNumber(normalizedNumber, null);
 
         room.setNumber(normalizedNumber);
-        room.setType(normalizeType(room.getType()));
-        room.setCapacity(normalizeCapacity(room.getCapacity()));
-        room.setPrice(normalizePrice(room));
         room.setBuilding(getRequiredBuilding(buildingId));
+        room.setRoomType(getRequiredRoomType(roomTypeId));
+        room.syncFromRoomType();
         return roomRepository.save(room);
     }
 
@@ -67,16 +71,15 @@ public class RoomService {
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy phòng: " + id));
     }
 
-    public Room updateRoom(Long id, Room room, Long buildingId) {
+    public Room updateRoom(Long id, Room room, Long buildingId, Long roomTypeId) {
         Room existing = getRequiredRoom(id);
         String normalizedNumber = normalizeNumber(room.getNumber());
         ensureUniqueNumber(normalizedNumber, id);
 
         existing.setNumber(normalizedNumber);
-        existing.setType(normalizeType(room.getType()));
-        existing.setCapacity(normalizeCapacity(room.getCapacity()));
-        existing.setPrice(normalizePrice(room));
         existing.setBuilding(getRequiredBuilding(buildingId));
+        existing.setRoomType(getRequiredRoomType(roomTypeId));
+        existing.syncFromRoomType();
         return roomRepository.save(existing);
     }
 
@@ -119,33 +122,6 @@ public class RoomService {
         return studentRepository.countByRoomIsNotNull();
     }
 
-    private int normalizeCapacity(int capacity) {
-        if (capacity <= 0) {
-            throw new IllegalArgumentException("Sức chứa phải lớn hơn 0");
-        }
-        return capacity;
-    }
-
-    private String normalizeType(String type) {
-        return type == null ? null : type.trim();
-    }
-
-    private int normalizePrice(Room room) {
-        int price = room.getPrice();
-        if (price > 0) {
-            return price;
-        }
-        String type = room.getType();
-        if (type == null) {
-            throw new IllegalArgumentException("Giá phòng phải lớn hơn 0");
-        }
-        return switch (type) {
-            case "Phòng bốn" -> 2_000_000;
-            case "Phòng tám" -> 1_200_000;
-            default -> throw new IllegalArgumentException("Giá phòng phải lớn hơn 0");
-        };
-    }
-
     private String normalizeNumber(String number) {
         return number == null ? null : number.trim();
     }
@@ -161,6 +137,14 @@ public class RoomService {
                     throw new IllegalArgumentException(
                             "Phòng \"" + existing.getNumber() + "\" đã tồn tại, vui lòng nhập tên phòng khác.");
                 });
+    }
+
+    private RoomType getRequiredRoomType(Long roomTypeId) {
+        if (roomTypeId == null) {
+            throw new IllegalArgumentException("Vui lòng chọn loại phòng");
+        }
+        return roomTypeRepository.findById(roomTypeId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy loại phòng với ID: " + roomTypeId));
     }
 
     private Building getRequiredBuilding(Long buildingId) {

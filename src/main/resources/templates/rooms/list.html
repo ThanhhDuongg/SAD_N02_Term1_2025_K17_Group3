@@ -25,7 +25,10 @@
                 </select>
                 <button type="submit">Lọc</button>
             </form>
-            <a th:href="@{/rooms/new}" class="button btn-add">Thêm Phòng</a>
+            <div class="inline-actions">
+                <a th:href="@{/room-types}" class="button btn-secondary">Quản lý loại phòng</a>
+                <a th:href="@{/rooms/new}" class="button btn-add">Thêm Phòng</a>
+            </div>
         </div>
         <table>
             <thead>
@@ -45,10 +48,10 @@
                     <td th:text="${room.id}"></td>
                     <td th:text="${room.number}"></td>
                     <td th:text="${room.building != null ? room.building.code : 'N/A'}"></td>
-                    <td th:text="${room.type}"></td>
+                    <td th:text="${room.roomType != null ? room.roomType.name : room.type}"></td>
                     <td th:text="${room.capacity}"></td>
                     <td th:text="${occupancies[room.id]}"></td>
-                    <td th:text="${T(java.lang.String).format('%,d', room.price).replace(',', '.')}"></td>
+                    <td th:text="${room.roomType != null ? T(java.lang.String).format('%,d', room.roomType.currentPrice).replace(',', '.') : T(java.lang.String).format('%,d', room.price).replace(',', '.')}"></td>
                     <td class="action-icons">
                         <a th:href="@{/rooms/{id}(id=${room.id})}" class="view"><i class="fas fa-eye"></i></a>
                         <a th:href="@{/rooms/{id}/edit(id=${room.id})}" class="edit"><i class="fas fa-edit"></i></a>

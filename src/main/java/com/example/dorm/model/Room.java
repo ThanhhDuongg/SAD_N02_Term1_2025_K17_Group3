@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 
 import java.util.List;
 
+import com.example.dorm.model.RoomType;
+
 @Entity
 @Table(name = "room")
 public class Room {
@@ -18,6 +20,10 @@ public class Room {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "building_id")
     private Building building;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_type_id")
+    private RoomType roomType;
 
     @OneToMany(mappedBy = "room")
     private List<Student> students;
@@ -68,6 +74,23 @@ public class Room {
 
     public void setBuilding(Building building) {
         this.building = building;
+    }
+
+    public RoomType getRoomType() {
+        return roomType;
+    }
+
+    public void setRoomType(RoomType roomType) {
+        this.roomType = roomType;
+        syncFromRoomType();
+    }
+
+    public void syncFromRoomType() {
+        if (roomType != null) {
+            this.type = roomType.getName();
+            this.capacity = roomType.getCapacity();
+            this.price = roomType.getCurrentPrice();
+        }
     }
 
     public List<Student> getStudents() {

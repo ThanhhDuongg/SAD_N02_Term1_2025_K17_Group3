@@ -1,8 +1,10 @@
 package com.example.dorm.controller;
 
 import com.example.dorm.model.Room;
+import com.example.dorm.model.RoomType;
 import com.example.dorm.service.BuildingService;
 import com.example.dorm.service.RoomService;
+import com.example.dorm.service.RoomTypeService;
 import com.example.dorm.util.PageUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,15 +29,22 @@ public class RoomController {
 
     private final RoomService roomService;
     private final BuildingService buildingService;
+    private final RoomTypeService roomTypeService;
 
-    public RoomController(RoomService roomService, BuildingService buildingService) {
+    public RoomController(RoomService roomService, BuildingService buildingService, RoomTypeService roomTypeService) {
         this.roomService = roomService;
         this.buildingService = buildingService;
+        this.roomTypeService = roomTypeService;
     }
 
     @ModelAttribute("buildings")
     public List<com.example.dorm.model.Building> buildings() {
         return buildingService.getAllBuildings();
+    }
+
+    @ModelAttribute("roomTypes")
+    public List<RoomType> roomTypes() {
+        return roomTypeService.getAllRoomTypes();
     }
 
     @GetMapping("/{id}")
@@ -82,22 +91,26 @@ public class RoomController {
     public String showCreateForm(Model model) {
         model.addAttribute("room", new Room());
         model.addAttribute("selectedBuildingId", null);
+        model.addAttribute("selectedRoomTypeId", null);
         return "rooms/form";
     }
 
     @PostMapping
     public String createRoom(@ModelAttribute Room room,
                              @RequestParam("buildingId") Long buildingId,
+                             @RequestParam("roomTypeId") Long roomTypeId,
                              RedirectAttributes redirectAttributes,
                              Model model) {
         try {
-            roomService.createRoom(room, buildingId);
+            roomService.createRoom(room, buildingId, roomTypeId);
             redirectAttributes.addFlashAttribute("message", "Thêm phòng thành công!");
             redirectAttributes.addFlashAttribute("alertClass", "alert-success");
             return "redirect:/rooms";
         } catch (Exception e) {
             model.addAttribute("room", room);
             model.addAttribute("selectedBuildingId", buildingId);
+            model.addAttribute("selectedRoomTypeId", roomTypeId);
+            applyRoomTypeSelection(room, roomTypeId);
             model.addAttribute("formError", e.getMessage());
             return "rooms/form";
         }
@@ -109,6 +122,7 @@ public class RoomController {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phòng với ID: " + id));
         model.addAttribute("room", room);
         model.addAttribute("selectedBuildingId", room.getBuilding() != null ? room.getBuilding().getId() : null);
+        model.addAttribute("selectedRoomTypeId", room.getRoomType() != null ? room.getRoomType().getId() : null);
         return "rooms/form";
     }
 
@@ -116,12 +130,13 @@ public class RoomController {
     public String updateRoom(@PathVariable("id") Long id,
                              @ModelAttribute Room room,
                              @RequestParam("buildingId") Long buildingId,
+                             @RequestParam("roomTypeId") Long roomTypeId,
                              RedirectAttributes redirectAttributes,
                              Model model) {
         try {
             roomService.getRoom(id)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phòng với ID: " + id));
-            roomService.updateRoom(id, room, buildingId);
+            roomService.updateRoom(id, room, buildingId, roomTypeId);
             redirectAttributes.addFlashAttribute("message", "Cập nhật phòng thành công!");
             redirectAttributes.addFlashAttribute("alertClass", "alert-success");
             return "redirect:/rooms";
@@ -129,6 +144,8 @@ public class RoomController {
             room.setId(id);
             model.addAttribute("room", room);
             model.addAttribute("selectedBuildingId", buildingId);
+            model.addAttribute("selectedRoomTypeId", roomTypeId);
+            applyRoomTypeSelection(room, roomTypeId);
             model.addAttribute("formError", e.getMessage());
             return "rooms/form";
         }
@@ -147,5 +164,17 @@ public class RoomController {
             redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
         }
         return "redirect:/rooms";
+    }
+
+    private void applyRoomTypeSelection(Room room, Long roomTypeId) {
+        if (roomTypeId == null) {
+            return;
+        }
+        try {
+            RoomType roomType = roomTypeService.getRoomType(roomTypeId);
+            room.setRoomType(roomType);
+        } catch (Exception ignored) {
+            // Ignore errors while trying to rehydrate the selection for redisplay purposes
+        }
     }
 }

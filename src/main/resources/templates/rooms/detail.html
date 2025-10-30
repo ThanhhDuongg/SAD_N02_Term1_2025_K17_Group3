@@ -27,11 +27,11 @@
             </tr>
             <tr>
                 <td class="label">Loại Phòng:</td>
-                <td class="value" th:text="${room.type}"></td>
+                <td class="value" th:text="${room.roomType != null ? room.roomType.name : room.type}"></td>
             </tr>
             <tr>
                 <td class="label">Giá/Tháng:</td>
-                <td class="value" th:text="${T(java.lang.String).format('%,d', room.price).replace(',', '.')} + ' VNĐ'"></td>
+                <td class="value" th:text="${room.roomType != null ? T(java.lang.String).format('%,d', room.roomType.currentPrice).replace(',', '.') : T(java.lang.String).format('%,d', room.price).replace(',', '.')} + ' VNĐ'"></td>
             </tr>
             <tr>
                 <td class="label">Sức Chứa:</td>

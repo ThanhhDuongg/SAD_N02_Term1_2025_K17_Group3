@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${'Lịch sử giá - ' + roomType.name}">Lịch sử giá</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div class="content-with-sidebar">
+    <div class="container">
+        <h2 th:text="${'Lịch sử giá - ' + roomType.name}"></h2>
+        <p>
+            <strong>Sức chứa:</strong> <span th:text="${roomType.capacity}"></span> ·
+            <strong>Giá hiện tại:</strong>
+            <span th:text="${T(java.lang.String).format('%,d', roomType.currentPrice).replace(',', '.')} + ' VNĐ'"></span>
+        </p>
+        <p>
+            <strong>Hợp đồng đang hiệu lực sử dụng loại phòng này:</strong>
+            <span th:text="${activeContracts}"></span>
+        </p>
+        <table>
+            <thead>
+            <tr>
+                <th>Thời gian thay đổi</th>
+                <th>Giá cũ (VNĐ)</th>
+                <th>Giá mới (VNĐ)</th>
+                <th>Ghi chú</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="entry : ${historyEntries}">
+                <td th:text="${entry.changedAt != null ? #temporals.format(entry.changedAt, 'dd/MM/yyyy HH:mm') : 'N/A'}"></td>
+                <td th:text="${T(java.lang.String).format('%,d', entry.oldPrice).replace(',', '.')}"></td>
+                <td th:text="${T(java.lang.String).format('%,d', entry.newPrice).replace(',', '.')}"></td>
+                <td th:text="${entry.note != null ? entry.note : '-'}"></td>
+            </tr>
+            <tr th:if="${historyEntries == null or #lists.isEmpty(historyEntries)}">
+                <td colspan="4">Chưa có lịch sử thay đổi giá nào.</td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="form-actions">
+            <a th:href="@{/room-types}" class="button btn-back">Quay lại</a>
+            <a th:href="@{/room-types/{id}/edit(id=${roomType.id})}" class="button btn-secondary">Chỉnh sửa loại phòng</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>
