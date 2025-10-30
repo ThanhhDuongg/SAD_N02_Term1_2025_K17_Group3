@@ -1,6 +1,7 @@
 package com.example.dorm.service;
 
 import com.example.dorm.dto.StudentAccountCredentials;
+import com.example.dorm.exception.StudentRegistrationException;
 import com.example.dorm.model.Room;
 import com.example.dorm.model.RoleName;
 import com.example.dorm.model.Student;
@@ -114,26 +115,44 @@ public class StudentService {
     }
 
     @Transactional
-    public StudentAccountCredentials registerStudentAccount(Student student, String email) {
-        if (student == null) {
-            throw new IllegalArgumentException("Không tìm thấy sinh viên");
-        }
-
-        if (student.getUser() != null) {
-            throw new IllegalStateException("Sinh viên đã có tài khoản đăng nhập");
+    public StudentAccountCredentials registerStudentAccount(String studentCode, String email) {
+        String normalizedCode = trimToNull(studentCode);
+        if (normalizedCode == null) {
+            throw new StudentRegistrationException("studentCode", "Mã sinh viên không được để trống");
         }
 
         String normalizedEmail = normalizeEmail(email);
         if (normalizedEmail == null) {
-            throw new IllegalStateException("Email không được để trống");
+            throw new StudentRegistrationException("email", "Email không được để trống");
+        }
+
+        Student student = studentRepository.findByCode(normalizedCode)
+                .orElseGet(() -> {
+                    Student freshStudent = new Student();
+                    freshStudent.setCode(normalizedCode);
+                    freshStudent.setStudyYear(1);
+                    return freshStudent;
+                });
+
+        if (student.getUser() != null) {
+            throw new StudentRegistrationException("studentCode", "Sinh viên đã có tài khoản đăng nhập");
         }
 
         if (student.getEmail() != null && !student.getEmail().equalsIgnoreCase(normalizedEmail)) {
-            throw new IllegalStateException("Email không trùng khớp với hồ sơ sinh viên");
+            throw new StudentRegistrationException("email", "Email không trùng khớp với hồ sơ sinh viên");
         }
 
         student.setEmail(normalizedEmail);
-        validateUniqueEmail(student);
+        student.setCode(normalizedCode);
+        if (student.getStudyYear() == null) {
+            student.setStudyYear(1);
+        }
+
+        try {
+            validateUniqueEmail(student);
+        } catch (IllegalStateException ex) {
+            throw new StudentRegistrationException("email", ex.getMessage());
+        }
 
         String username = normalizedEmail;
         String rawPassword = generateTemporaryPassword();

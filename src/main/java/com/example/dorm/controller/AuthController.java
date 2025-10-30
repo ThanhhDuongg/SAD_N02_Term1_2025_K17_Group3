@@ -2,7 +2,7 @@ package com.example.dorm.controller;
 
 import com.example.dorm.dto.StudentAccountCredentials;
 import com.example.dorm.dto.StudentRegistrationForm;
-import com.example.dorm.model.Student;
+import com.example.dorm.exception.StudentRegistrationException;
 import com.example.dorm.service.StudentService;
 import jakarta.validation.Valid;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -47,26 +47,28 @@ public class AuthController {
                                   BindingResult bindingResult,
                                   RedirectAttributes redirectAttributes,
                                   Model model) {
-        Student student = studentService.findByCode(form.getStudentCode())
-                .orElse(null);
-
-        if (student == null) {
-            bindingResult.rejectValue("studentCode", "student.notFound", "Không tìm thấy sinh viên với mã này");
-        } else {
-            validateStudentRegistration(form, student, bindingResult);
-        }
-
         if (bindingResult.hasErrors()) {
             model.addAttribute("registrationForm", form);
             return "auth/register";
         }
 
         try {
-            StudentAccountCredentials credentials = studentService.registerStudentAccount(student, form.getEmail());
+            StudentAccountCredentials credentials = studentService.registerStudentAccount(
+                    form.getStudentCode(),
+                    form.getEmail()
+            );
             redirectAttributes.addFlashAttribute("message", "Hệ thống đã tạo tài khoản và gửi thông tin đăng nhập qua email của bạn.");
             redirectAttributes.addFlashAttribute("alertClass", "alert-success");
             redirectAttributes.addFlashAttribute("generatedUsername", credentials.username());
             redirectAttributes.addFlashAttribute("generatedPassword", credentials.password());
+        } catch (StudentRegistrationException ex) {
+            if (ex.getField() != null) {
+                bindingResult.rejectValue(ex.getField(), "registration." + ex.getField(), ex.getMessage());
+            } else {
+                bindingResult.reject("registration.error", ex.getMessage());
+            }
+            model.addAttribute("registrationForm", form);
+            return "auth/register";
         } catch (IllegalStateException | IllegalArgumentException ex) {
             bindingResult.reject("registration.error", ex.getMessage());
             model.addAttribute("registrationForm", form);
@@ -91,14 +93,4 @@ public class AuthController {
         return "redirect:/dashboard";
     }
 
-    private void validateStudentRegistration(StudentRegistrationForm form,
-                                             Student student,
-                                             BindingResult bindingResult) {
-        if (student.getEmail() != null && !student.getEmail().equalsIgnoreCase(form.getEmail())) {
-            bindingResult.rejectValue("email", "email.mismatch", "Email không trùng khớp với hồ sơ sinh viên");
-        }
-        if (student.getUser() != null) {
-            bindingResult.rejectValue("studentCode", "student.hasAccount", "Sinh viên đã có tài khoản đăng nhập");
-        }
-    }
 }
