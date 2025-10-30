@@ -1,11 +1,9 @@
 package com.example.dorm.controller;
 
+import com.example.dorm.dto.StudentAccountCredentials;
 import com.example.dorm.dto.StudentRegistrationForm;
 import com.example.dorm.model.Student;
-import com.example.dorm.model.User;
-import com.example.dorm.model.RoleName;
 import com.example.dorm.service.StudentService;
-import com.example.dorm.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,11 +19,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AuthController {
 
     private final StudentService studentService;
-    private final UserService userService;
-
-    public AuthController(StudentService studentService, UserService userService) {
+    public AuthController(StudentService studentService) {
         this.studentService = studentService;
-        this.userService = userService;
     }
 
     @GetMapping("/login")
@@ -52,31 +47,32 @@ public class AuthController {
                                   BindingResult bindingResult,
                                   RedirectAttributes redirectAttributes,
                                   Model model) {
-        if (!form.getPassword().equals(form.getConfirmPassword())) {
-            bindingResult.rejectValue("confirmPassword", "password.mismatch", "Mật khẩu xác nhận không khớp");
-        }
+        Student student = studentService.findByCode(form.getStudentCode())
+                .orElse(null);
 
-        studentService.findByCode(form.getStudentCode()).ifPresentOrElse(student -> {
+        if (student == null) {
+            bindingResult.rejectValue("studentCode", "student.notFound", "Không tìm thấy sinh viên với mã này");
+        } else {
             validateStudentRegistration(form, student, bindingResult);
-            if (bindingResult.hasErrors()) {
-                return;
-            }
-            try {
-                User user = userService.createUser(form.getUsername(), form.getEmail(), form.getPassword(), RoleName.ROLE_STUDENT);
-                student.setUser(user);
-                studentService.saveStudent(student);
-            } catch (IllegalStateException ex) {
-                bindingResult.reject("registration.error", ex.getMessage());
-            }
-        }, () -> bindingResult.rejectValue("studentCode", "student.notFound", "Không tìm thấy sinh viên với mã này"));
+        }
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("registrationForm", form);
             return "auth/register";
         }
 
-        redirectAttributes.addFlashAttribute("message", "Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
-        redirectAttributes.addFlashAttribute("alertClass", "alert-success");
+        try {
+            StudentAccountCredentials credentials = studentService.registerStudentAccount(student, form.getEmail());
+            redirectAttributes.addFlashAttribute("message", "Hệ thống đã tạo tài khoản và gửi thông tin đăng nhập qua email của bạn.");
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
+            redirectAttributes.addFlashAttribute("generatedUsername", credentials.username());
+            redirectAttributes.addFlashAttribute("generatedPassword", credentials.password());
+        } catch (IllegalStateException | IllegalArgumentException ex) {
+            bindingResult.reject("registration.error", ex.getMessage());
+            model.addAttribute("registrationForm", form);
+            return "auth/register";
+        }
+
         return "redirect:/login";
     }
 

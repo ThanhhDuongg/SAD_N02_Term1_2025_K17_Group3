@@ -1,5 +1,6 @@
 package com.example.dorm.service;
 
+import com.example.dorm.dto.StudentAccountCredentials;
 import com.example.dorm.model.Room;
 import com.example.dorm.model.RoleName;
 import com.example.dorm.model.Student;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +26,10 @@ public class StudentService {
     private final RoomRepository roomRepository;
     private final UserService userService;
     private final String defaultStudentPassword;
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    private static final String PASSWORD_CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#&$%";
+    private static final int PASSWORD_LENGTH = 12;
 
     public StudentService(StudentRepository studentRepository,
                           RoomRepository roomRepository,
@@ -108,6 +114,38 @@ public class StudentService {
     }
 
     @Transactional
+    public StudentAccountCredentials registerStudentAccount(Student student, String email) {
+        if (student == null) {
+            throw new IllegalArgumentException("Không tìm thấy sinh viên");
+        }
+
+        if (student.getUser() != null) {
+            throw new IllegalStateException("Sinh viên đã có tài khoản đăng nhập");
+        }
+
+        String normalizedEmail = normalizeEmail(email);
+        if (normalizedEmail == null) {
+            throw new IllegalStateException("Email không được để trống");
+        }
+
+        if (student.getEmail() != null && !student.getEmail().equalsIgnoreCase(normalizedEmail)) {
+            throw new IllegalStateException("Email không trùng khớp với hồ sơ sinh viên");
+        }
+
+        student.setEmail(normalizedEmail);
+        validateUniqueEmail(student);
+
+        String username = normalizedEmail;
+        String rawPassword = generateTemporaryPassword();
+
+        User account = userService.createUser(username, normalizedEmail, rawPassword, RoleName.ROLE_STUDENT);
+        student.setUser(account);
+        studentRepository.save(student);
+
+        return new StudentAccountCredentials(username, rawPassword);
+    }
+
+    @Transactional
     public Student updateContactInfo(Long studentId, String phone, String email, String address) {
         Student student = getRequiredStudent(studentId);
 
@@ -165,6 +203,15 @@ public class StudentService {
 
         User updatedAccount = userService.updateStudentAccount(account, email, student.getName(), student.getPhone());
         student.setUser(updatedAccount);
+    }
+
+    private String generateTemporaryPassword() {
+        StringBuilder password = new StringBuilder(PASSWORD_LENGTH);
+        for (int i = 0; i < PASSWORD_LENGTH; i++) {
+            int index = secureRandom.nextInt(PASSWORD_CHARACTERS.length());
+            password.append(PASSWORD_CHARACTERS.charAt(index));
+        }
+        return password.toString();
     }
 
     private void validateUniqueCode(Student student) {
