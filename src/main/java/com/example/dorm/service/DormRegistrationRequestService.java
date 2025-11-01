@@ -22,9 +22,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class DormRegistrationRequestService {
+
+    private static final Pattern CAPACITY_PATTERN = Pattern.compile("(\\d+)");
 
     private final DormRegistrationRequestRepository repository;
     private final DormRegistrationPeriodService periodService;
@@ -379,10 +383,33 @@ public class DormRegistrationRequestService {
         if (desiredType == null || desiredType.isBlank()) {
             return;
         }
+        String trimmedDesired = desiredType.trim();
         String actualType = room.getRoomType() != null ? room.getRoomType().getName() : room.getType();
-        if (actualType == null || !actualType.equalsIgnoreCase(desiredType.trim())) {
-            throw new IllegalStateException("Phòng được chọn không đúng với loại phòng sinh viên đăng ký");
+        if (actualType != null && actualType.equalsIgnoreCase(trimmedDesired)) {
+            return;
         }
+
+        Integer desiredCapacity = extractCapacity(trimmedDesired);
+        if (desiredCapacity != null) {
+            Integer roomCapacity = room.getRoomType() != null ? room.getRoomType().getCapacity() : room.getCapacity();
+            if (roomCapacity != null && roomCapacity.equals(desiredCapacity)) {
+                return;
+            }
+        }
+
+        throw new IllegalStateException("Phòng được chọn không đúng với loại phòng sinh viên đăng ký");
+    }
+
+    private Integer extractCapacity(String desiredType) {
+        Matcher matcher = CAPACITY_PATTERN.matcher(desiredType);
+        if (matcher.find()) {
+            try {
+                return Integer.parseInt(matcher.group(1));
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private void enforceQueueDiscipline(DormRegistrationRequest request) {
