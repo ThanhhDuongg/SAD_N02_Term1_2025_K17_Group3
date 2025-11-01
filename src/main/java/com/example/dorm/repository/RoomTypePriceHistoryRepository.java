@@ -10,4 +10,6 @@ import java.util.List;
 public interface RoomTypePriceHistoryRepository extends JpaRepository<RoomTypePriceHistory, Long> {
 
     List<RoomTypePriceHistory> findByRoomType_IdOrderByChangedAtDesc(Long roomTypeId);
+
+    List<RoomTypePriceHistory> findByRoomType_IdOrderByEffectiveFromAsc(Long roomTypeId);
 }

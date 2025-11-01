@@ -4,24 +4,33 @@ import com.example.dorm.model.Contract;
 import com.example.dorm.model.Fee;
 import com.example.dorm.model.FeeScope;
 import com.example.dorm.model.FeeType;
+import com.example.dorm.model.PaymentPlan;
 import com.example.dorm.model.PaymentStatus;
+import com.example.dorm.model.Room;
+import com.example.dorm.model.RoomType;
+import com.example.dorm.model.RoomTypePriceHistory;
 import com.example.dorm.repository.ContractRepository;
 import com.example.dorm.repository.FeeRepository;
+import com.example.dorm.repository.RoomTypePriceHistoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,14 +38,40 @@ public class FeeService {
 
     private final FeeRepository feeRepository;
     private final ContractRepository contractRepository;
+    private final RoomTypePriceHistoryRepository roomTypePriceHistoryRepository;
 
-    public FeeService(FeeRepository feeRepository, ContractRepository contractRepository) {
+    public FeeService(FeeRepository feeRepository,
+                      ContractRepository contractRepository,
+                      RoomTypePriceHistoryRepository roomTypePriceHistoryRepository) {
         this.feeRepository = feeRepository;
         this.contractRepository = contractRepository;
+        this.roomTypePriceHistoryRepository = roomTypePriceHistoryRepository;
     }
 
     public Page<Fee> getAllFees(Pageable pageable) {
         return feeRepository.findAll(pageable);
+    }
+
+    public int refreshOverdueStatuses() {
+        LocalDate today = LocalDate.now();
+        List<Fee> fees = feeRepository.findAll();
+        int updates = 0;
+        for (Fee fee : fees) {
+            if (fee.getDueDate() == null || fee.getPaymentStatus() == PaymentStatus.PAID) {
+                continue;
+            }
+            if (fee.getDueDate().isBefore(today) && fee.getPaymentStatus() == PaymentStatus.UNPAID) {
+                fee.setPaymentStatus(PaymentStatus.OVERDUE);
+                updates++;
+            } else if (!fee.getDueDate().isBefore(today) && fee.getPaymentStatus() == PaymentStatus.OVERDUE) {
+                fee.setPaymentStatus(PaymentStatus.UNPAID);
+                updates++;
+            }
+        }
+        if (updates > 0) {
+            feeRepository.saveAll(fees);
+        }
+        return updates;
     }
 
     public Optional<Fee> getFee(Long id) {
@@ -82,7 +117,9 @@ public class FeeService {
     }
 
     public List<Fee> getUnpaidFeesByStudent(Long studentId) {
-        return feeRepository.findByContract_Student_IdAndPaymentStatus(studentId, PaymentStatus.UNPAID);
+        return feeRepository.findByContract_Student_Id(studentId).stream()
+                .filter(fee -> fee.getPaymentStatus() != PaymentStatus.PAID)
+                .toList();
     }
 
     public List<Fee> getAllFees() {
@@ -113,6 +150,52 @@ public class FeeService {
         return feeRepository.count();
     }
 
+    public List<Fee> synchronizeRentFees(Contract contract) {
+        if (contract == null || contract.getId() == null) {
+            return List.of();
+        }
+
+        PaymentPlan plan = contract.getPaymentPlan() != null ? contract.getPaymentPlan() : PaymentPlan.MONTHLY;
+        List<Fee> existing = feeRepository.findByContract_IdAndType(contract.getId(), FeeType.RENT);
+        List<Fee> orphaned = existing.stream()
+                .filter(fee -> fee.getDueDate() == null)
+                .toList();
+        Map<LocalDate, Fee> existingByDueDate = existing.stream()
+                .filter(fee -> fee.getDueDate() != null)
+                .collect(Collectors.toMap(Fee::getDueDate, Function.identity(), (left, right) -> left, HashMap::new));
+
+        List<Fee> result = new ArrayList<>();
+        List<RoomTypePriceHistory> priceHistory = resolvePriceHistory(contract.getRoom());
+
+        if (!orphaned.isEmpty()) {
+            feeRepository.deleteAll(orphaned);
+        }
+
+        if (plan == PaymentPlan.FULL_TERM) {
+            result.add(buildFullTermFee(contract, existingByDueDate, priceHistory));
+        } else {
+            result.addAll(buildMonthlyFees(contract, existingByDueDate, priceHistory));
+        }
+
+        if (!existingByDueDate.isEmpty()) {
+            feeRepository.deleteAll(existingByDueDate.values());
+        }
+        if (!result.isEmpty()) {
+            feeRepository.saveAll(result);
+        }
+        return result;
+    }
+
+    public void removeFeesForContract(Long contractId) {
+        if (contractId == null) {
+            return;
+        }
+        List<Fee> fees = feeRepository.findByContract_Id(contractId);
+        if (!fees.isEmpty()) {
+            feeRepository.deleteAll(fees);
+        }
+    }
+
     private void persistIndividualFee(Fee fee, BigDecimal totalAmount) {
         Contract contract = getRequiredContract(fee);
         fee.setContract(contract);
@@ -120,6 +203,7 @@ public class FeeService {
         fee.setAmount(totalAmount);
         fee.setTotalAmount(totalAmount);
         fee.setGroupCode(null);
+        fee.setPaymentStatus(normalizePaymentStatus(fee.getPaymentStatus()));
         feeRepository.save(fee);
     }
 
@@ -192,7 +276,7 @@ public class FeeService {
         existing.setGroupCode(null);
         existing.setType(template.getType());
         existing.setDueDate(template.getDueDate());
-        existing.setPaymentStatus(template.getPaymentStatus());
+        existing.setPaymentStatus(determineTargetStatus(template.getPaymentStatus(), existing.getPaymentStatus()));
         existing.setAmount(totalAmount);
         existing.setTotalAmount(totalAmount);
         feeRepository.save(existing);
@@ -210,7 +294,7 @@ public class FeeService {
         existing.setGroupCode(null);
         existing.setType(template.getType());
         existing.setDueDate(template.getDueDate());
-        existing.setPaymentStatus(template.getPaymentStatus());
+        existing.setPaymentStatus(determineTargetStatus(template.getPaymentStatus(), existing.getPaymentStatus()));
         existing.setAmount(totalAmount);
         existing.setTotalAmount(totalAmount);
         feeRepository.save(existing);
@@ -245,7 +329,7 @@ public class FeeService {
             fee.setGroupCode(groupCode);
             fee.setType(template.getType());
             fee.setDueDate(template.getDueDate());
-            fee.setPaymentStatus(template.getPaymentStatus());
+            fee.setPaymentStatus(determineTargetStatus(template.getPaymentStatus(), fee.getPaymentStatus()));
 
             BigDecimal share = baseShare;
             if (remainder.compareTo(unit) >= 0) {
@@ -276,5 +360,117 @@ public class FeeService {
             return BigDecimal.ZERO;
         }
         return amount;
+    }
+
+    private List<Fee> buildMonthlyFees(Contract contract,
+                                       Map<LocalDate, Fee> existingByDueDate,
+                                       List<RoomTypePriceHistory> priceHistory) {
+        List<Fee> fees = new ArrayList<>();
+        YearMonth cursor = YearMonth.from(contract.getStartDate());
+        YearMonth end = YearMonth.from(contract.getEndDate());
+        while (!cursor.isAfter(end)) {
+            LocalDate dueDate = determineDueDateForMonth(cursor, contract);
+            Fee fee = existingByDueDate.remove(dueDate);
+            if (fee == null) {
+                fee = new Fee();
+            }
+            BigDecimal amount = resolveMonthlyAmount(contract, dueDate, priceHistory);
+            populateRentFee(contract, fee, dueDate, amount);
+            fees.add(fee);
+            cursor = cursor.plusMonths(1);
+        }
+        return fees;
+    }
+
+    private Fee buildFullTermFee(Contract contract,
+                                 Map<LocalDate, Fee> existingByDueDate,
+                                 List<RoomTypePriceHistory> priceHistory) {
+        YearMonth start = YearMonth.from(contract.getStartDate());
+        YearMonth end = YearMonth.from(contract.getEndDate());
+        YearMonth cursor = start;
+        BigDecimal total = BigDecimal.ZERO;
+        while (!cursor.isAfter(end)) {
+            LocalDate dueDate = determineDueDateForMonth(cursor, contract);
+            total = total.add(resolveMonthlyAmount(contract, dueDate, priceHistory));
+            cursor = cursor.plusMonths(1);
+        }
+        LocalDate dueDate = determineDueDateForMonth(start, contract);
+        Fee fee = existingByDueDate.remove(dueDate);
+        if (fee == null) {
+            fee = new Fee();
+        }
+        populateRentFee(contract, fee, dueDate, total);
+        fee.setTotalAmount(total);
+        return fee;
+    }
+
+    private void populateRentFee(Contract contract, Fee fee, LocalDate dueDate, BigDecimal amount) {
+        fee.setContract(contract);
+        fee.setScope(FeeScope.INDIVIDUAL);
+        fee.setGroupCode(null);
+        fee.setType(FeeType.RENT);
+        fee.setDueDate(dueDate);
+        fee.setPaymentStatus(determineTargetStatus(null, fee.getPaymentStatus()));
+        fee.setAmount(amount);
+        fee.setTotalAmount(amount);
+    }
+
+    private BigDecimal resolveMonthlyAmount(Contract contract, LocalDate dueDate, List<RoomTypePriceHistory> priceHistory) {
+        int price = resolvePriceForDate(contract.getRoom(), dueDate, priceHistory);
+        return BigDecimal.valueOf(price);
+    }
+
+    private LocalDate determineDueDateForMonth(YearMonth month, Contract contract) {
+        int preferredDay = contract.getBillingDayOfMonth() != null
+                ? contract.getBillingDayOfMonth()
+                : contract.getStartDate().getDayOfMonth();
+        int day = Math.max(1, Math.min(preferredDay, month.lengthOfMonth()));
+        LocalDate candidate = month.atDay(day);
+        if (candidate.isBefore(contract.getStartDate())) {
+            candidate = contract.getStartDate();
+        }
+        if (candidate.isAfter(contract.getEndDate())) {
+            candidate = contract.getEndDate();
+        }
+        return candidate;
+    }
+
+    private List<RoomTypePriceHistory> resolvePriceHistory(Room room) {
+        if (room == null || room.getRoomType() == null || room.getRoomType().getId() == null) {
+            return List.of();
+        }
+        return roomTypePriceHistoryRepository.findByRoomType_IdOrderByEffectiveFromAsc(room.getRoomType().getId());
+    }
+
+    private int resolvePriceForDate(Room room, LocalDate date, List<RoomTypePriceHistory> priceHistory) {
+        int fallback = room != null ? room.getPrice() : 0;
+        RoomType roomType = room != null ? room.getRoomType() : null;
+        int resolved = fallback;
+        for (RoomTypePriceHistory entry : priceHistory) {
+            LocalDate effectiveFrom = entry.getEffectiveFrom();
+            if (effectiveFrom == null) {
+                continue;
+            }
+            if (!effectiveFrom.isAfter(date)) {
+                resolved = entry.getNewPrice();
+            } else {
+                break;
+            }
+        }
+        if (resolved <= 0 && roomType != null) {
+            resolved = roomType.getCurrentPrice();
+        }
+        if (resolved <= 0) {
+            resolved = fallback;
+        }
+        return Math.max(resolved, 0);
+    }
+
+    private PaymentStatus normalizePaymentStatus(PaymentStatus status) {
+        return status != null ? status : PaymentStatus.UNPAID;
+    }
+
+    private PaymentStatus determineTargetStatus(PaymentStatus requested, PaymentStatus existing) {
+        return requested != null ? requested : normalizePaymentStatus(existing);
     }
 }

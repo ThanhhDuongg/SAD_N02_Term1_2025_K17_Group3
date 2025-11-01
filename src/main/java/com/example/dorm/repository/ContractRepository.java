@@ -48,4 +48,28 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
     Contract findTopByStudent_IdOrderByEndDateDesc(Long studentId);
 
     java.util.Optional<Contract> findByStudent_IdAndRoom_IdAndStartDate(Long studentId, Long roomId, java.time.LocalDate startDate);
+
+    @org.springframework.data.jpa.repository.Query("""
+            SELECT c FROM Contract c
+            WHERE c.student.id = :studentId
+              AND (:excludeId IS NULL OR c.id <> :excludeId)
+              AND c.startDate <= :endDate
+              AND c.endDate >= :startDate
+            """)
+    java.util.List<Contract> findOverlappingByStudent(@org.springframework.data.repository.query.Param("studentId") Long studentId,
+                                                      @org.springframework.data.repository.query.Param("startDate") java.time.LocalDate startDate,
+                                                      @org.springframework.data.repository.query.Param("endDate") java.time.LocalDate endDate,
+                                                      @org.springframework.data.repository.query.Param("excludeId") Long excludeId);
+
+    @org.springframework.data.jpa.repository.Query("""
+            SELECT c FROM Contract c
+            WHERE c.room.id = :roomId
+              AND (:excludeId IS NULL OR c.id <> :excludeId)
+              AND c.startDate <= :endDate
+              AND c.endDate >= :startDate
+            """)
+    java.util.List<Contract> findOverlappingByRoom(@org.springframework.data.repository.query.Param("roomId") Long roomId,
+                                                   @org.springframework.data.repository.query.Param("startDate") java.time.LocalDate startDate,
+                                                   @org.springframework.data.repository.query.Param("endDate") java.time.LocalDate endDate,
+                                                   @org.springframework.data.repository.query.Param("excludeId") Long excludeId);
 }

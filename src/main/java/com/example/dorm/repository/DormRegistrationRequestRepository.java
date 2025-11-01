@@ -30,4 +30,9 @@ public interface DormRegistrationRequestRepository extends JpaRepository<DormReg
 
     @EntityGraph(attributePaths = {"period", "student", "student.room"})
     Optional<DormRegistrationRequest> findWithStudentAndRoomById(Long id);
+
+    Optional<DormRegistrationRequest> findFirstByPeriod_IdAndDesiredRoomTypeIgnoreCaseAndStatusOrderByCreatedAtAsc(
+            Long periodId,
+            String desiredRoomType,
+            DormRegistrationStatus status);
 }

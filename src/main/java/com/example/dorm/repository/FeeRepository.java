@@ -48,4 +48,8 @@ public interface FeeRepository extends JpaRepository<Fee, Long> {
     Optional<Fee> findByContract_IdAndTypeAndDueDate(Long contractId, FeeType type, LocalDate dueDate);
 
     java.util.List<Fee> findByGroupCode(String groupCode);
+
+    java.util.List<Fee> findByContract_IdAndType(Long contractId, FeeType type);
+
+    java.util.List<Fee> findByContract_Id(Long contractId);
 }

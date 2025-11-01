@@ -39,6 +39,12 @@ public class DormRegistrationRequest {
     @Column(length = 2000)
     private String adminNotes;
 
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate approvedStartDate;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate approvedEndDate;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
@@ -127,6 +133,22 @@ public class DormRegistrationRequest {
 
     public void setAdminNotes(String adminNotes) {
         this.adminNotes = adminNotes;
+    }
+
+    public LocalDate getApprovedStartDate() {
+        return approvedStartDate;
+    }
+
+    public void setApprovedStartDate(LocalDate approvedStartDate) {
+        this.approvedStartDate = approvedStartDate;
+    }
+
+    public LocalDate getApprovedEndDate() {
+        return approvedEndDate;
+    }
+
+    public void setApprovedEndDate(LocalDate approvedEndDate) {
+        this.approvedEndDate = approvedEndDate;
     }
 
     public LocalDateTime getCreatedAt() {

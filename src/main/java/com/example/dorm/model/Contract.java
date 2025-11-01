@@ -21,6 +21,15 @@ public class Contract {
 
     private String status;
 
+    @Enumerated(EnumType.STRING)
+    private PaymentPlan paymentPlan = PaymentPlan.MONTHLY;
+
+    /**
+     * Preferred day within a month to generate rent invoices. If null the system
+     * will fall back to the contract start day.
+     */
+    private Integer billingDayOfMonth;
+
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -34,4 +43,8 @@ public class Contract {
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public PaymentPlan getPaymentPlan() { return paymentPlan; }
+    public void setPaymentPlan(PaymentPlan paymentPlan) { this.paymentPlan = paymentPlan; }
+    public Integer getBillingDayOfMonth() { return billingDayOfMonth; }
+    public void setBillingDayOfMonth(Integer billingDayOfMonth) { this.billingDayOfMonth = billingDayOfMonth; }
 }

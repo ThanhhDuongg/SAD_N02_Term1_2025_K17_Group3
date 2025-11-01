@@ -38,6 +38,7 @@ public class FeeController {
                            @RequestParam(name = "page", defaultValue = "0") int page,
                            @RequestParam(name = "size", defaultValue = "10") int size,
                            Model model) {
+        feeService.refreshOverdueStatuses();
         PageRequest pageable = PageRequest.of(page, size);
         Page<Fee> feesPage = feeService.searchFees(search, pageable);
         model.addAttribute("feesPage", feesPage);

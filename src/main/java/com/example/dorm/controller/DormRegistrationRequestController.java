@@ -3,8 +3,10 @@ package com.example.dorm.controller;
 import com.example.dorm.model.DormRegistrationPeriod;
 import com.example.dorm.model.DormRegistrationRequest;
 import com.example.dorm.model.DormRegistrationStatus;
+import com.example.dorm.model.PaymentPlan;
 import com.example.dorm.service.DormRegistrationPeriodService;
 import com.example.dorm.service.DormRegistrationRequestService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Controller
@@ -96,6 +99,30 @@ public class DormRegistrationRequestController {
             redirectAttributes.addFlashAttribute("alertClass", "alert-success");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("message", "Không thể cập nhật trạng thái: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+        }
+        return "redirect:/registrations/" + id;
+    }
+
+    @PostMapping("/{id}/assign")
+    public String assignRoom(@PathVariable Long id,
+                             @RequestParam("roomId") Long roomId,
+                             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                             @RequestParam(value = "paymentPlan", required = false) PaymentPlan paymentPlan,
+                             @RequestParam(value = "billingDay", required = false) Integer billingDay,
+                             @RequestParam(value = "force", defaultValue = "false") boolean force,
+                             @RequestParam(value = "adminNotes", required = false) String adminNotes,
+                             RedirectAttributes redirectAttributes) {
+        try {
+            DormRegistrationRequestService.DormRegistrationAssignmentResult result =
+                    dormRegistrationRequestService.approveAndAssign(id, roomId, startDate, endDate,
+                            paymentPlan, billingDay, force, adminNotes);
+            redirectAttributes.addFlashAttribute("message",
+                    "Đã phê duyệt và tạo hợp đồng #" + result.contract().getId());
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Không thể xếp phòng: " + e.getMessage());
             redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
         }
         return "redirect:/registrations/" + id;

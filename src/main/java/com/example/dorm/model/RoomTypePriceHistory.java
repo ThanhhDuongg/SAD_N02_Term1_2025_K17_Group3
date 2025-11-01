@@ -2,6 +2,7 @@ package com.example.dorm.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,6 +26,9 @@ public class RoomTypePriceHistory {
     @Column(nullable = false)
     private LocalDateTime changedAt;
 
+    @Column(name = "effective_from", nullable = false)
+    private LocalDate effectiveFrom;
+
     @Column(length = 500)
     private String note;
 
@@ -32,6 +36,9 @@ public class RoomTypePriceHistory {
     public void onCreate() {
         if (this.changedAt == null) {
             this.changedAt = LocalDateTime.now();
+        }
+        if (this.effectiveFrom == null) {
+            this.effectiveFrom = this.changedAt.toLocalDate();
         }
     }
 
@@ -73,6 +80,14 @@ public class RoomTypePriceHistory {
 
     public void setChangedAt(LocalDateTime changedAt) {
         this.changedAt = changedAt;
+    }
+
+    public LocalDate getEffectiveFrom() {
+        return effectiveFrom;
+    }
+
+    public void setEffectiveFrom(LocalDate effectiveFrom) {
+        this.effectiveFrom = effectiveFrom;
     }
 
     public String getNote() {
