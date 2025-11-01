@@ -24,6 +24,7 @@ Tổng hợp các kiểm tra/chuẩn hóa được áp dụng trong tầng servi
 - Một sinh viên chỉ có tối đa một hợp đồng đang hoạt động.
 - Không thể gán hợp đồng vào phòng đã đầy.
 - Cập nhật hợp đồng sẽ đồng bộ lại phòng của sinh viên.
+- Khoảng thời gian trong hợp đồng được chuẩn hóa theo tháng và kiểm tra trùng lặp trước khi tạo.
 
 ## Fee
 
@@ -42,6 +43,8 @@ Tổng hợp các kiểm tra/chuẩn hóa được áp dụng trong tầng servi
 - Sinh viên chỉ được gửi một hồ sơ cho mỗi đợt đăng ký đang mở.
 - Ngày dự kiến vào ở là bắt buộc.
 - Không thể nhận hồ sơ nếu đợt đã đầy chỉ tiêu.
+- Khi duyệt hồ sơ, thời gian ở bị giới hạn trong phạm vi năm học của đợt đăng ký và chỉ lấy theo tháng.
+- Hệ thống chỉ đề xuất các phòng còn chỗ phù hợp với loại phòng mong muốn và thời gian cư trú được chọn.
 
 ## MaintenanceRequest
 

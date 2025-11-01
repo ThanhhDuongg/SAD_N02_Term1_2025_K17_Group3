@@ -6,18 +6,22 @@ import com.example.dorm.model.DormRegistrationRequest;
 import com.example.dorm.model.DormRegistrationStatus;
 import com.example.dorm.model.PaymentPlan;
 import com.example.dorm.model.Room;
+import com.example.dorm.model.RoomOccupancyStatus;
 import com.example.dorm.model.Student;
 import com.example.dorm.repository.DormRegistrationRequestRepository;
 import com.example.dorm.repository.RoomRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.time.LocalDate;
-import java.util.Objects;
 
 @Service
 public class DormRegistrationRequestService {
@@ -93,6 +97,31 @@ public class DormRegistrationRequestService {
         return repository.findWithStudentAndRoomById(id);
     }
 
+    @Transactional(readOnly = true)
+    public AssignmentPreparation prepareAssignment(Long requestId,
+                                                    YearMonth requestedStart,
+                                                    YearMonth requestedEnd) {
+        DormRegistrationRequest request = repository.findWithStudentAndRoomById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu đăng ký"));
+
+        YearMonth startMonth = determineDefaultStartMonth(request);
+        if (requestedStart != null) {
+            startMonth = clampStartMonth(request, requestedStart);
+        }
+
+        YearMonth endMonth = determineDefaultEndMonth(request, startMonth);
+        if (requestedEnd != null) {
+            endMonth = clampEndMonth(request, startMonth, requestedEnd);
+        }
+
+        LocalDate startDate = startMonth.atDay(1);
+        LocalDate endDate = endMonth.atEndOfMonth();
+
+        List<RoomSuggestion> suggestions = buildRoomSuggestions(request, startDate, endDate);
+
+        return new AssignmentPreparation(request, startMonth, endMonth, suggestions);
+    }
+
     @Transactional
     public DormRegistrationAssignmentResult approveAndAssign(Long requestId,
                                                              Long roomId,
@@ -122,8 +151,9 @@ public class DormRegistrationRequestService {
             enforceQueueDiscipline(request);
         }
 
-        LocalDate normalizedStart = requireDate(startDate, "Vui lòng chọn ngày bắt đầu ở");
+        LocalDate normalizedStart = requireDate(startDate, "Vui lòng chọn ngày bắt đầu ở").withDayOfMonth(1);
         LocalDate normalizedEnd = requireDate(endDate, "Vui lòng chọn ngày kết thúc ở");
+        normalizedEnd = normalizedEnd.withDayOfMonth(normalizedEnd.lengthOfMonth());
         if (normalizedEnd.isBefore(normalizedStart)) {
             throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu");
         }
@@ -194,11 +224,154 @@ public class DormRegistrationRequestService {
             return;
         }
         if (period.getStartTime() != null && start.isBefore(period.getStartTime().toLocalDate())) {
-            throw new IllegalStateException("Thời gian ở phải nằm trong đợt đăng ký");
+            throw new IllegalStateException("Thời gian ở phải nằm trong năm học của đợt đăng ký");
         }
         if (period.getEndTime() != null && end.isAfter(period.getEndTime().toLocalDate())) {
-            throw new IllegalStateException("Thời gian ở vượt quá giới hạn đợt đăng ký");
+            throw new IllegalStateException("Thời gian ở vượt quá giới hạn năm học của đợt đăng ký");
         }
+    }
+
+    private List<RoomSuggestion> buildRoomSuggestions(DormRegistrationRequest request,
+                                                      LocalDate startDate,
+                                                      LocalDate endDate) {
+        List<Room> candidates = new ArrayList<>(loadCandidateRooms(request));
+        if (candidates.isEmpty()) {
+            return List.of();
+        }
+
+        List<RoomSuggestion> suggestions = new ArrayList<>();
+        String preferredNumber = request.getPreferredRoomNumber();
+        for (Room room : candidates) {
+            if (room.getCapacity() <= 0 || room.getOccupancyStatus() != RoomOccupancyStatus.AVAILABLE) {
+                continue;
+            }
+
+            long occupied = contractService.countBlockingContractsForRoom(room.getId(), startDate, endDate, null);
+            int availableSlots = room.getCapacity() - (int) occupied;
+            if (availableSlots <= 0) {
+                continue;
+            }
+
+            List<String> occupants = contractService.findBlockingContractsForRoom(room.getId(), startDate, endDate, null)
+                    .stream()
+                    .map(contract -> contract.getStudent() != null ? contract.getStudent().getName() : "(Chưa xác định)")
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            boolean matchesPreference = preferredNumber != null
+                    && !preferredNumber.isBlank()
+                    && preferredNumber.equalsIgnoreCase(room.getNumber());
+
+            suggestions.add(new RoomSuggestion(
+                    room.getId(),
+                    room.getNumber(),
+                    room.getBuilding() != null ? room.getBuilding().getName() : null,
+                    room.getRoomType() != null ? room.getRoomType().getName() : room.getType(),
+                    room.getCapacity(),
+                    availableSlots,
+                    room.getCapacity() - availableSlots,
+                    resolveRoomPrice(room),
+                    matchesPreference,
+                    occupants
+            ));
+        }
+
+        suggestions.sort(Comparator
+                .comparing(RoomSuggestion::matchesPreference).reversed()
+                .thenComparing(RoomSuggestion::availableSlots, Comparator.reverseOrder())
+                .thenComparing(RoomSuggestion::price)
+                .thenComparing(RoomSuggestion::number, String.CASE_INSENSITIVE_ORDER));
+
+        return suggestions;
+    }
+
+    private List<Room> loadCandidateRooms(DormRegistrationRequest request) {
+        String desiredType = request.getDesiredRoomType();
+        List<Room> rooms = new ArrayList<>();
+        if (desiredType != null && !desiredType.isBlank()) {
+            rooms.addAll(roomRepository.findAvailableRoomsByType(desiredType.trim(), RoomOccupancyStatus.AVAILABLE));
+        } else {
+            rooms.addAll(roomRepository.findAvailableRoomsByType(null, RoomOccupancyStatus.AVAILABLE));
+        }
+
+        if (rooms.isEmpty() && desiredType != null && !desiredType.isBlank()) {
+            rooms.addAll(roomRepository.findAvailableRoomsByType(null, RoomOccupancyStatus.AVAILABLE));
+        }
+
+        String preferredNumber = request.getPreferredRoomNumber();
+        if (preferredNumber != null && !preferredNumber.isBlank()) {
+            roomRepository.findByNumberWithDetails(preferredNumber.trim())
+                    .filter(room -> room.getOccupancyStatus() == RoomOccupancyStatus.AVAILABLE)
+                    .ifPresent(room -> {
+                        boolean exists = rooms.stream().anyMatch(candidate -> Objects.equals(candidate.getId(), room.getId()));
+                        if (!exists) {
+                            rooms.add(0, room);
+                        }
+                    });
+        }
+
+        return rooms;
+    }
+
+    private int resolveRoomPrice(Room room) {
+        if (room.getRoomType() != null) {
+            return room.getRoomType().getCurrentPrice();
+        }
+        return room.getPrice();
+    }
+
+    private YearMonth determineDefaultStartMonth(DormRegistrationRequest request) {
+        if (request.getApprovedStartDate() != null) {
+            return clampStartMonth(request, YearMonth.from(request.getApprovedStartDate()));
+        }
+        if (request.getExpectedMoveInDate() != null) {
+            return clampStartMonth(request, YearMonth.from(request.getExpectedMoveInDate()));
+        }
+        DormRegistrationPeriod period = request.getPeriod();
+        if (period != null && period.getStartTime() != null) {
+            return clampStartMonth(request, YearMonth.from(period.getStartTime()));
+        }
+        return YearMonth.from(LocalDate.now());
+    }
+
+    private YearMonth determineDefaultEndMonth(DormRegistrationRequest request, YearMonth startMonth) {
+        YearMonth candidate;
+        if (request.getApprovedEndDate() != null) {
+            candidate = YearMonth.from(request.getApprovedEndDate());
+        } else {
+            DormRegistrationPeriod period = request.getPeriod();
+            if (period != null && period.getEndTime() != null) {
+                candidate = YearMonth.from(period.getEndTime());
+            } else {
+                candidate = startMonth.plusMonths(5);
+            }
+        }
+        return clampEndMonth(request, startMonth, candidate);
+    }
+
+    private YearMonth clampStartMonth(DormRegistrationRequest request, YearMonth candidate) {
+        DormRegistrationPeriod period = request.getPeriod();
+        if (period != null && period.getStartTime() != null) {
+            YearMonth min = YearMonth.from(period.getStartTime());
+            if (candidate.isBefore(min)) {
+                return min;
+            }
+        }
+        return candidate;
+    }
+
+    private YearMonth clampEndMonth(DormRegistrationRequest request,
+                                    YearMonth startMonth,
+                                    YearMonth candidate) {
+        YearMonth adjusted = candidate.isBefore(startMonth) ? startMonth : candidate;
+        DormRegistrationPeriod period = request.getPeriod();
+        if (period != null && period.getEndTime() != null) {
+            YearMonth max = YearMonth.from(period.getEndTime());
+            if (adjusted.isAfter(max)) {
+                adjusted = max;
+            }
+        }
+        return adjusted;
     }
 
     private void ensureRoomMatchesPreference(DormRegistrationRequest request, Room room) {
@@ -269,5 +442,23 @@ public class DormRegistrationRequestService {
     }
 
     public record DormRegistrationAssignmentResult(DormRegistrationRequest request, Contract contract) {
+    }
+
+    public record AssignmentPreparation(DormRegistrationRequest request,
+                                        YearMonth startMonth,
+                                        YearMonth endMonth,
+                                        List<RoomSuggestion> roomSuggestions) {
+    }
+
+    public record RoomSuggestion(Long id,
+                                 String number,
+                                 String buildingName,
+                                 String roomType,
+                                 int capacity,
+                                 int availableSlots,
+                                 int occupiedSlots,
+                                 int price,
+                                 boolean matchesPreference,
+                                 List<String> occupants) {
     }
 }

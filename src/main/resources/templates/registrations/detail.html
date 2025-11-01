@@ -71,6 +71,104 @@
         </div>
 
         <div class="card">
+            <h3>Phê duyệt &amp; Xếp phòng</h3>
+
+            <form class="form-inline" th:action="@{'/registrations/' + ${request.id}}" method="get">
+                <div class="form-group">
+                    <label for="filterStartMonth">Tháng bắt đầu</label>
+                    <input id="filterStartMonth" type="month" name="startMonth" th:value="${selectedStartMonth}">
+                </div>
+                <div class="form-group">
+                    <label for="filterEndMonth">Tháng kết thúc</label>
+                    <input id="filterEndMonth" type="month" name="endMonth" th:value="${selectedEndMonth}">
+                </div>
+                <button class="button btn-view" type="submit">Lấy gợi ý phòng</button>
+            </form>
+
+            <div class="table-wrapper" th:if="${roomSuggestions != null}">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Phòng</th>
+                        <th>Tòa</th>
+                        <th>Loại phòng</th>
+                        <th>Sức chứa</th>
+                        <th>Học phí</th>
+                        <th>Đang ở</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="suggestion : ${roomSuggestions}">
+                        <td>
+                            <strong th:text="${suggestion.number}"></strong>
+                            <span class="badge" th:if="${suggestion.matchesPreference}" style="margin-left: 0.5rem;">Ưu tiên</span>
+                            <div class="meta-sub" th:text="${'Còn ' + suggestion.availableSlots + ' chỗ'}"></div>
+                        </td>
+                        <td th:text="${suggestion.buildingName != null ? suggestion.buildingName : '---'}"></td>
+                        <td th:text="${suggestion.roomType != null ? suggestion.roomType : '-'}"></td>
+                        <td th:text="${suggestion.capacity + ' (đã ở ' + suggestion.occupiedSlots + ')'}"></td>
+                        <td th:text="${suggestion.price} + ' đ/tháng'"></td>
+                        <td>
+                            <span th:if="${#lists.isEmpty(suggestion.occupants)}">Chưa có sinh viên</span>
+                            <span th:each="occupant, iterStat : ${suggestion.occupants}">
+                                <span th:text="${occupant}"></span><span th:if="${!iterStat.last}">, </span>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(roomSuggestions)}">
+                        <td colspan="6" class="text-center text-muted">Chưa có phòng phù hợp trong khoảng thời gian đã chọn.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <form class="form-grid" th:action="@{'/registrations/' + ${request.id} + '/assign'}" method="post">
+                <div class="form-group">
+                    <label for="assignStartMonth">Tháng bắt đầu ở</label>
+                    <input id="assignStartMonth" type="month" name="startMonth" required th:value="${selectedStartMonth}">
+                </div>
+                <div class="form-group">
+                    <label for="assignEndMonth">Tháng kết thúc ở</label>
+                    <input id="assignEndMonth" type="month" name="endMonth" required th:value="${selectedEndMonth}">
+                </div>
+                <div class="form-group">
+                    <label for="roomId">Chọn phòng</label>
+                    <select id="roomId" name="roomId" required>
+                        <option value="" disabled selected>-- Chọn phòng phù hợp --</option>
+                        <option th:each="suggestion : ${roomSuggestions}"
+                                th:value="${suggestion.id}"
+                                th:text="${'Phòng ' + suggestion.number + ' • ' + (suggestion.buildingName != null ? suggestion.buildingName : 'Không rõ') + ' • Còn ' + suggestion.availableSlots + '/' + suggestion.capacity}"
+                                th:disabled="${suggestion.availableSlots <= 0}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="paymentPlan">Hình thức thanh toán</label>
+                    <select id="paymentPlan" name="paymentPlan">
+                        <option th:each="plan : ${paymentPlans}"
+                                th:value="${plan.name()}"
+                                th:selected="${plan.name() == 'MONTHLY'}"
+                                th:text="${plan.name() == 'FULL_TERM' ? 'Đóng cả kỳ' : 'Theo tháng'}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="billingDay">Ngày thu phí (nếu cần)</label>
+                    <input id="billingDay" type="number" name="billingDay" min="1" max="31" placeholder="Mặc định ngày bắt đầu">
+                </div>
+                <div class="form-group form-group-checkbox">
+                    <input id="force" type="checkbox" name="force">
+                    <label for="force">Bỏ qua thứ tự ưu tiên (nếu cần xử lý gấp)</label>
+                </div>
+                <div class="form-group form-group-full">
+                    <label for="assignmentNotes">Ghi chú cho sinh viên</label>
+                    <textarea id="assignmentNotes" name="adminNotes" rows="3" placeholder="Thông tin thêm về hợp đồng hoặc yêu cầu xác nhận"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button class="button btn-add" type="submit">Phê duyệt &amp; tạo hợp đồng</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
             <h3>Phản hồi &amp; trạng thái</h3>
             <form class="form-grid" th:action="@{'/registrations/' + ${request.id} + '/status'}" method="post">
                 <div class="form-group">

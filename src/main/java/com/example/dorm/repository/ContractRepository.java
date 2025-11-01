@@ -6,6 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDate;
+import java.util.Collection;
 
 @Repository
 public interface ContractRepository extends JpaRepository<Contract, Long> {
@@ -21,7 +25,7 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
                OR lower(c.student.name) LIKE lower(concat(:search, ' %'))
                OR lower(c.student.name) LIKE lower(concat('% ', :search))
             """)
-    Page<Contract> searchByStudentWordOrCodeOrRoomOrStatus(@org.springframework.data.repository.query.Param("search") String search, Pageable pageable);
+    Page<Contract> searchByStudentWordOrCodeOrRoomOrStatus(@Param("search") String search, Pageable pageable);
 
     @org.springframework.data.jpa.repository.Query("""
             SELECT c FROM Contract c
@@ -31,7 +35,7 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
                OR lower(c.student.name) LIKE lower(concat(:search, ' %'))
                OR lower(c.student.name) LIKE lower(concat('% ', :search))
             """)
-    Page<Contract> searchByIdOrStudentWord(@org.springframework.data.repository.query.Param("search") String search, Pageable pageable);
+    Page<Contract> searchByIdOrStudentWord(@Param("search") String search, Pageable pageable);
 
     java.util.List<Contract> findByRoom_Id(Long roomId);
 
@@ -58,10 +62,10 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
               AND c.startDate <= :endDate
               AND c.endDate >= :startDate
             """)
-    java.util.List<Contract> findOverlappingByStudent(@org.springframework.data.repository.query.Param("studentId") Long studentId,
-                                                      @org.springframework.data.repository.query.Param("startDate") java.time.LocalDate startDate,
-                                                      @org.springframework.data.repository.query.Param("endDate") java.time.LocalDate endDate,
-                                                      @org.springframework.data.repository.query.Param("excludeId") Long excludeId);
+    java.util.List<Contract> findOverlappingByStudent(@Param("studentId") Long studentId,
+                                                      @Param("startDate") LocalDate startDate,
+                                                      @Param("endDate") LocalDate endDate,
+                                                      @Param("excludeId") Long excludeId);
 
     @org.springframework.data.jpa.repository.Query("""
             SELECT c FROM Contract c
@@ -70,8 +74,23 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
               AND c.startDate <= :endDate
               AND c.endDate >= :startDate
             """)
-    java.util.List<Contract> findOverlappingByRoom(@org.springframework.data.repository.query.Param("roomId") Long roomId,
-                                                   @org.springframework.data.repository.query.Param("startDate") java.time.LocalDate startDate,
-                                                   @org.springframework.data.repository.query.Param("endDate") java.time.LocalDate endDate,
-                                                   @org.springframework.data.repository.query.Param("excludeId") Long excludeId);
+    java.util.List<Contract> findOverlappingByRoom(@Param("roomId") Long roomId,
+                                                   @Param("startDate") LocalDate startDate,
+                                                   @Param("endDate") LocalDate endDate,
+                                                   @Param("excludeId") Long excludeId);
+
+    @org.springframework.data.jpa.repository.Query("""
+            SELECT COUNT(c)
+            FROM Contract c
+            WHERE c.room.id = :roomId
+              AND (:excludeId IS NULL OR c.id <> :excludeId)
+              AND c.startDate <= :endDate
+              AND c.endDate >= :startDate
+              AND (c.status IS NULL OR UPPER(c.status) NOT IN :nonBlockingStatuses)
+            """)
+    long countBlockingContractsByRoom(@Param("roomId") Long roomId,
+                                      @Param("startDate") LocalDate startDate,
+                                      @Param("endDate") LocalDate endDate,
+                                      @Param("excludeId") Long excludeId,
+                                      @Param("nonBlockingStatuses") Collection<String> nonBlockingStatuses);
 }

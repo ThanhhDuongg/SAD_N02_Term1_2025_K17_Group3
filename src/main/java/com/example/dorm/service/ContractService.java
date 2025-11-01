@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ContractService {
@@ -24,7 +25,7 @@ public class ContractService {
     private final RoomRepository roomRepository;
     private final FeeService feeService;
 
-    private static final Set<String> NON_BLOCKING_STATUSES = Set.of("CANCELLED", "TERMINATED", "ENDED", "EXPIRED");
+    public static final Set<String> NON_BLOCKING_STATUSES = Set.of("CANCELLED", "TERMINATED", "ENDED", "EXPIRED");
 
     public ContractService(ContractRepository contractRepository,
                            StudentRepository studentRepository,
@@ -214,21 +215,47 @@ public class ContractService {
                     });
         }
 
-        List<Contract> roomOverlaps = contractRepository
-                .findOverlappingByRoom(room.getId(), startDate, endDate, excludeContractId);
-        long activeCount = roomOverlaps.stream()
-                .filter(contract -> isBlockingStatus(contract.getStatus()))
-                .count();
+        long activeCount = countBlockingContractsForRoom(room.getId(), startDate, endDate, excludeContractId);
         if (activeCount >= room.getCapacity()) {
-            throw new IllegalStateException("Room capacity exceeded");
+            throw new IllegalStateException("Phòng đã đủ người trong khoảng thời gian này");
         }
     }
 
-    private boolean isBlockingStatus(String status) {
+    public boolean isBlockingStatus(String status) {
         if (status == null || status.isBlank()) {
             return true;
         }
         return !NON_BLOCKING_STATUSES.contains(status.trim().toUpperCase());
+    }
+
+    public long countBlockingContractsForRoom(Long roomId,
+                                              LocalDate startDate,
+                                              LocalDate endDate,
+                                              Long excludeContractId) {
+        if (roomId == null) {
+            return 0;
+        }
+        return contractRepository.countBlockingContractsByRoom(
+                roomId,
+                startDate,
+                endDate,
+                excludeContractId,
+                NON_BLOCKING_STATUSES
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<Contract> findBlockingContractsForRoom(Long roomId,
+                                                       LocalDate startDate,
+                                                       LocalDate endDate,
+                                                       Long excludeContractId) {
+        if (roomId == null) {
+            return List.of();
+        }
+        return contractRepository.findOverlappingByRoom(roomId, startDate, endDate, excludeContractId)
+                .stream()
+                .filter(contract -> isBlockingStatus(contract.getStatus()))
+                .collect(Collectors.toList());
     }
 
     private String normalizeStatus(String requestedStatus, LocalDate startDate, LocalDate endDate) {

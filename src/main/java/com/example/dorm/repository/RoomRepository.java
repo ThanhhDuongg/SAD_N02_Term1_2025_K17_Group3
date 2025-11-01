@@ -1,6 +1,7 @@
 package com.example.dorm.repository;
 
 import com.example.dorm.model.Room;
+import com.example.dorm.model.RoomOccupancyStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,6 +22,31 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     Optional<Room> findByNumber(String number);
 
     Optional<Room> findByNumberIgnoreCase(String number);
+
+    @Query("""
+            select r
+            from Room r
+            left join fetch r.roomType rt
+            left join fetch r.building b
+            where r.occupancyStatus = :status
+              and (
+                    :typeName is null
+                 or lower(rt.name) = lower(:typeName)
+                 or (r.type is not null and lower(r.type) = lower(:typeName))
+              )
+            order by b.name asc, r.number asc
+            """)
+    List<Room> findAvailableRoomsByType(@Param("typeName") String typeName,
+                                        @Param("status") RoomOccupancyStatus status);
+
+    @Query("""
+            select r
+            from Room r
+            left join fetch r.roomType rt
+            left join fetch r.building b
+            where lower(r.number) = lower(:number)
+            """)
+    Optional<Room> findByNumberWithDetails(@Param("number") String number);
 
     boolean existsByBuilding_Id(Long buildingId);
 
