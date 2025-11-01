@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
 @Service
 public class FeeService {
 
+    private static final Set<String> INACTIVE_CONTRACT_STATUSES = Set.of("CANCELLED", "TERMINATED", "ENDED", "EXPIRED");
+
     private final FeeRepository feeRepository;
     private final ContractRepository contractRepository;
     private final RoomTypePriceHistoryRepository roomTypePriceHistoryRepository;
@@ -85,7 +87,7 @@ public class FeeService {
     public void createFee(Fee fee, BigDecimal totalAmount) {
         FeeScope scope = fee.getScope() != null ? fee.getScope() : FeeScope.INDIVIDUAL;
         if (scope == FeeScope.ROOM) {
-            distributeRoomFee(fee, normalizeAmount(totalAmount));
+            distributeRoomFee(fee, normalizeAmount(totalAmount), fee.getRoomId());
         } else {
             persistIndividualFee(fee, normalizeAmount(totalAmount));
         }
@@ -98,7 +100,7 @@ public class FeeService {
         BigDecimal normalizedTotal = normalizeAmount(totalAmount);
 
         if (currentScope == FeeScope.ROOM && newScope == FeeScope.ROOM) {
-            updateRoomFeeGroup(existing, fee, normalizedTotal);
+            updateRoomFeeGroup(existing, fee, normalizedTotal, fee.getRoomId());
         } else if (currentScope == FeeScope.ROOM && newScope == FeeScope.INDIVIDUAL) {
             convertRoomFeeToIndividual(existing, fee, normalizedTotal);
         } else if (currentScope == FeeScope.INDIVIDUAL && newScope == FeeScope.ROOM) {
@@ -207,11 +209,12 @@ public class FeeService {
         feeRepository.save(fee);
     }
 
-    private void distributeRoomFee(Fee template, BigDecimal totalAmount) {
-        Contract baseContract = getRequiredContract(template);
-        List<Contract> roomContracts = contractRepository.findByRoom_Id(baseContract.getRoom().getId());
+    private void distributeRoomFee(Fee template, BigDecimal totalAmount, Long requestedRoomId) {
+        Contract baseContract = findContractIfPresent(template);
+        Long roomId = resolveRoomId(requestedRoomId, baseContract);
+        List<Contract> roomContracts = findActiveRoomContracts(roomId, template.getDueDate());
         if (roomContracts.isEmpty()) {
-            throw new IllegalStateException("Phòng chưa có thành viên để phân bổ phí.");
+            throw new IllegalStateException("Phòng chưa có sinh viên phù hợp để phân bổ phí.");
         }
 
         String groupCode = template.getGroupCode();
@@ -223,7 +226,7 @@ public class FeeService {
         distributeToContracts(template, totalAmount, groupCode, roomContracts, existing);
     }
 
-    private void updateRoomFeeGroup(Fee existing, Fee template, BigDecimal totalAmount) {
+    private void updateRoomFeeGroup(Fee existing, Fee template, BigDecimal totalAmount, Long requestedRoomId) {
         String groupCode = existing.getGroupCode();
         if (groupCode == null || groupCode.isBlank()) {
             groupCode = UUID.randomUUID().toString();
@@ -235,12 +238,14 @@ public class FeeService {
         }
 
         Contract baseContract = existing.getContract();
-        if (template.getContract() != null && template.getContract().getId() != null) {
-            baseContract = getRequiredContract(template);
+        Contract templateContract = findContractIfPresent(template);
+        if (templateContract != null) {
+            baseContract = templateContract;
         }
-        List<Contract> roomContracts = contractRepository.findByRoom_Id(baseContract.getRoom().getId());
+        Long roomId = resolveRoomId(requestedRoomId, baseContract);
+        List<Contract> roomContracts = findActiveRoomContracts(roomId, template.getDueDate());
         if (roomContracts.isEmpty()) {
-            throw new IllegalStateException("Phòng chưa có thành viên để phân bổ phí.");
+            throw new IllegalStateException("Phòng chưa có sinh viên phù hợp để phân bổ phí.");
         }
 
         Set<Long> contractIds = roomContracts.stream()
@@ -284,7 +289,7 @@ public class FeeService {
 
     private void convertIndividualFeeToRoom(Fee existing, Fee template, BigDecimal totalAmount) {
         feeRepository.delete(existing);
-        distributeRoomFee(template, totalAmount);
+        distributeRoomFee(template, totalAmount, template.getRoomId());
     }
 
     private void updateIndividual(Fee existing, Fee template, BigDecimal totalAmount) {
@@ -417,7 +422,29 @@ public class FeeService {
 
     private BigDecimal resolveMonthlyAmount(Contract contract, LocalDate dueDate, List<RoomTypePriceHistory> priceHistory) {
         int price = resolvePriceForDate(contract.getRoom(), dueDate, priceHistory);
-        return BigDecimal.valueOf(price);
+        Room room = contract.getRoom();
+        if (room == null) {
+            return BigDecimal.valueOf(price);
+        }
+        List<Contract> occupants = findActiveRoomContracts(room.getId(), dueDate);
+        if (occupants.isEmpty()) {
+            return BigDecimal.valueOf(price);
+        }
+        int occupantCount = occupants.size();
+        int baseShare = price / occupantCount;
+        int remainder = price - (baseShare * occupantCount);
+        int position = 0;
+        for (int i = 0; i < occupants.size(); i++) {
+            if (Objects.equals(occupants.get(i).getId(), contract.getId())) {
+                position = i;
+                break;
+            }
+        }
+        int share = baseShare;
+        if (remainder > 0 && position < remainder) {
+            share += 1;
+        }
+        return BigDecimal.valueOf(Math.max(share, 0));
     }
 
     private LocalDate determineDueDateForMonth(YearMonth month, Contract contract) {
@@ -472,5 +499,59 @@ public class FeeService {
 
     private PaymentStatus determineTargetStatus(PaymentStatus requested, PaymentStatus existing) {
         return requested != null ? requested : normalizePaymentStatus(existing);
+    }
+
+    private Contract findContractIfPresent(Fee fee) {
+        if (fee.getContract() == null || fee.getContract().getId() == null) {
+            return null;
+        }
+        return contractRepository.findById(fee.getContract().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hợp đồng với ID đã chọn."));
+    }
+
+    private Long resolveRoomId(Long requestedRoomId, Contract baseContract) {
+        if (requestedRoomId != null) {
+            return requestedRoomId;
+        }
+        if (baseContract != null && baseContract.getRoom() != null) {
+            return baseContract.getRoom().getId();
+        }
+        throw new IllegalArgumentException("Cần chọn phòng để phân bổ phí cho cả phòng.");
+    }
+
+    private List<Contract> findActiveRoomContracts(Long roomId, LocalDate referenceDate) {
+        if (roomId == null) {
+            return List.of();
+        }
+        LocalDate date = referenceDate != null ? referenceDate : LocalDate.now();
+        return contractRepository.findByRoom_Id(roomId).stream()
+                .filter(contract -> isEligibleForRoomFee(contract, date))
+                .sorted(Comparator
+                        .comparing(Contract::getStartDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(Contract::getId))
+                .toList();
+    }
+
+    private boolean isEligibleForRoomFee(Contract contract, LocalDate referenceDate) {
+        if (contract == null || contract.getStudent() == null) {
+            return false;
+        }
+        String status = contract.getStatus();
+        if (status != null) {
+            String normalized = status.trim().toUpperCase();
+            if (INACTIVE_CONTRACT_STATUSES.contains(normalized)) {
+                return false;
+            }
+        }
+        LocalDate start = contract.getStartDate();
+        LocalDate end = contract.getEndDate();
+        LocalDate date = referenceDate != null ? referenceDate : LocalDate.now();
+        if (start != null && start.isAfter(date)) {
+            return false;
+        }
+        if (end != null && end.isBefore(date)) {
+            return false;
+        }
+        return true;
     }
 }

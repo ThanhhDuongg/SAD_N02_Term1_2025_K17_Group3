@@ -25,15 +25,18 @@ public class RoomTypeService {
     private final RoomTypePriceHistoryRepository roomTypePriceHistoryRepository;
     private final RoomRepository roomRepository;
     private final ContractRepository contractRepository;
+    private final StudentNotificationService studentNotificationService;
 
     public RoomTypeService(RoomTypeRepository roomTypeRepository,
                            RoomTypePriceHistoryRepository roomTypePriceHistoryRepository,
                            RoomRepository roomRepository,
-                           ContractRepository contractRepository) {
+                           ContractRepository contractRepository,
+                           StudentNotificationService studentNotificationService) {
         this.roomTypeRepository = roomTypeRepository;
         this.roomTypePriceHistoryRepository = roomTypePriceHistoryRepository;
         this.roomRepository = roomRepository;
         this.contractRepository = contractRepository;
+        this.studentNotificationService = studentNotificationService;
     }
 
     @Transactional(readOnly = true)
@@ -86,8 +89,9 @@ public class RoomTypeService {
             LocalDate effectiveDate = normalizeEffectiveDate(priceEffectiveDate);
             affectedActiveContracts = contractRepository.countByRoom_RoomType_IdAndStatus(existing.getId(), ACTIVE_CONTRACT_STATUS);
             recordPriceHistory(existing, newPrice, priceChangeNote, effectiveDate);
-            if (!effectiveDate.isAfter(LocalDate.now())) {
-                existing.setCurrentPrice(newPrice);
+            existing.setCurrentPrice(newPrice);
+            if (affectedActiveContracts > 0) {
+                studentNotificationService.notifyRoomTypePriceChange(existing, previousPrice, newPrice, effectiveDate);
             }
         } else {
             existing.setCurrentPrice(newPrice);
@@ -195,13 +199,12 @@ public class RoomTypeService {
 
     private LocalDate normalizeEffectiveDate(LocalDate effectiveDate) {
         LocalDate today = LocalDate.now();
-        if (effectiveDate == null) {
-            return today;
+        LocalDate minimumDate = today.plusMonths(1);
+        LocalDate target = effectiveDate != null ? effectiveDate : minimumDate;
+        if (target.isBefore(minimumDate)) {
+            throw new IllegalArgumentException("Ngày áp dụng giá mới phải cách hiện tại tối thiểu 1 tháng.");
         }
-        if (effectiveDate.isAfter(today)) {
-            throw new IllegalArgumentException("Ngày áp dụng giá mới không được vượt quá ngày hiện tại");
-        }
-        return effectiveDate;
+        return target;
     }
 
     private String normalizeDescription(String description) {

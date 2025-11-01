@@ -35,6 +35,14 @@
                 <textarea id="priceNote" name="priceNote" rows="2" placeholder="Mô tả lý do điều chỉnh giá" th:text="${priceNote}"></textarea>
                 <small>Nếu thay đổi giá thuê, nội dung này sẽ được lưu cùng lịch sử giá.</small>
             </div>
+            <div class="form-group" th:if="${roomType.id} != null">
+                <label for="priceEffectiveDate">Ngày áp dụng giá mới</label>
+                <input type="date"
+                       id="priceEffectiveDate"
+                       name="priceEffectiveDate"
+                       th:value="${priceEffectiveDate != null ? priceEffectiveDate : T(java.time.LocalDate).now().plusMonths(1)}">
+                <small>Ngày áp dụng phải cách thời điểm thông báo tối thiểu 1 tháng để sinh viên chuẩn bị.</small>
+            </div>
             <div class="form-actions">
                 <button type="submit" class="button btn-save">Lưu</button>
                 <a th:href="@{/room-types}" class="button btn-cancel">Hủy</a>

@@ -38,6 +38,9 @@ public class Fee {
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
+    @Transient
+    private Long roomId;
+
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -57,4 +60,7 @@ public class Fee {
     public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
     public PaymentStatus getPaymentStatus() { return paymentStatus; }
     public void setPaymentStatus(PaymentStatus paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public Long getRoomId() { return roomId; }
+    public void setRoomId(Long roomId) { this.roomId = roomId; }
 }

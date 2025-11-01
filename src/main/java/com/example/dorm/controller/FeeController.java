@@ -51,6 +51,7 @@ public class FeeController {
     public String showCreateForm(Model model) {
         Fee fee = new Fee();
         fee.setScope(FeeScope.INDIVIDUAL);
+        fee.setRoomId(null);
         model.addAttribute("fee", fee);
         model.addAttribute("contracts", contractService.getAllContracts());
         model.addAttribute("amountInputValue", "");
@@ -95,6 +96,12 @@ public class FeeController {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phí với ID: " + id));
         if (fee.getScope() == null) {
             fee.setScope(FeeScope.INDIVIDUAL);
+        }
+        if (fee.getScope() == FeeScope.ROOM) {
+            Long roomId = fee.getContract() != null && fee.getContract().getRoom() != null
+                    ? fee.getContract().getRoom().getId()
+                    : fee.getRoomId();
+            fee.setRoomId(roomId);
         }
         model.addAttribute("fee", fee);
         model.addAttribute("contracts", contractService.getAllContracts());

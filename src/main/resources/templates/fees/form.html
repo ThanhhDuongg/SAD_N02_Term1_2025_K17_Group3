@@ -21,9 +21,9 @@
                 <input type="hidden" id="contractId" th:field="*{contract.id}">
             </div>
             <div id="roomScopeFields" class="form-group-grid" hidden
-                 th:attr="data-selected-building=${fee.contract != null && fee.contract.room != null && fee.contract.room.building != null ? fee.contract.room.building.id : ''},
-                          data-selected-room=${fee.contract != null && fee.contract.room != null ? fee.contract.room.id : ''},
-                          data-selected-contract=${fee.contract != null ? fee.contract.id : ''}">
+                 th:attr="data-selected-building=${fee.roomId != null && fee.contract != null && fee.contract.room != null && fee.contract.room.building != null ? fee.contract.room.building.id : ''},
+                          data-selected-room=${fee.roomId != null ? fee.roomId : (fee.contract != null && fee.contract.room != null ? fee.contract.room.id : '')}">
+                <input type="hidden" id="roomId" th:field="*{roomId}">
                 <div class="form-group">
                     <label for="buildingSelect">Tòa nhà</label>
                     <select id="buildingSelect">
@@ -38,12 +38,10 @@
                     </select>
 
                 </div>
-                <div class="form-group">
-                    <label for="roomContractSelect">Hợp đồng đại diện</label>
-                    <select id="roomContractSelect" disabled>
-                        <option value="">-- Chọn sinh viên --</option>
-                    </select>
-
+                <div class="form-group full-width">
+                    <label>Danh sách sinh viên</label>
+                    <div id="roomOccupants" class="info-box muted">Chọn phòng để hiển thị danh sách sinh viên.</div>
+                    <small id="roomShareHint" class="help-text"></small>
                 </div>
             </div>
             <div class="form-group">
@@ -99,11 +97,15 @@
         const roomScopeFields = document.getElementById('roomScopeFields');
         const buildingSelect = document.getElementById('buildingSelect');
         const roomSelect = document.getElementById('roomSelect');
-        const roomContractSelect = document.getElementById('roomContractSelect');
+        const roomIdInput = document.getElementById('roomId');
+        const occupantContainer = document.getElementById('roomOccupants');
+        const shareHint = document.getElementById('roomShareHint');
+        const amountInput = document.getElementById('amount');
 
         const selectedBuildingId = roomScopeFields.dataset.selectedBuilding;
         const selectedRoomId = roomScopeFields.dataset.selectedRoom;
-        const selectedContractId = roomScopeFields.dataset.selectedContract;
+
+        let currentOccupantCount = 0;
 
         function fetchContracts(q) {
             if (!q) { cList.innerHTML = ''; return; }
@@ -126,13 +128,13 @@
             roomScopeFields.hidden = !isRoomScope;
             buildingSelect.required = isRoomScope;
             roomSelect.required = isRoomScope;
-            roomContractSelect.required = isRoomScope;
             if (!isRoomScope) {
                 buildingSelect.value = '';
                 roomSelect.innerHTML = '<option value="">-- Chọn phòng --</option>';
                 roomSelect.disabled = true;
-                roomContractSelect.innerHTML = '<option value="">-- Chọn sinh viên --</option>';
-                roomContractSelect.disabled = true;
+                occupantContainer.textContent = 'Chọn phòng để hiển thị danh sách sinh viên.';
+                shareHint.textContent = '';
+                roomIdInput.value = '';
             } else {
                 cHidden.value = '';
             }
@@ -151,17 +153,18 @@
                     });
                     if (selectedBuildingId) {
                         buildingSelect.value = selectedBuildingId;
-                        loadRooms(selectedBuildingId, selectedRoomId, selectedContractId);
+                        loadRooms(selectedBuildingId, selectedRoomId);
                     }
                 });
         }
 
-        function loadRooms(buildingId, roomIdToSelect, contractIdToSelect) {
+        function loadRooms(buildingId, roomIdToSelect) {
             if (!buildingId) {
                 roomSelect.innerHTML = '<option value="">-- Chọn phòng --</option>';
                 roomSelect.disabled = true;
-                roomContractSelect.innerHTML = '<option value="">-- Chọn sinh viên --</option>';
-                roomContractSelect.disabled = true;
+                occupantContainer.textContent = 'Chọn phòng để hiển thị danh sách sinh viên.';
+                shareHint.textContent = '';
+                roomIdInput.value = '';
                 return;
             }
             fetch(`/rooms/by-building/${buildingId}`)
@@ -177,37 +180,63 @@
                     roomSelect.disabled = false;
                     if (roomIdToSelect) {
                         roomSelect.value = roomIdToSelect;
-                        loadRoomContracts(roomIdToSelect, contractIdToSelect);
+                        loadRoomContracts(roomIdToSelect);
                     }
                 });
         }
 
-        function loadRoomContracts(roomId, contractIdToSelect) {
+        function loadRoomContracts(roomId) {
             if (!roomId) {
-                roomContractSelect.innerHTML = '<option value="">-- Chọn sinh viên --</option>';
-                roomContractSelect.disabled = true;
-                cHidden.value = '';
+                occupantContainer.textContent = 'Chọn phòng để hiển thị danh sách sinh viên.';
+                shareHint.textContent = '';
+                roomIdInput.value = '';
+                currentOccupantCount = 0;
                 return;
             }
             fetch(`/contracts/by-room/${roomId}`)
                 .then(r => r.json())
                 .then(data => {
-                    roomContractSelect.innerHTML = '<option value="">-- Chọn sinh viên --</option>';
-                    data.forEach(contract => {
-                        const option = document.createElement('option');
-                        option.value = contract.id;
-                        option.textContent = contract.label;
-                        roomContractSelect.appendChild(option);
-                    });
-                    roomContractSelect.disabled = data.length === 0;
-                    if (data.length === 0) {
-                        roomContractSelect.insertAdjacentHTML('beforeend', '<option value="" disabled>Phòng chưa có hợp đồng</option>');
+                    roomIdInput.value = roomId;
+                    if (!Array.isArray(data) || data.length === 0) {
+                        occupantContainer.textContent = 'Phòng chưa có sinh viên đang ở.';
+                        currentOccupantCount = 0;
+                    } else {
+                        const list = document.createElement('ul');
+                        list.classList.add('plain-list');
+                        data.forEach(contract => {
+                            const item = document.createElement('li');
+                            item.textContent = contract.label;
+                            list.appendChild(item);
+                        });
+                        occupantContainer.innerHTML = '';
+                        occupantContainer.appendChild(list);
+                        currentOccupantCount = data.length;
                     }
-                    if (contractIdToSelect) {
-                        roomContractSelect.value = contractIdToSelect;
-                        cHidden.value = contractIdToSelect;
-                    }
+                    updateShareHint();
                 });
+        }
+
+        function updateShareHint() {
+            if (!shareHint) {
+                return;
+            }
+            if (!roomScopeFields || roomScopeFields.hidden || currentOccupantCount <= 0) {
+                shareHint.textContent = '';
+                return;
+            }
+            const total = parseInt(amountInput.value.replace(/\D/g, ''), 10) || 0;
+            if (total <= 0) {
+                shareHint.textContent = '';
+                return;
+            }
+            const baseShare = Math.floor(total / currentOccupantCount);
+            const remainder = total - baseShare * currentOccupantCount;
+            if (remainder === 0) {
+                shareHint.textContent = `Mỗi sinh viên tạm tính: ${baseShare.toLocaleString('vi-VN')}₫.`;
+            } else {
+                shareHint.textContent = `Mỗi sinh viên tạm tính: ${baseShare.toLocaleString('vi-VN')}₫, ` +
+                    `có ${remainder} bạn đầu tiên cộng thêm 1₫ để làm tròn.`;
+            }
         }
 
         cInput.addEventListener('input', () => {
@@ -230,23 +259,20 @@
 
         buildingSelect.addEventListener('change', () => {
             cHidden.value = '';
-            roomContractSelect.value = '';
-            loadRooms(buildingSelect.value, null, null);
+            loadRooms(buildingSelect.value, null);
         });
 
         roomSelect.addEventListener('change', () => {
             cHidden.value = '';
-            roomContractSelect.value = '';
-            loadRoomContracts(roomSelect.value, null);
+            loadRoomContracts(roomSelect.value);
         });
 
-        roomContractSelect.addEventListener('change', () => {
-            cHidden.value = roomContractSelect.value;
-        });
+        amountInput.addEventListener('input', updateShareHint);
 
         toggleScopeFields();
         if (scopeSelect.value === 'ROOM') {
             loadBuildings();
+            updateShareHint();
         }
         /*]]>*/
     </script>

@@ -7,12 +7,14 @@ import com.example.dorm.model.DormRegistrationStatus;
 import com.example.dorm.model.Fee;
 import com.example.dorm.model.MaintenanceRequest;
 import com.example.dorm.model.Student;
+import com.example.dorm.model.StudentNotification;
 import com.example.dorm.model.Violation;
 import com.example.dorm.service.ContractService;
 import com.example.dorm.service.DormRegistrationPeriodService;
 import com.example.dorm.service.DormRegistrationRequestService;
 import com.example.dorm.service.FeeService;
 import com.example.dorm.service.MaintenanceRequestService;
+import com.example.dorm.service.StudentNotificationService;
 import com.example.dorm.service.StudentService;
 import com.example.dorm.service.ViolationService;
 import org.springframework.security.core.Authentication;
@@ -52,6 +54,7 @@ public class StudentPortalController {
     private final ViolationService violationService;
     private final DormRegistrationRequestService dormRegistrationRequestService;
     private final DormRegistrationPeriodService dormRegistrationPeriodService;
+    private final StudentNotificationService studentNotificationService;
 
     public StudentPortalController(StudentService studentService,
                                    ContractService contractService,
@@ -59,7 +62,8 @@ public class StudentPortalController {
                                    MaintenanceRequestService maintenanceRequestService,
                                    ViolationService violationService,
                                    DormRegistrationRequestService dormRegistrationRequestService,
-                                   DormRegistrationPeriodService dormRegistrationPeriodService) {
+                                   DormRegistrationPeriodService dormRegistrationPeriodService,
+                                   StudentNotificationService studentNotificationService) {
         this.studentService = studentService;
         this.contractService = contractService;
         this.feeService = feeService;
@@ -67,6 +71,7 @@ public class StudentPortalController {
         this.violationService = violationService;
         this.dormRegistrationRequestService = dormRegistrationRequestService;
         this.dormRegistrationPeriodService = dormRegistrationPeriodService;
+        this.studentNotificationService = studentNotificationService;
     }
 
     @ModelAttribute("requestTypes")
@@ -122,7 +127,8 @@ public class StudentPortalController {
         model.addAttribute("hasHighSeverityViolation", latestHighSeverity.isPresent());
         model.addAttribute("latestHighSeverityViolation", latestHighSeverity.orElse(null));
 
-        List<String> notifications = buildNotifications(unpaidFees, maintenanceRequests, registrationRequests, violations, activePeriod);
+        List<StudentNotification> directNotifications = studentNotificationService.consumeUnread(student.getId());
+        List<String> notifications = buildNotifications(unpaidFees, maintenanceRequests, registrationRequests, violations, activePeriod, directNotifications);
         model.addAttribute("notifications", notifications);
         model.addAttribute("hasNotifications", !notifications.isEmpty());
 
@@ -270,9 +276,21 @@ public class StudentPortalController {
                                             List<MaintenanceRequest> requests,
                                             List<DormRegistrationRequest> registrationRequests,
                                             List<Violation> violations,
-                                            DormRegistrationPeriod activePeriod) {
+                                            DormRegistrationPeriod activePeriod,
+                                            List<StudentNotification> directNotifications) {
         List<String> notifications = new ArrayList<>();
         LocalDate today = LocalDate.now();
+
+        if (directNotifications != null) {
+            directNotifications.forEach(notification -> {
+                String title = notification.getTitle();
+                if (title != null && !title.isBlank()) {
+                    notifications.add(title + ": " + notification.getMessage());
+                } else {
+                    notifications.add(notification.getMessage());
+                }
+            });
+        }
 
         for (Fee fee : unpaidFees) {
             if (fee.getDueDate() != null) {
