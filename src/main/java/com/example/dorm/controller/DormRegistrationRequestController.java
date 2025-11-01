@@ -3,8 +3,10 @@ package com.example.dorm.controller;
 import com.example.dorm.model.DormRegistrationPeriod;
 import com.example.dorm.model.DormRegistrationRequest;
 import com.example.dorm.model.DormRegistrationStatus;
+import com.example.dorm.model.PaymentPlan;
 import com.example.dorm.service.DormRegistrationPeriodService;
 import com.example.dorm.service.DormRegistrationRequestService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 @Controller
@@ -35,6 +39,11 @@ public class DormRegistrationRequestController {
         return DormRegistrationStatus.values();
     }
 
+    @ModelAttribute("paymentPlans")
+    public PaymentPlan[] paymentPlans() {
+        return PaymentPlan.values();
+    }
+
     @GetMapping
     public String list(@RequestParam(value = "status", required = false) String status,
                        @RequestParam(value = "periodId", required = false) Long periodId,
@@ -52,17 +61,27 @@ public class DormRegistrationRequestController {
     }
 
     @GetMapping("/{id}")
-    public String detail(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
-        return dormRegistrationRequestService.findById(id)
-                .map(request -> {
-                    model.addAttribute("request", request);
-                    return "registrations/detail";
-                })
-                .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("message", "Không tìm thấy yêu cầu đăng ký");
-                    redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
-                    return "redirect:/registrations";
-                });
+    public String detail(@PathVariable Long id,
+                         @RequestParam(value = "startMonth", required = false)
+                         @DateTimeFormat(pattern = "yyyy-MM") YearMonth startMonth,
+                         @RequestParam(value = "endMonth", required = false)
+                         @DateTimeFormat(pattern = "yyyy-MM") YearMonth endMonth,
+                         Model model,
+                         RedirectAttributes redirectAttributes) {
+        try {
+            DormRegistrationRequestService.AssignmentPreparation preparation =
+                    dormRegistrationRequestService.prepareAssignment(id, startMonth, endMonth);
+            model.addAttribute("request", preparation.request());
+            model.addAttribute("assignment", preparation);
+            model.addAttribute("roomSuggestions", preparation.roomSuggestions());
+            model.addAttribute("selectedStartMonth", preparation.startMonth());
+            model.addAttribute("selectedEndMonth", preparation.endMonth());
+            return "registrations/detail";
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("message", ex.getMessage());
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+            return "redirect:/registrations";
+        }
     }
 
     @PostMapping("/{id}/update")
@@ -99,5 +118,50 @@ public class DormRegistrationRequestController {
             redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
         }
         return "redirect:/registrations/" + id;
+    }
+
+    @PostMapping("/{id}/assign")
+    public String assignRoom(@PathVariable Long id,
+                             @RequestParam("roomId") Long roomId,
+                             @RequestParam("startMonth") @DateTimeFormat(pattern = "yyyy-MM") YearMonth startMonth,
+                             @RequestParam("endMonth") @DateTimeFormat(pattern = "yyyy-MM") YearMonth endMonth,
+                             @RequestParam(value = "paymentPlan", required = false) PaymentPlan paymentPlan,
+                             @RequestParam(value = "billingDay", required = false) Integer billingDay,
+                             @RequestParam(value = "force", defaultValue = "false") boolean force,
+                             @RequestParam(value = "adminNotes", required = false) String adminNotes,
+                             RedirectAttributes redirectAttributes) {
+        try {
+            LocalDate startDate = startMonth != null ? startMonth.atDay(1) : null;
+            LocalDate endDate = endMonth != null ? endMonth.atEndOfMonth() : null;
+            DormRegistrationRequestService.DormRegistrationAssignmentResult result =
+                    dormRegistrationRequestService.approveAndAssign(id, roomId, startDate, endDate,
+                            paymentPlan, billingDay, force, adminNotes);
+            redirectAttributes.addFlashAttribute("message",
+                    "Đã phê duyệt và tạo hợp đồng #" + result.contract().getId());
+            redirectAttributes.addFlashAttribute("alertClass", "alert-success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Không thể xếp phòng: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("alertClass", "alert-danger");
+        }
+        return "redirect:/registrations/" + id + buildMonthQuery(startMonth, endMonth);
+    }
+
+    private String buildMonthQuery(YearMonth startMonth, YearMonth endMonth) {
+        boolean hasStart = startMonth != null;
+        boolean hasEnd = endMonth != null;
+        if (!hasStart && !hasEnd) {
+            return "";
+        }
+        StringBuilder builder = new StringBuilder("?");
+        if (hasStart) {
+            builder.append("startMonth=").append(startMonth);
+        }
+        if (hasEnd) {
+            if (hasStart) {
+                builder.append("&");
+            }
+            builder.append("endMonth=").append(endMonth);
+        }
+        return builder.toString();
     }
 }

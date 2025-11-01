@@ -1,6 +1,7 @@
 package com.example.dorm.service;
 
 import com.example.dorm.model.Contract;
+import com.example.dorm.model.PaymentPlan;
 import com.example.dorm.model.Room;
 import com.example.dorm.repository.ContractRepository;
 import com.example.dorm.repository.StudentRepository;
@@ -10,8 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ContractService {
@@ -19,13 +23,18 @@ public class ContractService {
     private final ContractRepository contractRepository;
     private final StudentRepository studentRepository;
     private final RoomRepository roomRepository;
+    private final FeeService feeService;
+
+    public static final Set<String> NON_BLOCKING_STATUSES = Set.of("CANCELLED", "TERMINATED", "ENDED", "EXPIRED");
 
     public ContractService(ContractRepository contractRepository,
                            StudentRepository studentRepository,
-                           RoomRepository roomRepository) {
+                           RoomRepository roomRepository,
+                           FeeService feeService) {
         this.contractRepository = contractRepository;
         this.studentRepository = studentRepository;
         this.roomRepository = roomRepository;
+        this.feeService = feeService;
     }
 
     public Page<Contract> getAllContracts(Pageable pageable) {
@@ -47,23 +56,28 @@ public class ContractService {
     public Contract createContract(Contract contract) {
         Long roomId = extractRoomId(contract);
         Long studentId = extractStudentId(contract);
-
-        checkRoomCapacity(roomId, studentId);
+        LocalDate startDate = requireStartDate(contract);
+        LocalDate endDate = requireEndDate(contract);
 
         Room room = getRequiredRoom(roomId);
+        validateContractWindow(room, studentId, startDate, endDate, null);
+
         contract.setRoom(room);
+        contract.setPaymentPlan(contract.getPaymentPlan() != null ? contract.getPaymentPlan() : PaymentPlan.MONTHLY);
+        contract.setBillingDayOfMonth(normalizeBillingDay(contract.getBillingDayOfMonth(), startDate));
+        contract.setStatus(normalizeStatus(contract.getStatus(), startDate, endDate));
 
         if (studentId != null) {
-            if (contractRepository.existsByStudent_Id(studentId)) {
-                throw new IllegalStateException("Đã có hợp đồng");
-            }
             var student = studentRepository.findById(studentId)
                     .orElseThrow(() -> new IllegalArgumentException("Student not found"));
             student.setRoom(room);
             studentRepository.save(student);
             contract.setStudent(student);
         }
-        return contractRepository.save(contract);
+
+        Contract saved = contractRepository.save(contract);
+        feeService.synchronizeRentFees(saved);
+        return saved;
     }
 
     public Contract updateContract(Long id, Contract contract) {
@@ -71,41 +85,41 @@ public class ContractService {
         Long newStudentId = extractStudentId(contract);
         Long existingStudentId = existing.getStudent() != null ? existing.getStudent().getId() : null;
         Long newRoomId = extractRoomId(contract);
-
-        boolean roomChanged = !existing.getRoom().getId().equals(newRoomId);
-        boolean studentChanged = newStudentId != null && !newStudentId.equals(existingStudentId);
-
-        if (roomChanged || studentChanged) {
-            checkRoomCapacity(newRoomId, newStudentId);
-            if (studentChanged && contractRepository.existsByStudent_Id(newStudentId)) {
-                throw new IllegalStateException("Đã có hợp đồng");
-            }
-            if (existingStudentId != null && (newStudentId == null || !existingStudentId.equals(newStudentId))) {
-                studentRepository.findById(existingStudentId).ifPresent(s -> {
-                    s.setRoom(null);
-                    studentRepository.save(s);
-                });
-            }
-        }
+        LocalDate newStartDate = requireStartDate(contract);
+        LocalDate newEndDate = requireEndDate(contract);
 
         Room room = getRequiredRoom(newRoomId);
+        boolean removeStudent = contract.getStudent() == null || contract.getStudent().getId() == null;
+        Long targetStudentId = removeStudent ? null : newStudentId;
 
-        if (newStudentId != null) {
+        validateContractWindow(room, targetStudentId, newStartDate, newEndDate, existing.getId());
+
+        if (!removeStudent && newStudentId != null) {
             var student = studentRepository.findById(newStudentId)
                     .orElseThrow(() -> new IllegalArgumentException("Student not found"));
             student.setRoom(room);
             studentRepository.save(student);
             existing.setStudent(student);
         } else {
+            if (existingStudentId != null) {
+                studentRepository.findById(existingStudentId).ifPresent(s -> {
+                    s.setRoom(null);
+                    studentRepository.save(s);
+                });
+            }
             existing.setStudent(null);
         }
 
         existing.setRoom(room);
-        existing.setStartDate(contract.getStartDate());
-        existing.setEndDate(contract.getEndDate());
-        existing.setStatus(contract.getStatus());
+        existing.setStartDate(newStartDate);
+        existing.setEndDate(newEndDate);
+        existing.setStatus(normalizeStatus(contract.getStatus(), newStartDate, newEndDate));
+        existing.setPaymentPlan(contract.getPaymentPlan() != null ? contract.getPaymentPlan() : PaymentPlan.MONTHLY);
+        existing.setBillingDayOfMonth(normalizeBillingDay(contract.getBillingDayOfMonth(), newStartDate));
 
-        return contractRepository.save(existing);
+        Contract saved = contractRepository.save(existing);
+        feeService.synchronizeRentFees(saved);
+        return saved;
     }
 
     @Transactional
@@ -117,6 +131,7 @@ public class ContractService {
                     studentRepository.save(student);
                 });
             }
+            feeService.removeFeesForContract(contract.getId());
             contractRepository.delete(contract);
         });
     }
@@ -160,25 +175,109 @@ public class ContractService {
                 .orElseThrow(() -> new IllegalArgumentException("Room not found"));
     }
 
-    private void checkRoomCapacity(Long roomId, Long studentId) {
-        Room actual = getRequiredRoom(roomId);
-        long current = studentRepository.countByRoom_Id(roomId);
+    private LocalDate requireStartDate(Contract contract) {
+        if (contract.getStartDate() == null) {
+            throw new IllegalArgumentException("Vui lòng chọn ngày bắt đầu hợp đồng");
+        }
+        return contract.getStartDate();
+    }
 
-        if (studentId != null) {
-            boolean sameRoom = studentRepository.findById(studentId)
-                    .map(s -> s.getRoom() != null ? s.getRoom().getId() : null)
-                    .filter(roomId::equals)
-                    .isPresent();
-            if (sameRoom) {
-                current -= 1;
-            }
+    private LocalDate requireEndDate(Contract contract) {
+        if (contract.getEndDate() == null) {
+            throw new IllegalArgumentException("Vui lòng chọn ngày kết thúc hợp đồng");
+        }
+        return contract.getEndDate();
+    }
+
+    private void validateContractWindow(Room room,
+                                        Long studentId,
+                                        LocalDate startDate,
+                                        LocalDate endDate,
+                                        Long excludeContractId) {
+        if (room == null) {
+            throw new IllegalArgumentException("Room not found");
+        }
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Hợp đồng phải có thời gian bắt đầu và kết thúc");
+        }
+        if (endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("Ngày kết thúc hợp đồng phải sau ngày bắt đầu");
         }
 
-        if (current >= actual.getCapacity()) {
-            throw new IllegalStateException("Room capacity exceeded");
+        if (studentId != null) {
+            List<Contract> overlaps = contractRepository
+                    .findOverlappingByStudent(studentId, startDate, endDate, excludeContractId);
+            overlaps.stream()
+                    .filter(contract -> isBlockingStatus(contract.getStatus()))
+                    .findAny()
+                    .ifPresent(conflict -> {
+                        throw new IllegalStateException("Sinh viên đã có hợp đồng trong khoảng thời gian này");
+                    });
+        }
+
+        long activeCount = countBlockingContractsForRoom(room.getId(), startDate, endDate, excludeContractId);
+        if (activeCount >= room.getCapacity()) {
+            throw new IllegalStateException("Phòng đã đủ người trong khoảng thời gian này");
         }
     }
 
+    public boolean isBlockingStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return true;
+        }
+        return !NON_BLOCKING_STATUSES.contains(status.trim().toUpperCase());
+    }
+
+    public long countBlockingContractsForRoom(Long roomId,
+                                              LocalDate startDate,
+                                              LocalDate endDate,
+                                              Long excludeContractId) {
+        if (roomId == null) {
+            return 0;
+        }
+        return contractRepository.countBlockingContractsByRoom(
+                roomId,
+                startDate,
+                endDate,
+                excludeContractId,
+                NON_BLOCKING_STATUSES
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<Contract> findBlockingContractsForRoom(Long roomId,
+                                                       LocalDate startDate,
+                                                       LocalDate endDate,
+                                                       Long excludeContractId) {
+        if (roomId == null) {
+            return List.of();
+        }
+        return contractRepository.findOverlappingByRoom(roomId, startDate, endDate, excludeContractId)
+                .stream()
+                .filter(contract -> isBlockingStatus(contract.getStatus()))
+                .collect(Collectors.toList());
+    }
+
+    private String normalizeStatus(String requestedStatus, LocalDate startDate, LocalDate endDate) {
+        if (requestedStatus != null && !requestedStatus.isBlank()) {
+            return requestedStatus;
+        }
+        LocalDate today = LocalDate.now();
+        if (endDate.isBefore(today)) {
+            return "EXPIRED";
+        }
+        if (startDate.isAfter(today)) {
+            return "UPCOMING";
+        }
+        return "ACTIVE";
+    }
+
+    private Integer normalizeBillingDay(Integer billingDayOfMonth, LocalDate startDate) {
+        if (billingDayOfMonth == null || billingDayOfMonth < 1) {
+            return startDate != null ? startDate.getDayOfMonth() : 1;
+        }
+        return Math.min(Math.max(1, billingDayOfMonth), 31);
+    }
 
     private Long extractStudentId(Contract contract) {
         return contract.getStudent() != null ? contract.getStudent().getId() : null;

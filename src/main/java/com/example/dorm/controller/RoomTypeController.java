@@ -3,6 +3,7 @@ package com.example.dorm.controller;
 import com.example.dorm.model.RoomType;
 import com.example.dorm.model.RoomTypePriceHistory;
 import com.example.dorm.service.RoomTypeService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,10 +76,12 @@ public class RoomTypeController {
     public String update(@PathVariable Long id,
                          @ModelAttribute RoomType roomType,
                          @RequestParam(value = "priceNote", required = false) String priceNote,
+                         @RequestParam(value = "priceEffectiveDate", required = false)
+                         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate priceEffectiveDate,
                          RedirectAttributes redirectAttributes,
                          Model model) {
         try {
-            RoomTypeService.RoomTypeUpdateResult result = roomTypeService.updateRoomType(id, roomType, priceNote);
+            RoomTypeService.RoomTypeUpdateResult result = roomTypeService.updateRoomType(id, roomType, priceNote, priceEffectiveDate);
             redirectAttributes.addFlashAttribute("message", "Cập nhật loại phòng thành công!");
             redirectAttributes.addFlashAttribute("alertClass", "alert-success");
             if (result.priceChanged()) {
@@ -96,6 +100,7 @@ public class RoomTypeController {
             roomType.setId(id);
             model.addAttribute("roomType", roomType);
             model.addAttribute("priceNote", priceNote);
+            model.addAttribute("priceEffectiveDate", priceEffectiveDate);
             model.addAttribute("formError", e.getMessage());
             return "room_types/form";
         }

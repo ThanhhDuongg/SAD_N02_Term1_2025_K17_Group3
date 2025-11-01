@@ -275,12 +275,24 @@ public class DemoDataInitializer implements ApplicationRunner {
         return contractRepository.findByStudent_IdAndRoom_IdAndStartDate(student.getId(), room.getId(), startDate)
                 .map(existing -> {
                     boolean changed = false;
+                    if (!startDate.equals(existing.getStartDate())) {
+                        existing.setStartDate(startDate);
+                        changed = true;
+                    }
                     if (!endDate.equals(existing.getEndDate())) {
                         existing.setEndDate(endDate);
                         changed = true;
                     }
                     if (!status.equalsIgnoreCase(existing.getStatus())) {
                         existing.setStatus(status);
+                        changed = true;
+                    }
+                    if (existing.getPaymentPlan() == null) {
+                        existing.setPaymentPlan(PaymentPlan.MONTHLY);
+                        changed = true;
+                    }
+                    if (existing.getBillingDayOfMonth() == null) {
+                        existing.setBillingDayOfMonth(startDate.getDayOfMonth());
                         changed = true;
                     }
                     return changed ? contractRepository.save(existing) : existing;
@@ -292,6 +304,8 @@ public class DemoDataInitializer implements ApplicationRunner {
                     contract.setStartDate(startDate);
                     contract.setEndDate(endDate);
                     contract.setStatus(status);
+                    contract.setPaymentPlan(PaymentPlan.MONTHLY);
+                    contract.setBillingDayOfMonth(startDate.getDayOfMonth());
                     return contractRepository.save(contract);
                 });
     }

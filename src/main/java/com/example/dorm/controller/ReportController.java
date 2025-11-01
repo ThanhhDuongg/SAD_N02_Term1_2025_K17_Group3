@@ -68,7 +68,7 @@ public class ReportController {
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal outstandingRevenue = fees.stream()
-                .filter(fee -> fee.getPaymentStatus() == PaymentStatus.UNPAID)
+                .filter(fee -> fee.getPaymentStatus() != PaymentStatus.PAID)
                 .map(Fee::getAmount)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -86,10 +86,10 @@ public class ReportController {
                                 .filter(Objects::nonNull)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add),
                         entry.getValue().stream()
-                                .filter(fee -> fee.getPaymentStatus() == PaymentStatus.UNPAID)
+                                .filter(fee -> fee.getPaymentStatus() != PaymentStatus.PAID)
                                 .count(),
                         entry.getValue().stream()
-                                .filter(fee -> fee.getPaymentStatus() == PaymentStatus.UNPAID)
+                                .filter(fee -> fee.getPaymentStatus() != PaymentStatus.PAID)
                                 .map(Fee::getAmount)
                                 .filter(Objects::nonNull)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add)))
@@ -111,7 +111,7 @@ public class ReportController {
                                 .filter(Objects::nonNull)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add),
                         entry.getValue().stream()
-                                .filter(fee -> fee.getPaymentStatus() == PaymentStatus.UNPAID)
+                                .filter(fee -> fee.getPaymentStatus() != PaymentStatus.PAID)
                                 .map(Fee::getAmount)
                                 .filter(Objects::nonNull)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add)))
