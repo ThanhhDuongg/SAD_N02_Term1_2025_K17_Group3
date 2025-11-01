@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -223,15 +224,9 @@ public class DormRegistrationRequestService {
     }
 
     private void ensureWithinPeriod(DormRegistrationRequest request, LocalDate start, LocalDate end) {
-        DormRegistrationPeriod period = request.getPeriod();
-        if (period == null) {
-            return;
-        }
-        if (period.getStartTime() != null && start.isBefore(period.getStartTime().toLocalDate())) {
-            throw new IllegalStateException("Thời gian ở phải nằm trong năm học của đợt đăng ký");
-        }
-        if (period.getEndTime() != null && end.isAfter(period.getEndTime().toLocalDate())) {
-            throw new IllegalStateException("Thời gian ở vượt quá giới hạn năm học của đợt đăng ký");
+        long months = ChronoUnit.MONTHS.between(YearMonth.from(start), YearMonth.from(end)) + 1;
+        if (months > 12) {
+            throw new IllegalStateException("Mỗi hợp đồng chỉ được kéo dài tối đa 12 tháng. Vui lòng tách thành hợp đồng mới.");
         }
     }
 
@@ -368,12 +363,9 @@ public class DormRegistrationRequestService {
                                     YearMonth startMonth,
                                     YearMonth candidate) {
         YearMonth adjusted = candidate.isBefore(startMonth) ? startMonth : candidate;
-        DormRegistrationPeriod period = request.getPeriod();
-        if (period != null && period.getEndTime() != null) {
-            YearMonth max = YearMonth.from(period.getEndTime());
-            if (adjusted.isAfter(max)) {
-                adjusted = max;
-            }
+        YearMonth max = startMonth.plusMonths(11);
+        if (adjusted.isAfter(max)) {
+            adjusted = max;
         }
         return adjusted;
     }

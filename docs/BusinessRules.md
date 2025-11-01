@@ -43,7 +43,7 @@ Tổng hợp các kiểm tra/chuẩn hóa được áp dụng trong tầng servi
 - Sinh viên chỉ được gửi một hồ sơ cho mỗi đợt đăng ký đang mở.
 - Ngày dự kiến vào ở là bắt buộc.
 - Không thể nhận hồ sơ nếu đợt đã đầy chỉ tiêu.
-- Khi duyệt hồ sơ, thời gian ở bị giới hạn trong phạm vi năm học của đợt đăng ký và chỉ lấy theo tháng.
+- Khi duyệt hồ sơ, thời gian ở được chuẩn hóa theo tháng và không vượt quá 12 tháng cho mỗi hợp đồng; dài hơn phải tách hợp đồng mới.
 - Hệ thống chỉ đề xuất các phòng còn chỗ phù hợp với loại phòng mong muốn và thời gian cư trú được chọn.
 
 ## MaintenanceRequest
